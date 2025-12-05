@@ -6,9 +6,10 @@ import Game from "./pages/Game.jsx";
 import Lobby from "./pages/Lobby.jsx";
 import ModeSelect from "./pages/ModeSelect.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
+import CategorySelect from "./pages/CategorySelect.jsx";
 import { auth, db } from "./firebaseConfig.js";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { doc, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot, setDoc } from "firebase/firestore";
 
 const ProtectedRoute = ({ user, children }) => {
     if (!user) {
@@ -22,6 +23,10 @@ function App() {
     const [username, setUsername] = useState("");
     const [loading, setLoading] = useState(true);
 
+    // Stats for Solo Mode
+    const [currentStreak, setCurrentStreak] = useState(0);
+    const [longestStreak, setLongestStreak] = useState(0);
+
     const location = useLocation();
 
     useEffect(() => {
@@ -31,7 +36,9 @@ function App() {
                 const userDocRef = doc(db, "users", user.uid);
                 onSnapshot(userDocRef, (docSnap) => {
                     if (docSnap.exists()) {
-                        setUsername(docSnap.data().username || "");
+                        const data = docSnap.data();
+                        setUsername(data.username || "");
+                        setLongestStreak(data.longestStreak || 0);
                     }
                 });
             } else {
@@ -47,6 +54,21 @@ function App() {
         await signOut(auth);
     };
 
+    const handleSoloGameEnd = async (didWin) => {
+        if (didWin) {
+            const newStreak = currentStreak + 1;
+            setCurrentStreak(newStreak);
+            if (newStreak > longestStreak) {
+                setLongestStreak(newStreak);
+                if (currentUser) {
+                    await setDoc(doc(db, "users", currentUser.uid), { longestStreak: newStreak }, { merge: true });
+                }
+            }
+        } else {
+            setCurrentStreak(0);
+        }
+    };
+
     if (loading) {
         return (
             <div className="bg-[#023e8a] text-white min-h-screen p-4 flex justify-center items-center font-sans">
@@ -55,18 +77,20 @@ function App() {
         );
     }
 
-    // FIX: Treat both "/" (Login) AND "/mode-select" as full-screen pages
-    const isFullScreenPage = location.pathname === "/" || location.pathname === "/mode-select";
+    // --- LAYOUT LOGIC ---
+    // These pages handle their own full-screen layout.
+    // We do NOT want App.jsx to add padding or background to them.
+    const fullScreenRoutes = ["/", "/mode-select", "/category-select"];
+    const isFullScreen = fullScreenRoutes.includes(location.pathname);
 
     return (
-        // If it's a full screen page, we use a plain div. If it's Game/Lobby, we use the blue background.
-        <div className={isFullScreenPage ? "font-nunito" : "bg-[#023e8a] text-white min-h-screen p-4 font-sans"}>
+        <div className={isFullScreen ? "font-nunito" : "bg-[#023e8a] text-white min-h-screen p-4 font-sans"}>
 
-            {/* If it's a full screen page, we don't constrain the width */}
-            <div className={isFullScreenPage ? "" : "max-w-4xl mx-auto text-center"}>
+            {/* Only constrain width if NOT full screen */}
+            <div className={isFullScreen ? "" : "max-w-4xl mx-auto text-center"}>
 
-                {/* Header: Show on Game/Lobby pages, or specifically on ModeSelect if you want the logout button there */}
-                {!isFullScreenPage && currentUser && (
+                {/* Global Header (Only show on Game/Lobby pages) */}
+                {!isFullScreen && currentUser && (
                     <header className="border-b border-gray-600 pb-4 mb-6 relative">
                         <button
                             onClick={handleLogout}
@@ -75,6 +99,13 @@ function App() {
                             Logout
                         </button>
                         <h1 className="text-4xl font-bold tracking-wider">Mathemix 🧮</h1>
+
+                        {location.pathname === "/game" && (
+                            <div className="flex justify-center gap-6 mt-2 text-sm font-bold text-yellow-300">
+                                <span>🔥 Streak: {currentStreak}</span>
+                                <span>🏆 Best: {longestStreak}</span>
+                            </div>
+                        )}
                     </header>
                 )}
 
@@ -88,8 +119,16 @@ function App() {
                         path="/mode-select"
                         element={
                             <ProtectedRoute user={currentUser}>
-                                {/* Pass handleLogout so ModeSelect can use its own logout button */}
                                 <ModeSelect username={username} onLogout={handleLogout} />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/category-select"
+                        element={
+                            <ProtectedRoute user={currentUser}>
+                                <CategorySelect />
                             </ProtectedRoute>
                         }
                     />
@@ -98,7 +137,7 @@ function App() {
                         path="/game"
                         element={
                             <ProtectedRoute user={currentUser}>
-                                <Game />
+                                <Game onGameEnd={handleSoloGameEnd} />
                             </ProtectedRoute>
                         }
                     />
