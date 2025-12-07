@@ -1,114 +1,124 @@
 // src/components/Keyboard.jsx
 
-import React from "react";
+import React from 'react';
+import { motion } from 'framer-motion';
 
-function Keyboard({ onKey, onClear, onDelete, onSubmit, onGiveUp }) {
-
-    const numberRow = "1234567890()".split("");
-    const row1 = "QWERTYUIOP".split("");
-    const row2 = "ASDFGHJKL".split("");
-    const row3 = "ZXCVBNM".split("");
-
-    // Common style for all keys
-    // White background, Blue text, nicely rounded
-    const baseKeyClass =
-        "flex-1 h-12 rounded-md font-bold text-lg shadow-md transition-transform active:scale-95 flex justify-center items-center select-none cursor-pointer bg-white text-blue-900 hover:bg-gray-100";
-
-    // Style for action buttons (Enter, Del, Clear) to make them distinct
-    const actionKeyClass =
-        "flex-[1.5] h-12 rounded-md font-bold text-lg shadow-md transition-transform active:scale-95 flex justify-center items-center select-none cursor-pointer text-white";
+export default function Keyboard({ onChar, onDelete, onClear, onSpace, onSubmit, onSkip, pressedKey }) {
+    const row1 = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '-'];
+    const row2 = ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'];
+    const row3 = ['Z', 'X', 'C', 'V', 'B', 'N', 'M'];
 
     return (
-        <div className="w-full max-w-3xl mx-auto mt-6 space-y-2">
+        <div className="relative">
+            {/* Background glow effect */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#023e8a]/40 to-transparent rounded-2xl blur-xl" />
 
-            {/* 1. Number Row */}
-            <div className="flex gap-1">
-                {numberRow.map((key) => (
-                    <button
-                        key={key}
-                        onClick={() => onKey(key)}
-                        className={baseKeyClass}
+            <div className="relative bg-white/10 backdrop-blur-xl p-4 rounded-2xl border-2 border-white/20 shadow-2xl space-y-2.5">
+
+                {/* Row 1 */}
+                <div className="flex gap-2.5 justify-center">
+                    {row1.map((key) => (
+                        <KeyButton key={key} char={key} onClick={onChar} isPressed={pressedKey === key} />
+                    ))}
+                </div>
+
+                {/* Row 2 */}
+                <div className="flex gap-2.5 justify-center">
+                    {row2.map((key) => (
+                        <KeyButton key={key} char={key} onClick={onChar} isPressed={pressedKey === key} />
+                    ))}
+                </div>
+
+                {/* Row 3 */}
+                <div className="flex gap-2.5 justify-center items-center">
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        animate={{
+                            scale: pressedKey === 'CLEAR' ? 0.95 : 1,
+                            y: pressedKey === 'CLEAR' ? -2 : 0,
+                        }}
+                        onClick={onClear}
+                        className={`px-5 h-14 text-white text-sm rounded-xl shadow-lg transition-all border-2 font-semibold ${
+                            pressedKey === 'CLEAR'
+                                ? 'bg-white/40 border-white/50'
+                                : 'bg-white/20 hover:bg-white/30 border-white/30'
+                        }`}
                     >
-                        {key}
-                    </button>
-                ))}
-            </div>
-
-            {/* 2. QWERTY Row */}
-            <div className="flex gap-1">
-                {row1.map((key) => (
-                    <button
-                        key={key}
-                        onClick={() => onKey(key)}
-                        className={baseKeyClass}
+                        CLEAR
+                    </motion.button>
+                    {row3.map((key) => (
+                        <KeyButton key={key} char={key} onClick={onChar} isPressed={pressedKey === key} />
+                    ))}
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        animate={{
+                            scale: pressedKey === 'DELETE' ? 0.95 : 1,
+                            y: pressedKey === 'DELETE' ? -2 : 0,
+                        }}
+                        onClick={onDelete}
+                        className={`px-5 h-14 text-white text-sm rounded-xl shadow-lg transition-all border-2 font-semibold ${
+                            pressedKey === 'DELETE'
+                                ? 'bg-white/40 border-white/50'
+                                : 'bg-white/20 hover:bg-white/30 border-white/30'
+                        }`}
                     >
-                        {key}
-                    </button>
-                ))}
-            </div>
+                        DEL
+                    </motion.button>
+                </div>
 
-            {/* 3. ASDF Row */}
-            <div className="flex gap-1 px-4">
-                {row2.map((key) => (
-                    <button
-                        key={key}
-                        onClick={() => onKey(key)}
-                        className={baseKeyClass}
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-1">
+                    <motion.button
+                        whileHover={{ scale: 1.03, y: -2 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={onSkip}
+                        className="flex-1 h-12 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white text-sm rounded-xl shadow-xl shadow-red-500/40 transition-all border-2 border-red-300/50 font-semibold"
                     >
-                        {key}
-                    </button>
-                ))}
-            </div>
-
-            {/* 4. ZXCV Row + Clear/Del */}
-            <div className="flex gap-1">
-                <button
-                    onClick={onClear}
-                    className={`${actionKeyClass} bg-red-500 hover:bg-red-600 text-sm`}
-                >
-                    CLR
-                </button>
-
-                {row3.map((key) => (
-                    <button
-                        key={key}
-                        onClick={() => onKey(key)}
-                        className={baseKeyClass}
+                        SKIP ⟫
+                    </motion.button>
+                    <motion.button
+                        whileHover={{ scale: 1.03, y: -2 }}
+                        whileTap={{ scale: 0.97 }}
+                        animate={{
+                            scale: pressedKey === 'ENTER' ? 0.97 : 1,
+                            y: pressedKey === 'ENTER' ? -2 : 0,
+                        }}
+                        onClick={onSubmit}
+                        className={`flex-1 h-12 text-white text-sm rounded-xl shadow-xl transition-all border-2 font-semibold ${
+                            pressedKey === 'ENTER'
+                                ? 'bg-gradient-to-r from-cyan-400 to-blue-500 border-cyan-200 shadow-cyan-400/60'
+                                : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 border-cyan-300/50 shadow-blue-500/40'
+                        }`}
                     >
-                        {key}
-                    </button>
-                ))}
-
-                <button
-                    onClick={onDelete}
-                    className={`${actionKeyClass} bg-red-500 hover:bg-red-600 text-sm`}
-                >
-                    DEL
-                </button>
+                        SUBMIT ✓
+                    </motion.button>
+                </div>
             </div>
-
-            {/* 5. Submit / Give Up Row */}
-            <div className="flex gap-2 pt-2">
-                <button
-                    onClick={onSubmit}
-                    className="flex-[3] h-14 bg-green-500 hover:bg-green-600 text-white rounded-lg font-bold text-xl shadow-lg transition-transform active:scale-95"
-                >
-                    SUBMIT
-                </button>
-
-                {/* Only render Give Up if the prop is provided (non-null) */}
-                {onGiveUp && (
-                    <button
-                        onClick={onGiveUp}
-                        className="flex-1 h-14 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-bold text-sm shadow-lg transition-transform active:scale-95"
-                    >
-                        GIVE UP
-                    </button>
-                )}
-            </div>
-
         </div>
     );
 }
 
-export default Keyboard;
+// Key Button Component
+function KeyButton({ char, onClick, isPressed }) {
+    return (
+        <motion.button
+            whileHover={{ scale: 1.1, y: -2 }}
+            whileTap={{ scale: 0.95 }}
+            animate={{
+                scale: isPressed ? 0.95 : 1,
+                y: isPressed ? -2 : 0,
+            }}
+            onClick={() => onClick(char)}
+            className={`w-14 h-14 bg-gradient-to-br rounded-xl shadow-lg transition-all border-2 text-white text-xl font-bold ${
+                isPressed
+                    ? 'from-[#48cae4] to-[#0077b6] border-cyan-300 shadow-cyan-400/50'
+                    : 'from-[#0077b6] to-[#023e8a] hover:from-[#48cae4] hover:to-[#0077b6] border-white/30'
+            }`}
+            transition={{ duration: 0.1 }}
+        >
+            {char}
+        </motion.button>
+    );
+}

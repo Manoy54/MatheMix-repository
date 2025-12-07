@@ -2,19 +2,25 @@
 
 import React, { useState, useEffect } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { Menu } from 'lucide-react'; // Icon for the trigger button
+import { motion } from 'framer-motion';
+
+// Pages
 import Game from "./pages/Game.jsx";
 import Lobby from "./pages/Lobby.jsx";
 import ModeSelect from "./pages/ModeSelect.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import CategorySelect from "./pages/CategorySelect.jsx";
+
+// Components
+import { Sidebar } from "./components/Sidebar.jsx"; // Use the new file we just made
+
 import { auth, db } from "./firebaseConfig.js";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, onSnapshot, setDoc } from "firebase/firestore";
 
 const ProtectedRoute = ({ user, children }) => {
-    if (!user) {
-        return <Navigate to="/" replace />;
-    }
+    if (!user) return <Navigate to="/" replace />;
     return children;
 };
 
@@ -23,9 +29,8 @@ function App() {
     const [username, setUsername] = useState("");
     const [loading, setLoading] = useState(true);
 
-    // Stats for Solo Mode
-    const [currentStreak, setCurrentStreak] = useState(0);
-    const [longestStreak, setLongestStreak] = useState(0);
+    // Sidebar Control State
+    const [isSidebarOpen, setSidebarOpen] = useState(false);
 
     const location = useLocation();
 
@@ -36,9 +41,7 @@ function App() {
                 const userDocRef = doc(db, "users", user.uid);
                 onSnapshot(userDocRef, (docSnap) => {
                     if (docSnap.exists()) {
-                        const data = docSnap.data();
-                        setUsername(data.username || "");
-                        setLongestStreak(data.longestStreak || 0);
+                        setUsername(docSnap.data().username || "");
                     }
                 });
             } else {
@@ -52,21 +55,11 @@ function App() {
 
     const handleLogout = async () => {
         await signOut(auth);
+        setSidebarOpen(false); // Close sidebar on logout
     };
 
     const handleSoloGameEnd = async (didWin) => {
-        if (didWin) {
-            const newStreak = currentStreak + 1;
-            setCurrentStreak(newStreak);
-            if (newStreak > longestStreak) {
-                setLongestStreak(newStreak);
-                if (currentUser) {
-                    await setDoc(doc(db, "users", currentUser.uid), { longestStreak: newStreak }, { merge: true });
-                }
-            }
-        } else {
-            setCurrentStreak(0);
-        }
+        // Logic handled in Game.jsx usually
     };
 
     if (loading) {
@@ -77,38 +70,48 @@ function App() {
         );
     }
 
-    // --- LAYOUT LOGIC ---
-    // These pages handle their own full-screen layout.
-    // We do NOT want App.jsx to add padding or background to them.
-    const fullScreenRoutes = ["/", "/mode-select", "/category-select"];
+    // List of pages that handle their own full-screen layout
+    const fullScreenRoutes = [
+        "/",
+        "/mode-select",
+        "/category-select",
+        "/lobby",
+        "/game"
+    ];
+
     const isFullScreen = fullScreenRoutes.includes(location.pathname);
+    const isLoginPage = location.pathname === "/";
 
     return (
-        <div className={isFullScreen ? "font-nunito" : "bg-[#023e8a] text-white min-h-screen p-4 font-sans"}>
+        <div className={isFullScreen ? "font-nunito min-h-screen w-full relative" : "bg-[#023e8a] text-white min-h-screen p-4 font-sans relative"}>
 
-            {/* Only constrain width if NOT full screen */}
-            <div className={isFullScreen ? "" : "max-w-4xl mx-auto text-center"}>
+            {/* --- SIDEBAR SYSTEM --- */}
+            {!isLoginPage && currentUser && (
+                <>
+                    {/* The Sidebar Component */}
+                    <Sidebar
+                        isOpen={isSidebarOpen}
+                        onClose={() => setSidebarOpen(false)}
+                        onLogout={handleLogout}
+                        username={username}
+                    />
 
-                {/* Global Header (Only show on Game/Lobby pages) */}
-                {!isFullScreen && currentUser && (
-                    <header className="border-b border-gray-600 pb-4 mb-6 relative">
-                        <button
-                            onClick={handleLogout}
-                            className="absolute top-0 right-0 bg-red-700 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm"
-                        >
-                            Logout
-                        </button>
-                        <h1 className="text-4xl font-bold tracking-wider">Mathemix 🧮</h1>
+                    {/* FLOATING MENU BUTTON (The hamburger you clicked) */}
+                    {/* This button opens the sidebar */}
+                    <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => setSidebarOpen(true)}
+                        className="fixed top-4 left-4 z-40 bg-white/10 backdrop-blur-md p-2 rounded-xl border border-white/20 text-white shadow-lg hover:bg-white/20 transition-all"
+                    >
+                        <Menu className="w-6 h-6" />
+                    </motion.button>
+                </>
+            )}
 
-                        {location.pathname === "/game" && (
-                            <div className="flex justify-center gap-6 mt-2 text-sm font-bold text-yellow-300">
-                                <span>🔥 Streak: {currentStreak}</span>
-                                <span>🏆 Best: {longestStreak}</span>
-                            </div>
-                        )}
-                    </header>
-                )}
+            <div className={isFullScreen ? "w-full h-full" : "max-w-4xl mx-auto text-center"}>
 
+                {/* Routes */}
                 <Routes>
                     <Route
                         path="/"

@@ -4,21 +4,30 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Background3D from '../components/Background3D.jsx';
-import { ArrowLeft, Calculator, Sparkles, Ruler, PieChart, Plus, Minus, X, Divide, Flame, Info } from 'lucide-react';
+import {
+    Calculator, Sparkles, Ruler, PieChart, Flame, Info,
+    // Math Symbols
+    Plus, Minus, X, Divide,
+    // Geometry Symbols
+    Triangle, Square, Circle, Compass,
+    // Data Symbols
+    BarChart, LineChart, TrendingUp, Percent
+} from 'lucide-react';
 
-export default function CategorySelect() {
+export default function CategorySelect({ username, onLogout }) {
     const navigate = useNavigate();
     const [hoveredCategory, setHoveredCategory] = useState(null);
 
     const categories = [
         {
-            id: 'Number & Algebra', // Matches the ID expected by Game.jsx
+            id: 'Number & Algebra',
             name: 'Number and Algebra',
             description: 'Master arithmetic operations, equations, and algebraic thinking.',
             icon: Calculator,
             color: 'from-purple-600/80 to-violet-600/80',
             iconBg: 'from-purple-500/30 to-violet-500/30',
             glowColor: 'shadow-[0_0_30px_rgba(168,85,247,0.4)]',
+            // Existing symbols
             symbols: [Plus, Minus, X, Divide],
         },
         {
@@ -29,7 +38,8 @@ export default function CategorySelect() {
             color: 'from-blue-600/80 to-cyan-600/80',
             iconBg: 'from-blue-500/30 to-cyan-500/30',
             glowColor: 'shadow-[0_0_30px_rgba(59,130,246,0.4)]',
-            symbols: [],
+            // NEW: Geometry symbols added here
+            symbols: [Triangle, Square, Circle, Compass],
         },
         {
             id: 'Data & probability',
@@ -39,7 +49,8 @@ export default function CategorySelect() {
             color: 'from-emerald-600/80 to-green-600/80',
             iconBg: 'from-emerald-500/30 to-green-500/30',
             glowColor: 'shadow-[0_0_30px_rgba(16,185,129,0.4)]',
-            symbols: [],
+            // NEW: Data symbols added here
+            symbols: [BarChart, LineChart, TrendingUp, Percent],
         },
     ];
 
@@ -54,13 +65,14 @@ export default function CategorySelect() {
             <Background3D />
 
             {/* Main Content Layer */}
-            <div className="relative z-10 container mx-auto px-4 h-screen flex flex-col">
+            {/* Added pointer-events-none to container so mouse reaches 3D bg */}
+            <div className="relative z-10 container mx-auto px-4 h-screen flex flex-col pointer-events-none">
 
                 {/* Header */}
                 <motion.div
                     initial={{ y: -20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    className="flex items-center justify-between pt-4 pb-2 shrink-0"
+                    className="flex items-center justify-between pt-4 pb-2 shrink-0 pointer-events-auto"
                 >
                     <div className="flex items-center gap-3">
                         <motion.div
@@ -85,18 +97,7 @@ export default function CategorySelect() {
                             </h1>
                         </div>
                     </div>
-                    <motion.button
-                        onClick={() => navigate('/mode-select')}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="relative group"
-                    >
-                        <div className="absolute inset-0 bg-white/20 rounded-lg blur-md opacity-50 group-hover:opacity-75 transition-opacity" />
-                        <div className="relative bg-gradient-to-br from-white/20 to-white/10 text-white px-5 py-2 rounded-lg flex items-center gap-2 border border-white/30 font-bold text-sm shadow-lg backdrop-blur-sm">
-                            <ArrowLeft className="w-4 h-4" />
-                            Back
-                        </div>
-                    </motion.button>
+                    {/* Back Button Removed Here */}
                 </motion.div>
 
                 {/* Centered Content */}
@@ -126,7 +127,7 @@ export default function CategorySelect() {
                             initial={{ y: -20, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
                             transition={{ delay: 0.3 }}
-                            className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 backdrop-blur-md rounded-2xl p-4 border border-yellow-400/30 mb-6 shadow-lg"
+                            className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 backdrop-blur-md rounded-2xl p-4 border border-yellow-400/30 mb-6 shadow-lg pointer-events-auto"
                         >
                             <div className="flex items-start gap-3">
                                 <div className="bg-yellow-400/30 rounded-lg p-2 mt-0.5">
@@ -142,7 +143,7 @@ export default function CategorySelect() {
                         </motion.div>
 
                         {/* Category Cards */}
-                        <div className="grid md:grid-cols-3 gap-5">
+                        <div className="grid md:grid-cols-3 gap-5 pointer-events-auto">
                             {categories.map((category, index) => (
                                 <motion.div
                                     key={category.id}
@@ -201,12 +202,12 @@ export default function CategorySelect() {
                             ))}
                         </div>
 
-                        {/* Streak Info */}
+                        {/* Streak Info - ADDED HERE */}
                         <motion.div
                             initial={{ y: 30, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
                             transition={{ delay: 0.8 }}
-                            className="mt-6 bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/10"
+                            className="mt-6 bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/10 pointer-events-auto"
                         >
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">

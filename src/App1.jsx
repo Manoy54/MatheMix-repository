@@ -1,204 +1,164 @@
-import React, { useEffect, useState } from "react";
-import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import { onAuthStateChanged, signOut } from "firebase/auth";
-import { doc, onSnapshot } from "firebase/firestore";
-import { AppSidebar } from "@/components/app-sidebar";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
-import { Skeleton } from "@/components/ui/skeleton";
-import { auth, db } from "./firebaseConfig.js";
-import LoginPage from "./pages/LoginPage.jsx";
+// src/App.jsx
+
+import React, { useState, useEffect } from "react";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { Menu } from 'lucide-react'; // Import Icon for button
+import { motion } from 'framer-motion';
+
+import Game from "./pages/Game.jsx";
+import Lobby from "./pages/Lobby.jsx";
 import ModeSelect from "./pages/ModeSelect.jsx";
-import Home from "./pages/Home.jsx";
+import LoginPage from "./pages/LoginPage.jsx";
+import CategorySelect from "./pages/CategorySelect.jsx";
+import { Sidebar } from "./components/Sidebar.jsx"; // Import the Sidebar
 
-function SidebarPage({ username, email, onLogout, children }) {
-  return (
-    <SidebarProvider>
-      <AppSidebar username={username} email={email} onLogout={onLogout} />
-      <SidebarInset>
-        <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4">
-          <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="mr-2 h-4" />
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbLink href="#">Documentation</BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator className="hidden md:block" />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Introduction</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-          <div className="ml-auto flex items-center gap-2">
-            <Button size="sm" variant="secondary">
-              Feedback
-            </Button>
-            <Button size="sm">Get started</Button>
-          </div>
-        </header>
+import { auth, db } from "./firebaseConfig.js";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { doc, onSnapshot, setDoc } from "firebase/firestore";
 
-        <div className="flex flex-1 flex-col gap-4 p-4">
-          {children ? (
-            <div className="flex flex-1 flex-col h-full">{children}</div>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="col-span-2 space-y-4">
-                <div className="rounded-xl border bg-card p-6">
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Welcome</p>
-                      <h1 className="text-2xl font-semibold">Sidebar demo</h1>
-                    </div>
-                    <Button>New project</Button>
-                  </div>
-                </div>
+const ProtectedRoute = ({ user, children }) => {
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+};
 
-                <div className="rounded-xl border bg-card p-6">
-                  <div className="flex items-center justify-between gap-2">
-                    <h2 className="text-lg font-medium">Search docs</h2>
-                    <Button variant="outline" size="sm">
-                      View all
-                    </Button>
-                  </div>
-                  <div className="mt-4 flex flex-wrap items-center gap-3">
-                    <Input
-                      className="w-full sm:max-w-xs"
-                      placeholder="Search..."
-                    />
-                    <Button>Search</Button>
-                  </div>
-                </div>
-              </div>
+function App() {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [username, setUsername] = useState("");
+  const [loading, setLoading] = useState(true);
 
-              <div className="space-y-4">
-                <div className="rounded-xl border bg-card p-6">
-                  <h3 className="text-sm font-semibold text-muted-foreground">
-                    Quick links
-                  </h3>
-                  <div className="mt-4 space-y-2">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-4/5" />
-                    <Skeleton className="h-4 w-3/4" />
-                  </div>
-                </div>
-                <div className="rounded-xl border bg-card p-6">
-                  <h3 className="text-sm font-semibold text-muted-foreground">
-                    Recent updates
-                  </h3>
-                  <div className="mt-4 space-y-2">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-5/6" />
-                    <Skeleton className="h-4 w-2/3" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
-  );
-}
+  // Sidebar State
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
 
-export default function App1() {
-  const [checkingAuth, setCheckingAuth] = useState(true);
-  const [userName, setUserName] = useState("");
-  const [userEmail, setUserEmail] = useState("");
-  const navigate = useNavigate();
   const location = useLocation();
-  const loginPath = "/loginPage";
-  const appPath = "/app1";
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setCurrentUser(user);
+        const userDocRef = doc(db, "users", user.uid);
+        onSnapshot(userDocRef, (docSnap) => {
+          if (docSnap.exists()) {
+            setUsername(docSnap.data().username || "");
+          }
+        });
+      } else {
+        setCurrentUser(null);
+        setUsername("");
+      }
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleLogout = async () => {
     await signOut(auth);
-    navigate(loginPath);
+    setSidebarOpen(false);
   };
 
-  useEffect(() => {
-    let unsubscribeUserDoc;
+  const handleSoloGameEnd = async (didWin) => {
+    // Logic to update streak in Firestore can go here
+  };
 
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        if (location.pathname !== loginPath) {
-          navigate(loginPath, { replace: true });
-        }
-        setUserName("");
-        setUserEmail("");
-      } else {
-        const fallbackName =
-          user.displayName || user.email?.split("@")[0] || "User";
-        const fallbackEmail = user.email || "";
-
-        setUserName(fallbackName);
-        setUserEmail(fallbackEmail);
-
-        if (location.pathname === loginPath) {
-          navigate(appPath, { replace: true });
-        }
-
-        const userDocRef = doc(db, "users", user.uid);
-        unsubscribeUserDoc = onSnapshot(userDocRef, (docSnap) => {
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            setUserName(data.username || fallbackName);
-            setUserEmail(data.email || fallbackEmail);
-          }
-        });
-      }
-      setCheckingAuth(false);
-    });
-
-    return () => {
-      if (unsubscribeUserDoc) unsubscribeUserDoc();
-      unsubscribe();
-    };
-  }, [navigate, location.pathname]);
-
-  if (checkingAuth) {
+  if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
-        Loading...
-      </div>
+        <div className="bg-[#023e8a] text-white min-h-screen p-4 flex justify-center items-center font-sans">
+          <h2 className="text-2xl">Loading Mathemix...</h2>
+        </div>
     );
   }
 
+  const fullScreenRoutes = [
+    "/",
+    "/mode-select",
+    "/category-select",
+    "/lobby",
+    "/game"
+  ];
+
+  const isFullScreen = fullScreenRoutes.includes(location.pathname);
+  const isLoginPage = location.pathname === "/";
+
   return (
-    <Routes>
-      <Route path={loginPath} element={<LoginPage />} />
-      <Route
-        path={appPath}
-        element={
-          <SidebarPage username={userName} email={userEmail} onLogout={handleLogout}>
-            <Home />
-          </SidebarPage>
-        }
-      />
-      <Route
-        path="/mode-select"
-        element={
-          <SidebarPage username={userName} email={userEmail} onLogout={handleLogout}>
-            <div className="w-full">
-              <ModeSelect username={userName} />
-            </div>
-          </SidebarPage>
-        }
-      />
-      <Route path="*" element={<Navigate to={appPath} replace />} />
-    </Routes>
+      <div className={isFullScreen ? "font-nunito min-h-screen w-full relative" : "bg-[#023e8a] text-white min-h-screen p-4 font-sans relative"}>
+
+        {/* SIDEBAR COMPONENT */}
+        {!isLoginPage && currentUser && (
+            <>
+              <Sidebar
+                  isOpen={isSidebarOpen}
+                  onClose={() => setSidebarOpen(false)}
+                  onLogout={handleLogout}
+                  username={username}
+              />
+
+              {/* FLOATING MENU BUTTON - Visible on all pages */}
+              <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setSidebarOpen(true)}
+                  className="fixed top-4 left-4 z-40 bg-white/10 backdrop-blur-md p-2 rounded-xl border border-white/20 text-white shadow-lg hover:bg-white/20 transition-all"
+              >
+                <Menu className="w-6 h-6" />
+              </motion.button>
+            </>
+        )}
+
+        <div className={isFullScreen ? "w-full h-full" : "max-w-4xl mx-auto text-center"}>
+
+          {!isFullScreen && currentUser && (
+              <header className="border-b border-gray-600 pb-4 mb-6 relative">
+                <h1 className="text-4xl font-bold tracking-wider">Mathemix 🧮</h1>
+              </header>
+          )}
+
+          <Routes>
+            <Route
+                path="/"
+                element={currentUser ? <Navigate to="/mode-select" /> : <LoginPage />}
+            />
+
+            <Route
+                path="/mode-select"
+                element={
+                  <ProtectedRoute user={currentUser}>
+                    <ModeSelect username={username} onLogout={handleLogout} />
+                  </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/category-select"
+                element={
+                  <ProtectedRoute user={currentUser}>
+                    <CategorySelect />
+                  </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/game"
+                element={
+                  <ProtectedRoute user={currentUser}>
+                    <Game onGameEnd={handleSoloGameEnd} />
+                  </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/lobby"
+                element={
+                  <ProtectedRoute user={currentUser}>
+                    <Lobby user={currentUser} />
+                  </ProtectedRoute>
+                }
+            />
+          </Routes>
+
+        </div>
+      </div>
   );
 }
+
+export default App;
