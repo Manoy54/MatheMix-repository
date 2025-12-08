@@ -1,5 +1,3 @@
-// src/components/Keyboard.jsx
-
 import React from 'react';
 import { motion } from 'framer-motion';
 
@@ -14,7 +12,6 @@ export default function Keyboard({ onChar, onDelete, onClear, onSpace, onSubmit,
             <div className="absolute inset-0 bg-gradient-to-t from-[#023e8a]/40 to-transparent rounded-2xl blur-xl" />
 
             <div className="relative bg-white/10 backdrop-blur-xl p-4 rounded-2xl border-2 border-white/20 shadow-2xl space-y-2.5">
-
                 {/* Row 1 */}
                 <div className="flex gap-2.5 justify-center">
                     {row1.map((key) => (
@@ -74,9 +71,9 @@ export default function Keyboard({ onChar, onDelete, onClear, onSpace, onSubmit,
                         whileHover={{ scale: 1.03, y: -2 }}
                         whileTap={{ scale: 0.97 }}
                         onClick={onSkip}
-                        className="flex-1 h-12 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white text-sm rounded-xl shadow-xl shadow-red-500/40 transition-all border-2 border-red-300/50 font-semibold"
+                        className="flex-1 h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-sm rounded-xl shadow-xl shadow-orange-500/40 transition-all border-2 border-orange-300/50 font-semibold"
                     >
-                        SKIP ⟫
+                        GIVE UP
                     </motion.button>
                     <motion.button
                         whileHover={{ scale: 1.03, y: -2 }}
@@ -88,8 +85,8 @@ export default function Keyboard({ onChar, onDelete, onClear, onSpace, onSubmit,
                         onClick={onSubmit}
                         className={`flex-1 h-12 text-white text-sm rounded-xl shadow-xl transition-all border-2 font-semibold ${
                             pressedKey === 'ENTER'
-                                ? 'bg-gradient-to-r from-cyan-400 to-blue-500 border-cyan-200 shadow-cyan-400/60'
-                                : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 border-cyan-300/50 shadow-blue-500/40'
+                                ? 'bg-gradient-to-r from-green-400 to-emerald-500 border-green-200 shadow-green-400/60'
+                                : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 border-green-300/50 shadow-green-500/40'
                         }`}
                     >
                         SUBMIT ✓

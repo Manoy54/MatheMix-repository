@@ -1,8 +1,6 @@
-// src/pages/Game.jsx
-
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Calculator, Sparkles, Flame, Trophy, Brain } from 'lucide-react'; // Removed ArrowLeft import
+import { Calculator, Sparkles, Flame, Trophy, Brain, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QUESTIONS } from '../data.js';
 import Keyboard from '../components/Keyboard.jsx';
@@ -11,7 +9,7 @@ export default function Game({ onGameEnd }) {
     const location = useLocation();
     const navigate = useNavigate();
 
-    // 1. Get Category & Questions
+    // --- 1. Get Category & Questions ---
     const category = location.state?.category || "Number & Algebra";
     const categoryQuestions = QUESTIONS[category] || [];
 
@@ -20,22 +18,24 @@ export default function Game({ onGameEnd }) {
         return categoryQuestions[Math.floor(Math.random() * categoryQuestions.length)];
     };
 
-    // 2. State Management
+    // --- 2. State Management ---
     const [currentQ, setCurrentQ] = useState(() => getRandomQuestion());
     const [input, setInput] = useState('');
     const [streak, setStreak] = useState(0);
     const [bestStreak, setBestStreak] = useState(0);
     const [questionNumber, setQuestionNumber] = useState(1);
-    const [showSuccess, setShowSuccess] = useState(false);
-    const [showError, setShowError] = useState(false);
-    const [answerStatus, setAnswerStatus] = useState(null); // 'correct', 'wrong', or null
-    const [pressedKey, setPressedKey] = useState(null); // Track which key is being pressed
+
+    // UI States (Removed showSuccess/showError)
+    const [showGiveUpModal, setShowGiveUpModal] = useState(false);
+
+    // Game Status: 'correct', 'wrong', 'revealed' (for give up), or null
+    const [answerStatus, setAnswerStatus] = useState(null);
+    const [pressedKey, setPressedKey] = useState(null);
 
     const answer = currentQ.answer.toUpperCase();
-    const answerWithSpaces = answer.replace(/ /g, ''); // Remove spaces from answer for comparison
-    const displaySlots = answer.split(''); // Keep spaces for display
+    const answerWithSpaces = answer.replace(/ /g, '');
 
-    // Memoize math symbols so they don't recreate on every render
+    // Memoize math symbols
     const mathSymbols = useMemo(() => {
         const symbols = ['+', '−', '×', '÷', '=', 'π', '∑', '√', '∞', 'α', 'β', 'θ'];
         return symbols.map((symbol, i) => ({
@@ -48,135 +48,142 @@ export default function Game({ onGameEnd }) {
             xOffset: Math.random() * 30 - 15,
             yOffset: Math.random() * 30 - 15,
         }));
-    }, []); // Empty dependency array means this only runs once
+    }, []);
 
-    // 3. Handlers - Use useCallback to prevent recreating functions
-    const handleChar = React.useCallback((char) => {
+    // --- 3. Game Logic Handlers ---
+
+    const nextQuestion = useCallback(() => {
+        setQuestionNumber(prev => prev + 1);
+        setCurrentQ(getRandomQuestion());
+        setInput('');
+        setAnswerStatus(null);
+    }, []);
+
+    const handleChar = useCallback((char) => {
+        if (answerStatus) return;
         setInput(prev => {
-            // Count only non-space characters in input
             const nonSpaceInput = prev.replace(/ /g, '');
             if (nonSpaceInput.length < answerWithSpaces.length) {
                 return prev + char;
             }
             return prev;
         });
-    }, [answerWithSpaces.length]);
+    }, [answerWithSpaces.length, answerStatus]);
 
-    const handleSpace = () => {
-        // Space functionality removed as spaces are auto-inserted
-    };
+    const handleSpace = useCallback(() => {}, []);
+    const handleClear = useCallback(() => {
+        if (!answerStatus) setInput('');
+    }, [answerStatus]);
 
-    const handleClear = React.useCallback(() => setInput(''), []);
-    const handleDelete = React.useCallback(() => setInput(prev => prev.slice(0, -1)), []);
+    const handleDelete = useCallback(() => {
+        if (!answerStatus) setInput(prev => prev.slice(0, -1));
+    }, [answerStatus]);
 
-    const handleSubmit = React.useCallback(() => {
-        // Compare without spaces
+    const handleSubmit = useCallback(() => {
+        if (answerStatus) return;
+
         const inputNoSpaces = input.replace(/ /g, '');
         const answerNoSpaces = answer.replace(/ /g, '');
 
         if (inputNoSpaces.toUpperCase() === answerNoSpaces) {
-            // Correct answer
+            // Correct
             setAnswerStatus('correct');
             const newStreak = streak + 1;
             setStreak(newStreak);
             if (newStreak > bestStreak) setBestStreak(newStreak);
             if (onGameEnd) onGameEnd(true);
 
-            setShowSuccess(true);
+            // Wait 2 seconds for the "Green Box" animation, then next question
+            // No modal shown
             setTimeout(() => {
-                setShowSuccess(false);
-                setAnswerStatus(null);
                 nextQuestion();
             }, 2000);
         } else {
-            // Wrong answer
+            // Wrong
             setAnswerStatus('wrong');
             setStreak(0);
             if (onGameEnd) onGameEnd(false);
-            setShowError(true);
-            setTimeout(() => {
-                setShowError(false);
-                setAnswerStatus(null);
-            }, 1000); // Reduced from 2000ms to 1000ms
-        }
-    }, [input, answer, streak, bestStreak, onGameEnd]);
 
-    const handleSkip = () => {
-        setAnswerStatus('wrong');
+            // Wait 1 second for the "Red Box" shake, then reset status so they can try again
+            // No modal shown
+            setTimeout(() => {
+                setAnswerStatus(null);
+            }, 1000);
+        }
+    }, [input, answer, streak, bestStreak, onGameEnd, nextQuestion, answerStatus]);
+
+    // --- Give Up Logic ---
+    const handleSkip = useCallback(() => {
+        if (!answerStatus) setShowGiveUpModal(true);
+    }, [answerStatus]);
+
+    const confirmGiveUp = () => {
+        setShowGiveUpModal(false);
         setStreak(0);
         if (onGameEnd) onGameEnd(false);
-        setShowError(true);
+
+        // Remove spaces for display logic
+        const cleanAnswer = answer.replace(/ /g, '');
+        setInput(cleanAnswer);
+        setAnswerStatus('revealed');
+
         setTimeout(() => {
-            setShowError(false);
-            setAnswerStatus(null);
             nextQuestion();
-        }, 1500);
+        }, 3000);
     };
 
-    const nextQuestion = () => {
-        setQuestionNumber(prev => prev + 1);
-        setCurrentQ(getRandomQuestion());
-        setInput('');
+    const cancelGiveUp = () => {
+        setShowGiveUpModal(false);
     };
 
-    // 4. Physical Keyboard Support
-    React.useEffect(() => {
+    // --- 4. Physical Keyboard ---
+    useEffect(() => {
         const handleKeyDown = (e) => {
-            // Prevent default for keys we handle
-            if (e.key.length === 1 || e.key === 'Backspace' || e.key === 'Enter') {
-                e.preventDefault();
+            if (showGiveUpModal) return;
+
+            if (e.key.length === 1 || e.key === 'Backspace' || e.key === 'Enter' || e.key === 'Escape') {
+                // e.preventDefault();
             }
 
-            // Handle letter keys and dash
             if (e.key.length === 1 && (/[a-zA-Z]/.test(e.key) || e.key === '-')) {
                 const key = e.key.toUpperCase();
                 setPressedKey(key);
                 handleChar(key);
                 setTimeout(() => setPressedKey(null), 150);
             }
-            // Handle backspace/delete
             else if (e.key === 'Backspace' || e.key === 'Delete') {
                 setPressedKey('DELETE');
                 handleDelete();
                 setTimeout(() => setPressedKey(null), 150);
             }
-            // Handle enter key for submit
             else if (e.key === 'Enter') {
                 setPressedKey('ENTER');
                 handleSubmit();
+                setTimeout(() => setPressedKey(null), 150);
+            }
+            else if (e.key === 'Escape') {
+                setPressedKey('CLEAR');
+                handleClear();
                 setTimeout(() => setPressedKey(null), 150);
             }
         };
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [handleChar, handleDelete, handleSubmit]); // Use stable function references
+    }, [handleChar, handleDelete, handleSubmit, handleClear, showGiveUpModal]);
 
     return (
         <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]">
 
-            {/* --- Animated background elements --- */}
+            {/* Background Elements */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 {mathSymbols.map((item) => (
                     <motion.div
                         key={`symbol-${item.id}`}
                         className="absolute text-white/10 select-none"
-                        style={{
-                            left: `${item.left}%`,
-                            top: `${item.top}%`,
-                            fontSize: `${item.fontSize}px`,
-                        }}
-                        animate={{
-                            y: [0, item.yOffset, 0],
-                            x: [0, item.xOffset, 0],
-                            rotate: [0, 360],
-                        }}
-                        transition={{
-                            duration: item.duration,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                            repeatType: "loop",
-                        }}
+                        style={{ left: `${item.left}%`, top: `${item.top}%`, fontSize: `${item.fontSize}px` }}
+                        animate={{ y: [0, item.yOffset, 0], x: [0, item.xOffset, 0], rotate: [0, 360] }}
+                        transition={{ duration: item.duration, repeat: Infinity, ease: "easeInOut", repeatType: "loop" }}
                     >
                         {item.symbol}
                     </motion.div>
@@ -185,69 +192,59 @@ export default function Game({ onGameEnd }) {
                 {/* Glowing orbs */}
                 <motion.div
                     className="absolute top-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl"
-                    animate={{
-                        scale: [1, 1.2, 1],
-                        opacity: [0.3, 0.5, 0.3],
-                    }}
+                    animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
                     transition={{ duration: 8, repeat: Infinity, repeatType: "loop" }}
                 />
                 <motion.div
                     className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl"
-                    animate={{
-                        scale: [1.2, 1, 1.2],
-                        opacity: [0.5, 0.3, 0.5],
-                    }}
+                    animate={{ scale: [1.2, 1, 1.2], opacity: [0.5, 0.3, 0.5] }}
                     transition={{ duration: 8, repeat: Infinity, repeatType: "loop" }}
                 />
             </div>
 
             {/* Dot pattern overlay */}
-            <div
-                className="absolute inset-0 opacity-20"
-                style={{
-                    backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.15) 1px, transparent 1px)',
-                    backgroundSize: '30px 30px'
-                }}
-            />
+            <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.15) 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
 
-            {/* --- Success/Error Notifications --- */}
+            {/* --- MODALS (Only Give Up remains) --- */}
             <AnimatePresence>
-                {showSuccess && (
+                {showGiveUpModal && (
                     <motion.div
-                        initial={{ opacity: 0, y: -100, scale: 0.5 }}
-                        animate={{ opacity: 1, y: 20, scale: 1 }}
-                        exit={{ opacity: 0, y: -100, scale: 0.5 }}
-                        className="fixed top-0 left-1/2 -translate-x-1/2 z-50"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
                     >
-                        <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-4 rounded-2xl shadow-2xl shadow-green-500/50 border-2 border-green-300/50 flex items-center gap-3">
-                            <span className="text-xl">Correct! Streak +1 🔥</span>
-                        </div>
-                    </motion.div>
-                )}
-                {showError && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -100, scale: 0.5 }}
-                        animate={{ opacity: 1, y: 20, scale: 1 }}
-                        exit={{ opacity: 0, y: -100, scale: 0.5 }}
-                        className="fixed top-0 left-1/2 -translate-x-1/2 z-50"
-                    >
-                        <div className="bg-gradient-to-r from-red-500 to-red-600 text-white px-8 py-4 rounded-2xl shadow-2xl shadow-red-500/50 border-2 border-red-300/50 flex items-center gap-3">
-                            <span className="text-xl">Streak Reset! Keep trying!</span>
-                        </div>
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="bg-[#023e8a] border-2 border-white/20 p-6 rounded-3xl shadow-2xl max-w-sm w-full text-center space-y-4"
+                        >
+                            <div className="w-16 h-16 bg-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-2">
+                                <AlertCircle className="w-8 h-8 text-orange-400" />
+                            </div>
+                            <h2 className="text-2xl font-bold text-white">Give Up?</h2>
+                            <p className="text-white/70">
+                                This will reset your streak to 0 and reveal the answer. Are you sure?
+                            </p>
+                            <div className="flex gap-3 mt-6">
+                                <button onClick={cancelGiveUp} className="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-semibold transition-colors">
+                                    Keep Trying
+                                </button>
+                                <button onClick={confirmGiveUp} className="flex-1 py-3 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white rounded-xl font-semibold shadow-lg shadow-orange-500/30 transition-all">
+                                    Yes, Give Up
+                                </button>
+                            </div>
+                        </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>
 
             <div className="relative z-10 container mx-auto px-4 py-3 h-screen flex flex-col">
-
                 {/* --- Header --- */}
-                <motion.div
-                    initial={{ y: -50, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    className="flex items-center justify-between mb-3 flex-shrink-0"
-                >
+                <motion.div initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="flex items-center justify-between mb-3 flex-shrink-0">
                     <div className="flex items-center gap-2">
-                        {/* REMOVED BACK BUTTON HERE */}
+                        {/* Rotating Calculator Icon */}
                         <motion.div
                             animate={{ rotate: [0, 360] }}
                             transition={{ duration: 20, repeat: Infinity, ease: "linear", repeatType: "loop" }}
@@ -259,6 +256,7 @@ export default function Game({ onGameEnd }) {
                             </div>
                         </motion.div>
                         <div>
+                            {/* Rotating Sparkles Logic */}
                             <h1 className="text-white flex items-center gap-2 text-xl">
                                 Mathemix
                                 <motion.div
@@ -273,18 +271,18 @@ export default function Game({ onGameEnd }) {
                     </div>
                 </motion.div>
 
-                {/* --- Main Game Area - CENTERED --- */}
+                {/* --- Main Game Area --- */}
                 <div className="flex-1 flex items-center justify-center overflow-hidden py-2">
                     <div className="w-full max-w-5xl space-y-4">
 
-                        {/* Stats Cards - Above Question */}
+                        {/* Stats Bar */}
                         <motion.div
                             initial={{ y: -20, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
                             transition={{ delay: 0.1 }}
                             className="flex items-center justify-between"
                         >
-                            {/* Question Number - Left */}
+                            {/* Question Counter */}
                             <div className="relative">
                                 <div className="absolute inset-0 bg-white/20 rounded-xl blur-lg" />
                                 <div className="relative bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2 border-2 border-white/30 flex items-center gap-2 shadow-xl">
@@ -296,20 +294,19 @@ export default function Game({ onGameEnd }) {
                                 </div>
                             </div>
 
-                            {/* Streak Stats - Right */}
+                            {/* Streak Stats */}
                             <div className="flex items-center gap-3">
                                 <div className="relative">
                                     <div className="absolute inset-0 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl blur-lg opacity-60" />
 
-                                    {/* Enhanced flame effects when streak > 0 */}
+                                    {/* Flame Particles */}
                                     {streak > 0 && (
                                         <>
-                                            {/* 12 Animated Flame Particles - Rising upward (doubled from 6) */}
                                             {[...Array(12)].map((_, i) => {
                                                 const randomDelay = i * 0.2;
                                                 const randomX = (Math.random() - 0.5) * 80;
                                                 const isOrange = i % 2 === 0;
-                                                const isLarge = i % 3 === 0; // Every 3rd particle is larger
+                                                const isLarge = i % 3 === 0;
 
                                                 return (
                                                     <motion.div
@@ -344,58 +341,35 @@ export default function Game({ onGameEnd }) {
                                         </>
                                     )}
 
-                                    {/* Streak Card with Enhanced Pulsing Glow */}
+                                    {/* Streak Card */}
                                     <motion.div
                                         className="relative bg-gradient-to-br from-orange-500 to-red-600 backdrop-blur-sm rounded-xl px-4 py-2 border-2 border-orange-300/50 flex items-center gap-2"
                                         animate={streak > 0 ? {
                                             boxShadow: [
-                                                '0 0 40px rgba(251, 146, 60, 0.8), 0 0 80px rgba(239, 68, 68, 0.6), 0 10px 40px rgba(251, 146, 60, 0.5)',
-                                                '0 0 60px rgba(251, 146, 60, 1), 0 0 120px rgba(239, 68, 68, 0.9), 0 10px 60px rgba(251, 146, 60, 0.8)',
-                                                '0 0 40px rgba(251, 146, 60, 0.8), 0 0 80px rgba(239, 68, 68, 0.6), 0 10px 40px rgba(251, 146, 60, 0.5)',
+                                                '0 0 40px rgba(251, 146, 60, 0.8), 0 0 80px rgba(239, 68, 68, 0.6)',
+                                                '0 0 60px rgba(251, 146, 60, 1), 0 0 120px rgba(239, 68, 68, 0.9)',
+                                                '0 0 40px rgba(251, 146, 60, 0.8), 0 0 80px rgba(239, 68, 68, 0.6)',
                                             ],
                                         } : {
                                             boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)',
                                         }}
-                                        transition={{
-                                            duration: 1.2,
-                                            repeat: Infinity,
-                                            ease: "easeInOut",
-                                        }}
+                                        transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
                                     >
-                                        {/* Animated Flame Icon */}
                                         <motion.div
-                                            animate={streak > 0 ? {
-                                                rotate: [-5, 5, -5, 5, -5, 0],
-                                                scale: [1, 1.2, 1, 1.15, 1],
-                                            } : {}}
-                                            transition={{
-                                                duration: 0.8,
-                                                repeat: Infinity,
-                                                repeatDelay: 1.5,
-                                                ease: "easeInOut",
-                                            }}
+                                            animate={streak > 0 ? { rotate: [-5, 5, -5, 5, -5, 0], scale: [1, 1.2, 1, 1.15, 1] } : {}}
+                                            transition={{ duration: 0.8, repeat: Infinity, repeatDelay: 1.5 }}
                                         >
                                             <Flame className="w-4 h-4 text-white drop-shadow-lg" />
                                         </motion.div>
                                         <div>
                                             <div className="text-orange-100 text-xs">Streak</div>
-                                            <motion.div
-                                                className="text-white text-xl font-bold"
-                                                key={streak}
-                                                initial={{ scale: 1 }}
-                                                animate={streak > 0 ? {
-                                                    scale: [1, 1.3, 1],
-                                                } : {}}
-                                                transition={{
-                                                    duration: 0.4,
-                                                }}
-                                            >
+                                            <motion.div className="text-white text-xl font-bold" key={streak} initial={{ scale: 1 }} animate={streak > 0 ? { scale: [1, 1.3, 1] } : {}}>
                                                 {streak}
                                             </motion.div>
                                         </div>
                                     </motion.div>
                                 </div>
-
+                                {/* Best Score */}
                                 <div className="relative">
                                     <div className="absolute inset-0 bg-white/20 rounded-xl blur-lg" />
                                     <div className="relative bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2 border-2 border-white/30 flex items-center gap-2 shadow-xl">
@@ -409,7 +383,7 @@ export default function Game({ onGameEnd }) {
                             </div>
                         </motion.div>
 
-                        {/* Question Card */}
+                        {/* Question Display */}
                         <motion.div
                             key={questionNumber}
                             initial={{ scale: 0.95, opacity: 0 }}
@@ -436,12 +410,11 @@ export default function Game({ onGameEnd }) {
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ delay: 0.2 }}
-                            className="flex justify-center items-center gap-6 flex-wrap max-w-5xl mx-auto"
+                            className="flex justify-center items-center gap-6 flex-wrap max-w-5xl mx-auto min-h-[80px]"
                         >
                             {(() => {
-                                // Split answer into words
                                 const words = answer.split(' ');
-                                const inputCharsOnly = input.split(''); // Input without tracking spaces
+                                const inputCharsOnly = input.split('');
                                 let globalInputIndex = 0;
 
                                 return words.map((word, wordIndex) => (
@@ -451,43 +424,32 @@ export default function Game({ onGameEnd }) {
                                             const currentGlobalIndex = globalInputIndex;
                                             globalInputIndex++;
 
-                                            // Determine animation based on answer status
+                                            // Animation Logic
                                             const getAnimation = () => {
                                                 if (answerStatus === 'correct') {
+                                                    return { scale: [1, 1.05, 1], rotate: [0, -2, 2, -2, 0] };
+                                                }
+                                                if (answerStatus === 'wrong') {
+                                                    return { x: [0, -10, 10, -10, 10, 0] };
+                                                }
+                                                // THE FLIP EFFECT FOR REVEAL
+                                                if (answerStatus === 'revealed') {
                                                     return {
-                                                        scale: [1, 1.05, 1],
-                                                        rotate: [0, -2, 2, -2, 0],
-                                                    };
-                                                } else if (answerStatus === 'wrong') {
-                                                    return {
-                                                        x: [0, -10, 10, -10, 10, 0],
-                                                        rotate: [0, -5, 5, -5, 5, 0],
+                                                        rotateX: [0, 90, 0], // Flip
+                                                        transition: {
+                                                            delay: currentGlobalIndex * 0.1,
+                                                            duration: 0.6
+                                                        }
                                                     };
                                                 }
-                                                return {
-                                                    y: 0,
-                                                    x: 0,
-                                                    scale: 1,
-                                                    rotate: 0,
-                                                };
+                                                return { y: 0, x: 0, scale: 1, rotate: 0 };
                                             };
 
                                             const getBackgroundColor = () => {
-                                                if (answerStatus === 'correct') {
-                                                    return 'bg-gradient-to-br from-green-400 to-emerald-500';
-                                                } else if (answerStatus === 'wrong') {
-                                                    return 'bg-gradient-to-br from-red-400 to-red-600';
-                                                }
+                                                if (answerStatus === 'correct') return 'bg-gradient-to-br from-green-400 to-emerald-500';
+                                                if (answerStatus === 'wrong') return 'bg-gradient-to-br from-red-400 to-red-600';
+                                                if (answerStatus === 'revealed') return 'bg-gradient-to-br from-orange-400 to-orange-600';
                                                 return 'bg-white/20';
-                                            };
-
-                                            const getBorderColor = () => {
-                                                if (answerStatus === 'correct') {
-                                                    return 'rgba(34, 197, 94, 0.8)';
-                                                } else if (answerStatus === 'wrong') {
-                                                    return 'rgba(239, 68, 68, 0.8)';
-                                                }
-                                                return inputChar ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.4)';
                                             };
 
                                             return (
@@ -498,35 +460,19 @@ export default function Game({ onGameEnd }) {
                                                         y: 0,
                                                         opacity: 1,
                                                         x: 0,
-                                                        scale: 1,
-                                                        rotate: 0,
                                                         ...getAnimation()
                                                     }}
                                                     transition={{
                                                         y: { delay: 0.3 + currentGlobalIndex * 0.03 },
                                                         opacity: { delay: 0.3 + currentGlobalIndex * 0.03 },
-                                                        x: { duration: answerStatus ? 0.5 : 0 },
-                                                        scale: {
-                                                            duration: answerStatus === 'correct' ? 0.8 : 0,
-                                                            repeat: answerStatus === 'correct' ? Infinity : 0,
-                                                            repeatType: 'reverse',
-                                                            repeatDelay: 0.3,
-                                                        },
-                                                        rotate: { duration: answerStatus ? 0.5 : 0 },
                                                     }}
-                                                    className="relative"
+                                                    className="relative perspective-1000"
                                                 >
-                                                    <div
-                                                        className={`absolute inset-0 rounded-xl blur-md ${
-                                                            answerStatus === 'correct' ? 'bg-green-400/50' :
-                                                                answerStatus === 'wrong' ? 'bg-red-400/50' :
-                                                                    'bg-cyan-400/30'
-                                                        }`}
-                                                    />
+                                                    <div className={`absolute inset-0 rounded-xl blur-md ${answerStatus === 'correct' ? 'bg-green-400/50' : answerStatus === 'wrong' ? 'bg-red-400/50' : 'bg-cyan-400/30'}`} />
                                                     <motion.div
                                                         className={`relative w-12 h-16 ${getBackgroundColor()} backdrop-blur-sm border-2 rounded-xl flex items-center justify-center shadow-xl transition-colors duration-300`}
-                                                        animate={{
-                                                            borderColor: getBorderColor(),
+                                                        style={{
+                                                            borderColor: inputChar ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.4)'
                                                         }}
                                                     >
                                                         <span className="text-white text-3xl font-bold">
@@ -541,7 +487,7 @@ export default function Game({ onGameEnd }) {
                             })()}
                         </motion.div>
 
-                        {/* Keyboard Component with improved design */}
+                        {/* Keyboard */}
                         <motion.div
                             initial={{ y: 30, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}

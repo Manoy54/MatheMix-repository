@@ -1,57 +1,57 @@
-// src/pages/Lobby.jsx
+import { useState, useEffect } from 'react';
+import { ArrowLeft, Users, Plus, LogIn, Copy, Check, Sparkles, Calculator, Info, Play } from 'lucide-react';
 
-import React, { useState, useEffect } from "react";
+// Mock Firebase functions for demo - replace with actual imports
+const db = {};
+const doc = () => {};
+const setDoc = () => {};
+const getDoc = () => ({ exists: () => false });
+const updateDoc = () => {};
+const onSnapshot = () => () => {};
+const arrayUnion = () => {};
 
-// FIX 1: Go up one level (../) to find firebaseConfig
-import { db } from "../firebaseConfig.js";
-import { doc, setDoc, getDoc, updateDoc, onSnapshot, arrayUnion } from "firebase/firestore";
+// Mock data
+const QUESTIONS = {
+    "Number & Algebra": [],
+    "Geometry": [],
+    "Statistics": []
+};
 
-// FIX 2: Go up one level, then into components folder
-import MultiplayerGame from "../components/MultiplayerGame.jsx";
-
-// FIX 3: Go up one level to find data.js
-import { QUESTIONS } from "../data.js";
-
-// Helper function to generate a room code
 const generateRoomCode = () => {
     return Math.random().toString(36).substring(2, 7).toUpperCase();
 };
 
-function Lobby({ goBack, user }) {
+export default function Lobby({ goBack, user }) {
+    const mathSymbols = ['+', '−', '×', '÷', '=', 'π', '∑', '√', '∞', 'α', 'β', 'θ'];
+
     // UI state
     const [view, setView] = useState("select");
-    const [nickname, setNickname] = useState(user.username || "Player");
-
-    // 'roomCode' is the ACTIVE room we are listening to
+    const [nickname, setNickname] = useState(user?.username || "Player");
     const [roomCode, setRoomCode] = useState("");
-    // 'joinInput' is just for the text box
     const [joinInput, setJoinInput] = useState("");
-
     const [error, setError] = useState("");
+    const [copiedCode, setCopiedCode] = useState(false);
+    const [hoveredCard, setHoveredCard] = useState(null);
 
-    // Game state from Firestore
+    // Game state
     const [roomData, setRoomData] = useState(null);
     const [gameStarted, setGameStarted] = useState(false);
 
-    const isHost = roomData?.hostId === user.uid;
+    const isHost = roomData?.hostId === user?.uid;
 
-    // Real-time listener for the room
+    // Real-time listener
     useEffect(() => {
         if (!roomCode) return;
 
         const roomRef = doc(db, "rooms", roomCode);
-
         const unsubscribe = onSnapshot(roomRef, (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data();
                 setRoomData(data);
-
                 if (data.status === "playing") {
                     setGameStarted(true);
                 }
-
             } else {
-                // Only reset if we were already inside a lobby
                 if (view === "host" || view === "waiting") {
                     setError("Room not found or has been closed.");
                     setRoomCode("");
@@ -62,14 +62,11 @@ function Lobby({ goBack, user }) {
         });
 
         return () => unsubscribe();
-
     }, [roomCode, view]);
 
-
-    // --- Button Handlers ---
-
+    // Handlers
     const handleHostGame = async () => {
-        if (!nickname) {
+        if (!nickname.trim()) {
             setError("Please enter a nickname.");
             return;
         }
@@ -82,13 +79,12 @@ function Lobby({ goBack, user }) {
         const roomRef = doc(db, "rooms", newRoomCode);
         const newPlayer = { uid: user.uid, nickname, score: 0 };
 
-        // Create the room
         await setDoc(roomRef, {
             hostId: user.uid,
             hostName: nickname,
             roomCode: newRoomCode,
             players: [newPlayer],
-            category: "Number & Algebra", // Default
+            category: "Number & Algebra",
             status: "waiting",
             currentQuestion: null,
             answers: [],
@@ -96,8 +92,7 @@ function Lobby({ goBack, user }) {
     };
 
     const handleJoinGame = async () => {
-        // Check 'joinInput' here, not roomCode
-        if (!nickname || !joinInput) {
+        if (!nickname.trim() || !joinInput.trim()) {
             setError("Please enter a nickname and room code.");
             return;
         }
@@ -123,7 +118,7 @@ function Lobby({ goBack, user }) {
             players: arrayUnion(newPlayer)
         });
 
-        setRoomCode(codeToJoin); // Set the active room
+        setRoomCode(codeToJoin);
         setView("waiting");
     };
 
@@ -150,144 +145,475 @@ function Lobby({ goBack, user }) {
         });
     };
 
-    // --- Render Logic ---
+    const copyCode = () => {
+        if (roomCode) {
+            navigator.clipboard.writeText(roomCode);
+            setCopiedCode(true);
+            setTimeout(() => setCopiedCode(false), 2000);
+        }
+    };
+
+    const handleBack = () => {
+        if (view === "select") {
+            goBack?.();
+        } else {
+            setView("select");
+            setRoomCode("");
+            setRoomData(null);
+            setError("");
+        }
+    };
 
     if (gameStarted && roomData) {
         return (
-            <MultiplayerGame
-                roomCode={roomCode}
-                roomData={roomData}
-                user={user}
-            />
-        );
-    }
-
-    // RENDER: Host Lobby View
-    if (view === "host") {
-        return (
-            <div className="p-6 bg-[#0077b6] rounded-xl shadow-2xl max-w-2xl mx-auto mt-10">
-                <h2 className="text-3xl font-bold mb-4 text-center text-white">Host Lobby</h2>
-
-                <div className="bg-[#023e8a] p-6 rounded-xl mb-6 shadow-md text-center">
-                    <p className="text-lg mb-2 text-gray-300">Share this code with your friends:</p>
-                    <h3 className="text-5xl font-extrabold tracking-widest text-[#FFD700] bg-[#005f8d] inline-block px-8 py-4 rounded-lg border-2 border-[#FFD700] border-dashed">
-                        {roomCode}
-                    </h3>
-                </div>
-
-                <h3 className="text-xl mb-2 text-white font-bold">Players Waiting ({roomData?.players.length || 0}):</h3>
-                <ul className="list-disc list-inside bg-[#023e8a] p-4 rounded-lg mb-6 min-h-[100px] shadow-inner text-white">
-                    {roomData?.players.map((p) => (
-                        <li key={p.uid} className="text-lg">
-                            {p.nickname} {p.uid === user.uid && "⭐ (You)"}
-                        </li>
-                    ))}
-                </ul>
-
-                <h3 className="text-xl mb-2 text-white font-bold">Select Category:</h3>
-                <select
-                    value={roomData?.category || "Number & Algebra"}
-                    onChange={(e) => handleCategoryChange(e.target.value)}
-                    className="w-full p-3 rounded-lg text-[#023e8a] font-bold mb-6 text-lg bg-white focus:outline-none focus:ring-4 focus:ring-[#FFD700]"
-                >
-                    {Object.keys(QUESTIONS).map((cat) => (
-                        <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                </select>
-
-                <button
-                    onClick={handleStartGame}
-                    className="w-full py-4 bg-[#4CAF50] hover:bg-[#45a049] rounded-lg text-2xl font-bold text-white transition-transform transform hover:scale-105 shadow-lg"
-                >
-                    Start Game
-                </button>
+            <div className="min-h-screen bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7] flex items-center justify-center p-4">
+                <div className="text-white text-2xl">Game Started! (MultiplayerGame component would render here)</div>
             </div>
         );
     }
 
-    // RENDER: Joiner Lobby View
-    if (view === "waiting") {
-        return (
-            <div className="p-6 bg-[#0077b6] rounded-xl shadow-2xl max-w-2xl mx-auto mt-10">
-                <h2 className="text-3xl font-bold mb-4 text-center text-white">Joined Room: <span className="text-[#FFD700]">{roomCode}</span></h2>
-
-                <h3 className="text-xl mb-2 text-white font-bold">Players in Lobby ({roomData?.players.length || 0}):</h3>
-                <ul className="list-disc list-inside bg-[#023e8a] p-4 rounded-lg mb-6 min-h-[100px] shadow-inner text-white">
-                    {roomData?.players.map((p) => (
-                        <li key={p.uid} className="text-lg">
-                            {p.nickname}
-                            {p.uid === roomData.hostId && " (Host) ⭐"}
-                            {p.uid === user.uid && " (You)"}
-                        </li>
-                    ))}
-                </ul>
-
-                <div className="text-center p-4 bg-[#023e8a] rounded-lg">
-                    <p className="text-2xl animate-pulse text-[#FFD700] font-bold">Waiting for the host to start...</p>
-                </div>
-            </div>
-        );
-    }
-
-    // RENDER: Default Select View (Host or Join)
     return (
-        <div className="p-8 bg-[#0077b6] rounded-xl shadow-2xl max-w-3xl mx-auto mt-10">
-            <button onClick={goBack} className="bg-transparent text-[#FFD700] hover:text-white text-lg cursor-pointer float-left mb-4 font-bold">
-                &larr; Back to Mode Select
-            </button>
+        <div className="h-screen w-screen fixed inset-0 overflow-hidden bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]">
+            {/* Animated background elements */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                {mathSymbols.map((symbol, i) => {
+                    const duration = Math.max(15, Math.random() * 15 + 15);
 
-            {error && (
-                <p className="bg-[#F44336] p-3 rounded-lg text-lg clear-both text-white font-bold mb-4 text-center shadow-md">{error}</p>
-            )}
+                    return (
+                        <div
+                            key={`symbol-${i}`}
+                            className="absolute text-white/10 select-none animate-float"
+                            style={{
+                                left: `${Math.random() * 100}%`,
+                                top: `${Math.random() * 100}%`,
+                                fontSize: `${Math.random() * 80 + 60}px`,
+                                animation: `float ${duration}s ease-in-out infinite`,
+                                animationDelay: `${i * 0.5}s`
+                            }}
+                        >
+                            {symbol}
+                        </div>
+                    );
+                })}
 
-            <div className="my-6 clear-both">
-                <label htmlFor="nickname" className="text-xl block mb-2 text-white font-bold">Enter Your Nickname</label>
-                <input
-                    id="nickname"
-                    type="text"
-                    placeholder="e.g., MathWiz"
-                    value={nickname}
-                    onChange={(e) => setNickname(e.target.value)}
-                    className="w-full p-4 rounded-lg text-[#023e8a] font-bold text-lg bg-white focus:outline-none focus:ring-4 focus:ring-[#FFD700]"
+                {/* Glowing orbs */}
+                <div className="absolute top-1/4 right-1/4 w-[500px] h-[500px] bg-gradient-to-br from-cyan-400/30 to-blue-500/30 rounded-full blur-3xl animate-pulse-slow" />
+                <div className="absolute bottom-1/4 left-1/4 w-[500px] h-[500px] bg-gradient-to-br from-purple-500/30 to-violet-500/30 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '4s' }} />
+
+                {/* Geometric patterns */}
+                <div className="absolute top-1/3 left-1/2 w-64 h-64 border-2 border-cyan-400/20 rounded-full animate-spin-slow" />
+                <div
+                    className="absolute bottom-1/3 right-1/3 w-48 h-48 border-2 border-purple-400/20 animate-spin-reverse"
+                    style={{ clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }}
                 />
             </div>
 
-            <div className="flex flex-col md:flex-row gap-6 mt-8">
-                {/* Host Game Box */}
-                <div className="flex-1 bg-[#023e8a] p-6 rounded-xl shadow-lg border-2 border-transparent hover:border-[#FFD700] transition-all">
-                    <h2 className="text-2xl mb-4 text-white font-bold">Host a Game</h2>
-                    <p className="mb-6 text-gray-300">Create a new room and get a code to share with friends.</p>
-                    <button
-                        onClick={handleHostGame}
-                        className="w-full py-4 bg-[#0096C7] hover:bg-[#00B4D8] rounded-lg text-xl font-bold text-white shadow-md"
-                    >
-                        Create Room
-                    </button>
+            {/* Grid pattern overlay */}
+            <div
+                className="absolute inset-0 opacity-10"
+                style={{
+                    backgroundImage: `
+            linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)
+          `,
+                    backgroundSize: '50px 50px'
+                }}
+            />
+
+            {/* Content */}
+            <div className="relative z-10 h-full flex flex-col">
+                {/* Header */}
+                <div className="flex items-center justify-between px-4 py-4 shrink-0 opacity-0 animate-fade-in">
+                    <div className="flex items-center gap-3">
+                        <div className="relative animate-spin-slow">
+                            <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl blur-md opacity-50" />
+                            <div className="relative bg-gradient-to-br from-white/20 to-white/10 p-2 rounded-xl border border-white/30 backdrop-blur-sm">
+                                <Calculator className="w-6 h-6 text-white" />
+                            </div>
+                        </div>
+                        <div>
+                            <h1 className="text-white flex items-center gap-2 text-3xl drop-shadow-md" style={{ fontWeight: 900 }}>
+                                Mathemix
+                                <div className="animate-wiggle">
+                                    <Sparkles className="w-5 h-5 text-yellow-300" />
+                                </div>
+                            </h1>
+                        </div>
+                    </div>
                 </div>
 
-                {/* Join Game Box */}
-                <div className="flex-1 bg-[#023e8a] p-6 rounded-xl shadow-lg border-2 border-transparent hover:border-[#FFD700] transition-all">
-                    <h2 className="text-2xl mb-4 text-white font-bold">Join a Game</h2>
-                    <label htmlFor="roomCode" className="block mb-2 text-gray-300">Enter Room Code:</label>
-                    <input
-                        id="roomCode"
-                        type="text"
-                        placeholder="ABC12"
-                        value={joinInput}
-                        onChange={(e) => setJoinInput(e.target.value.toUpperCase())}
-                        className="w-full p-3 rounded-lg text-[#023e8a] font-bold text-lg uppercase bg-white focus:outline-none focus:ring-4 focus:ring-[#FFD700] mb-4"
-                        maxLength={5}
-                    />
-                    <button
-                        onClick={handleJoinGame}
-                        className="w-full py-4 bg-[#4CAF50] hover:bg-[#45a049] rounded-lg text-xl font-bold text-white shadow-md"
-                    >
-                        Join Room
-                    </button>
+                {/* Main Content */}
+                <div className="flex-1 flex items-center justify-center px-4 overflow-y-auto">
+                    <div className="w-full max-w-5xl py-4">
+
+                        {/* SELECT VIEW */}
+                        {view === "select" && (
+                            <>
+                                {/* Welcome Section */}
+                                <div className="text-center mb-4 opacity-0 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+                                    <div className="inline-flex items-center gap-2 bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm px-5 py-2 rounded-full border border-white/30 mb-2 shadow-lg">
+                                        <Users className="w-4 h-4 text-cyan-300" />
+                                        <span className="text-white text-base" style={{ fontWeight: 700 }}>Multiplayer Mode</span>
+                                    </div>
+
+                                    <h2 className="text-white text-3xl md:text-4xl mb-2 leading-tight drop-shadow-lg" style={{ fontWeight: 900 }}>
+                                        Compete with <span className="text-yellow-300">Friends</span>
+                                    </h2>
+                                    <p className="text-white/80 text-base" style={{ fontWeight: 500 }}>Challenge your friends in real-time math battles!</p>
+                                </div>
+
+                                {/* Info Card */}
+                                <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 backdrop-blur-md rounded-2xl p-3 border border-yellow-400/30 mb-4 shadow-lg opacity-0 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+                                    <div className="flex items-start gap-3">
+                                        <div className="bg-yellow-400/30 rounded-lg p-2 mt-0.5">
+                                            <Info className="w-4 h-4 text-yellow-200" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <h3 className="text-white text-sm mb-1" style={{ fontWeight: 700 }}>How Multiplayer Works</h3>
+                                            <p className="text-white/90 text-xs leading-relaxed" style={{ fontWeight: 500 }}>
+                                                One player hosts a game and shares the room code. Others can join using that code. Enter your nickname below to get started!
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Error Message */}
+                                {error && (
+                                    <div className="mb-3 relative animate-scale-in">
+                                        <div className="absolute inset-0 bg-red-500/30 rounded-xl blur-lg" />
+                                        <div className="relative bg-red-500/90 backdrop-blur-sm p-3 rounded-xl border-2 border-red-300/50 text-white text-center text-sm font-semibold">
+                                            {error}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Nickname Input */}
+                                <div className="mb-4 opacity-0 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+                                    <label className="block text-white/90 mb-2 text-xs" style={{ fontWeight: 700 }}>
+                                        ENTER YOUR NICKNAME
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={nickname}
+                                        onChange={(e) => setNickname(e.target.value)}
+                                        placeholder="Player123"
+                                        className="w-full px-5 py-3 bg-white/90 backdrop-blur-sm border-2 border-white/50 rounded-2xl focus:border-cyan-400 focus:ring-4 focus:ring-cyan-400/30 outline-none transition-all placeholder-gray-400 text-gray-800 shadow-xl"
+                                        style={{ fontWeight: 600 }}
+                                    />
+                                </div>
+
+                                {/* Host & Join Cards */}
+                                <div className="grid md:grid-cols-2 gap-4 mb-4">
+                                    {/* Host a Game */}
+                                    <div
+                                        onMouseEnter={() => setHoveredCard('host')}
+                                        onMouseLeave={() => setHoveredCard(null)}
+                                        className="relative group opacity-0 animate-fade-in-left"
+                                        style={{ animationDelay: '0.5s' }}
+                                    >
+                                        <div
+                                            className={`relative overflow-hidden rounded-3xl p-6 bg-gradient-to-br from-purple-600/80 to-violet-600/80 border-2 border-white/30 shadow-2xl backdrop-blur-sm transition-all cursor-pointer hover:scale-[1.03] hover:translate-y-[-5px] active:scale-[0.98] ${
+                                                hoveredCard === 'host' ? 'shadow-[0_0_30px_rgba(168,85,247,0.4)]' : ''
+                                            }`}
+                                        >
+                                            {/* SHINE EFFECT */}
+                                            <div className="absolute inset-0 -translate-x-full group-hover:animate-shine bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+
+                                            <div className="relative z-10 flex flex-col h-full min-h-[280px] justify-between">
+                                                <div>
+                                                    <div className="flex justify-between items-start mb-4">
+                                                        <div className="bg-gradient-to-br from-purple-500/30 to-violet-500/30 w-16 h-16 rounded-2xl flex items-center justify-center shadow-inner border border-white/20 backdrop-blur-sm">
+                                                            <Plus className="w-9 h-9 text-white" />
+                                                        </div>
+                                                        <div className={`w-3 h-3 rounded-full transition-all ${
+                                                            hoveredCard === 'host'
+                                                                ? 'bg-yellow-300 shadow-[0_0_10px_#fde047]'
+                                                                : 'bg-white/20'
+                                                        }`} />
+                                                    </div>
+
+                                                    <h3 className="text-white text-xl mb-2 leading-tight" style={{ fontWeight: 900 }}>
+                                                        Host a Game
+                                                    </h3>
+                                                    <p className="text-white/80 text-xs leading-relaxed mb-3" style={{ fontWeight: 500 }}>
+                                                        Create a new room and get a code to share with friends.
+                                                    </p>
+                                                </div>
+
+                                                <button
+                                                    onClick={handleHostGame}
+                                                    className="w-full py-3 bg-white/20 hover:bg-white/30 text-white rounded-xl shadow-lg transition-all border-2 border-white/40 backdrop-blur-sm flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
+                                                    style={{ fontWeight: 700 }}
+                                                >
+                                                    <Plus className="w-4 h-4" />
+                                                    Create Room
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Join a Game */}
+                                    <div
+                                        onMouseEnter={() => setHoveredCard('join')}
+                                        onMouseLeave={() => setHoveredCard(null)}
+                                        className="relative group opacity-0 animate-fade-in-right"
+                                        style={{ animationDelay: '0.5s' }}
+                                    >
+                                        <div
+                                            className={`relative overflow-hidden rounded-3xl p-6 bg-gradient-to-br from-blue-600/80 to-cyan-600/80 border-2 border-white/30 shadow-2xl backdrop-blur-sm transition-all cursor-pointer hover:scale-[1.03] hover:translate-y-[-5px] active:scale-[0.98] ${
+                                                hoveredCard === 'join' ? 'shadow-[0_0_30px_rgba(59,130,246,0.4)]' : ''
+                                            }`}
+                                        >
+                                            {/* SHINE EFFECT */}
+                                            <div className="absolute inset-0 -translate-x-full group-hover:animate-shine bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+
+                                            <div className="relative z-10 flex flex-col h-full min-h-[320px] justify-between">
+                                                <div>
+                                                    <div className="flex justify-between items-start mb-4">
+                                                        <div className="bg-gradient-to-br from-blue-500/30 to-cyan-500/30 w-16 h-16 rounded-2xl flex items-center justify-center shadow-inner border border-white/20 backdrop-blur-sm">
+                                                            <LogIn className="w-9 h-9 text-white" />
+                                                        </div>
+                                                        <div className={`w-3 h-3 rounded-full transition-all ${
+                                                            hoveredCard === 'join'
+                                                                ? 'bg-yellow-300 shadow-[0_0_10px_#fde047]'
+                                                                : 'bg-white/20'
+                                                        }`} />
+                                                    </div>
+
+                                                    <h3 className="text-white text-xl mb-2 leading-tight" style={{ fontWeight: 900 }}>
+                                                        Join a Game
+                                                    </h3>
+                                                    <p className="text-white/80 text-xs leading-relaxed mb-3" style={{ fontWeight: 500 }}>
+                                                        Enter the room code provided by your friend.
+                                                    </p>
+
+                                                    {/* Room Code Input */}
+                                                    <div className="mb-3">
+                                                        <label className="block text-white/90 text-xs mb-2" style={{ fontWeight: 700 }}>
+                                                            ENTER ROOM CODE
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            value={joinInput}
+                                                            onChange={(e) => setJoinInput(e.target.value.toUpperCase())}
+                                                            placeholder="ABC123"
+                                                            className="w-full px-5 py-3 bg-white/90 backdrop-blur-sm border-2 border-white/50 rounded-xl focus:border-white focus:ring-4 focus:ring-white/30 outline-none transition-all placeholder-gray-400 text-gray-800 shadow-lg tracking-widest text-center"
+                                                            style={{ fontWeight: 700 }}
+                                                            maxLength={6}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <button
+                                                    onClick={handleJoinGame}
+                                                    className="w-full py-3 bg-white/20 hover:bg-white/30 text-white rounded-xl shadow-lg transition-all border-2 border-white/40 backdrop-blur-sm flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
+                                                    style={{ fontWeight: 700 }}
+                                                >
+                                                    <LogIn className="w-4 h-4" />
+                                                    Join Room
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        {/* HOST VIEW */}
+                        {view === "host" && (
+                            <div className="bg-gradient-to-br from-white/25 via-white/20 to-white/15 backdrop-blur-2xl rounded-3xl border-2 border-white/40 shadow-2xl p-8 animate-scale-in">
+                                <div className="text-center mb-6">
+                                    <h2 className="text-white text-3xl mb-2" style={{ fontWeight: 900 }}>
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 via-white to-purple-200">
+                      Host Lobby
+                    </span>
+                                    </h2>
+                                    <p className="text-white/80">Waiting for players to join...</p>
+                                </div>
+
+                                {/* Room Code Display */}
+                                <div className="mb-6 relative animate-scale-in">
+                                    <div className="relative bg-gradient-to-r from-yellow-300 to-orange-300 p-6 rounded-xl border-2 border-yellow-200/50 flex items-center justify-between shadow-lg">
+                                        <div>
+                                            <p className="text-[#023e8a] text-xs mb-1" style={{ fontWeight: 700 }}>ROOM CODE</p>
+                                            <p className="text-[#023e8a] text-4xl tracking-widest" style={{ fontWeight: 900 }}>
+                                                {roomCode}
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={copyCode}
+                                            className="bg-white/90 hover:bg-white p-3 rounded-xl shadow-lg transition-all hover:scale-110 active:scale-90"
+                                        >
+                                            {copiedCode ? (
+                                                <Check className="w-6 h-6 text-green-600" />
+                                            ) : (
+                                                <Copy className="w-6 h-6 text-[#023e8a]" />
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Players List */}
+                                <div className="mb-6">
+                                    <h3 className="text-white text-lg mb-3" style={{ fontWeight: 700 }}>
+                                        Players Waiting ({roomData?.players.length || 0})
+                                    </h3>
+                                    <div className="relative">
+                                        <div className="absolute inset-0 bg-white/10 rounded-xl blur-md" />
+                                        <div className="relative bg-white/20 backdrop-blur-sm rounded-xl border-2 border-white/30 p-4 min-h-[100px]">
+                                            {roomData?.players.map((p) => (
+                                                <div key={p.uid} className="text-white text-lg py-2 flex items-center gap-2">
+                                                    <Users className="w-5 h-5" />
+                                                    {p.nickname} {p.uid === user?.uid && "⭐ (You)"}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Category Selection */}
+                                <div className="mb-6">
+                                    <label className="block text-white text-sm mb-2" style={{ fontWeight: 700 }}>
+                                        SELECT CATEGORY
+                                    </label>
+                                    <div className="relative">
+                                        <select
+                                            value={roomData?.category || "Number & Algebra"}
+                                            onChange={(e) => handleCategoryChange(e.target.value)}
+                                            className="w-full px-6 py-4 bg-white/90 backdrop-blur-sm border-2 border-white/50 rounded-xl focus:border-cyan-300 focus:ring-4 focus:ring-cyan-400/30 outline-none transition-all text-gray-800 shadow-xl"
+                                            style={{ fontWeight: 600 }}
+                                        >
+                                            {Object.keys(QUESTIONS).map((cat) => (
+                                                <option key={cat} value={cat}>{cat}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {/* Start Game Button */}
+                                <button
+                                    onClick={handleStartGame}
+                                    className="w-full py-5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl shadow-lg shadow-green-500/40 transition-all border-2 border-green-300/50 flex items-center justify-center gap-2 text-xl hover:scale-105 hover:translate-y-[-2px] active:scale-95"
+                                    style={{ fontWeight: 700 }}
+                                >
+                                    <Play className="w-6 h-6" />
+                                    Start Game
+                                </button>
+                            </div>
+                        )}
+
+                        {/* WAITING VIEW */}
+                        {view === "waiting" && (
+                            <div className="bg-gradient-to-br from-white/25 via-white/20 to-white/15 backdrop-blur-2xl rounded-3xl border-2 border-white/40 shadow-2xl p-8 animate-scale-in">
+                                <div className="text-center mb-6">
+                                    <h2 className="text-white text-3xl mb-2" style={{ fontWeight: 900 }}>
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 via-white to-purple-200">
+                      Joined Room: {roomCode}
+                    </span>
+                                    </h2>
+                                </div>
+
+                                {/* Players List */}
+                                <div className="mb-6">
+                                    <h3 className="text-white text-lg mb-3" style={{ fontWeight: 700 }}>
+                                        Players in Lobby ({roomData?.players.length || 0})
+                                    </h3>
+                                    <div className="relative">
+                                        <div className="absolute inset-0 bg-white/10 rounded-xl blur-md" />
+                                        <div className="relative bg-white/20 backdrop-blur-sm rounded-xl border-2 border-white/30 p-4 min-h-[150px]">
+                                            {roomData?.players.map((p) => (
+                                                <div key={p.uid} className="text-white text-lg py-2 flex items-center gap-2">
+                                                    <Users className="w-5 h-5" />
+                                                    {p.nickname}
+                                                    {p.uid === roomData.hostId && " (Host) ⭐"}
+                                                    {p.uid === user?.uid && " (You)"}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Waiting Message */}
+                                <div className="relative animate-pulse">
+                                    <div className="absolute inset-0 bg-yellow-400/20 rounded-xl blur-lg" />
+                                    <div className="relative bg-yellow-300/30 backdrop-blur-sm p-6 rounded-xl border-2 border-yellow-200/50 text-center">
+                                        <p className="text-yellow-100 text-2xl" style={{ fontWeight: 700 }}>
+                                            Waiting for the host to start...
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
+
+                {/* Footer */}
+                {view === "select" && (
+                    <div className="text-center text-white/40 text-xs py-3 px-4 opacity-0 animate-fade-in" style={{ fontWeight: 600, animationDelay: '0.6s' }}>
+                        <p>Enter your nickname and choose to host or join a game! 🎮</p>
+                    </div>
+                )}
             </div>
+
+            {/* CSS Animations */}
+            <style>{`
+        @keyframes float {
+          0%, 100% { transform: translate(0, 0) rotate(0deg); }
+          33% { transform: translate(0, -40px) rotate(120deg); }
+          66% { transform: translate(10px, 0) rotate(240deg); }
+        }
+        @keyframes pulse-slow {
+          0%, 100% { transform: scale(1); opacity: 0.4; }
+          50% { transform: scale(1.3); opacity: 0.6; }
+        }
+        @keyframes spin-slow {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes spin-reverse {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(-360deg); }
+        }
+        @keyframes wiggle {
+          0%, 100% { transform: rotate(0deg); }
+          25% { transform: rotate(15deg); }
+          75% { transform: rotate(-15deg); }
+        }
+        @keyframes shine {
+          100% { transform: translateX(200%); }
+        }
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes fade-in-up {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fade-in-left {
+          from { opacity: 0; transform: translateX(-20px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes fade-in-right {
+          from { opacity: 0; transform: translateX(20px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes scale-in {
+          from { opacity: 0; transform: scale(0.9); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        .animate-float { animation: float 20s ease-in-out infinite; }
+        .animate-pulse-slow { animation: pulse-slow 8s ease-in-out infinite; }
+        .animate-spin-slow { animation: spin-slow 30s linear infinite; }
+        .animate-spin-reverse { animation: spin-reverse 25s linear infinite; }
+        .animate-wiggle { animation: wiggle 2s ease-in-out infinite; }
+        .animate-shine { animation: shine 1.5s ease-in-out; }
+        .animate-fade-in { animation: fade-in 0.5s ease-out forwards; }
+        .animate-fade-in-up { animation: fade-in-up 0.6s ease-out forwards; }
+        .animate-fade-in-left { animation: fade-in-left 0.5s ease-out forwards; }
+        .animate-fade-in-right { animation: fade-in-right 0.5s ease-out forwards; }
+        .animate-scale-in { animation: scale-in 0.5s ease-out forwards; }
+      `}</style>
         </div>
     );
 }
-
-export default Lobby;

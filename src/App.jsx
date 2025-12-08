@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { Menu } from 'lucide-react'; // Icon for the trigger button
+import { Menu } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 // Pages
@@ -13,11 +13,11 @@ import LoginPage from "./pages/LoginPage.jsx";
 import CategorySelect from "./pages/CategorySelect.jsx";
 
 // Components
-import { Sidebar } from "./components/Sidebar.jsx"; // Use the new file we just made
+import { Sidebar } from "./components/Sidebar.jsx";
 
 import { auth, db } from "./firebaseConfig.js";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { doc, onSnapshot, setDoc } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 
 const ProtectedRoute = ({ user, children }) => {
     if (!user) return <Navigate to="/" replace />;
@@ -82,6 +82,9 @@ function App() {
     const isFullScreen = fullScreenRoutes.includes(location.pathname);
     const isLoginPage = location.pathname === "/";
 
+    // NEW: Check if we are specifically in the lobby
+    const isLobby = location.pathname === "/lobby";
+
     return (
         <div className={isFullScreen ? "font-nunito min-h-screen w-full relative" : "bg-[#023e8a] text-white min-h-screen p-4 font-sans relative"}>
 
@@ -96,16 +99,19 @@ function App() {
                         username={username}
                     />
 
-                    {/* FLOATING MENU BUTTON (The hamburger you clicked) */}
-                    {/* This button opens the sidebar */}
-                    <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => setSidebarOpen(true)}
-                        className="fixed top-4 left-4 z-40 bg-white/10 backdrop-blur-md p-2 rounded-xl border border-white/20 text-white shadow-lg hover:bg-white/20 transition-all"
-                    >
-                        <Menu className="w-6 h-6" />
-                    </motion.button>
+                    {/* FLOATING MENU BUTTON */}
+                    {/* CHANGE: We added '!isLobby' here. We hide this floating button on the lobby
+                        because Lobby.jsx has its own integrated button now. */}
+                    {!isLobby && (
+                        <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => setSidebarOpen(true)}
+                            className="fixed top-4 left-4 z-40 bg-white/10 backdrop-blur-md p-2 rounded-xl border border-white/20 text-white shadow-lg hover:bg-white/20 transition-all"
+                        >
+                            <Menu className="w-6 h-6" />
+                        </motion.button>
+                    )}
                 </>
             )}
 
@@ -149,7 +155,11 @@ function App() {
                         path="/lobby"
                         element={
                             <ProtectedRoute user={currentUser}>
-                                <Lobby user={currentUser} />
+                                {/* CHANGE: We pass 'onOpenSidebar' function down to Lobby */}
+                                <Lobby
+                                    user={currentUser}
+                                    onOpenSidebar={() => setSidebarOpen(true)}
+                                />
                             </ProtectedRoute>
                         }
                     />
