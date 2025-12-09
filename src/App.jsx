@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 
 // Pages
 import Game from "./pages/Game.jsx";
-import Lobby from "./pages/Lobby.jsx";
+import Lobby from "./pages/multiplayer/Lobby.jsx";
 import ModeSelect from "./pages/ModeSelect.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import CategorySelect from "./pages/CategorySelect.jsx";
