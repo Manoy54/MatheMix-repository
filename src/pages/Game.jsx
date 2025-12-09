@@ -1,11 +1,11 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Calculator, Sparkles, Flame, Trophy, Brain, AlertCircle } from 'lucide-react';
+import { Calculator, Sparkles, Flame, Trophy, Brain, AlertCircle, Menu, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QUESTIONS } from '../data.js';
 import Keyboard from '../components/Keyboard.jsx';
 
-export default function Game({ onGameEnd }) {
+export default function Game({ onGameEnd, onOpenSidebar, onLogout }) {
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -70,7 +70,7 @@ export default function Game({ onGameEnd }) {
         });
     }, [answerWithSpaces.length, answerStatus]);
 
-    const handleSpace = useCallback(() => {}, []);
+    const handleSpace = useCallback(() => { }, []);
     const handleClear = useCallback(() => {
         if (!answerStatus) setInput('');
     }, [answerStatus]);
@@ -240,10 +240,21 @@ export default function Game({ onGameEnd }) {
                 )}
             </AnimatePresence>
 
-            <div className="relative z-10 container mx-auto px-4 py-3 h-screen flex flex-col">
+            <div className="relative z-10 px-4 py-3 h-screen flex flex-col">
                 {/* --- Header --- */}
                 <motion.div initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="flex items-center justify-between mb-3 flex-shrink-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
+                        {/* Hamburger Menu Button */}
+                        {onOpenSidebar && (
+                            <motion.button
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={onOpenSidebar}
+                                className="bg-white/10 backdrop-blur-md p-2 rounded-xl border border-white/20 text-white shadow-lg hover:bg-white/20 transition-all"
+                            >
+                                <Menu className="w-6 h-6" />
+                            </motion.button>
+                        )}
                         {/* Rotating Calculator Icon */}
                         <motion.div
                             animate={{ rotate: [0, 360] }}
@@ -269,6 +280,18 @@ export default function Game({ onGameEnd }) {
                             <p className="text-white/60 text-xs">Solo Mode - {category}</p>
                         </div>
                     </div>
+                    <motion.button
+                        onClick={onLogout}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="relative group"
+                    >
+                        <div className="absolute inset-0 bg-red-500 rounded-lg blur-md opacity-50 group-hover:opacity-75 transition-opacity" />
+                        <div className="relative bg-gradient-to-br from-red-500 to-red-600 text-white px-5 py-2 rounded-lg flex items-center gap-2 border border-red-400/30 font-bold text-sm shadow-lg">
+                            <LogOut className="w-4 h-4" />
+                            Logout
+                        </div>
+                    </motion.button>
                 </motion.div>
 
                 {/* --- Main Game Area --- */}
@@ -311,13 +334,11 @@ export default function Game({ onGameEnd }) {
                                                 return (
                                                     <motion.div
                                                         key={`particle-${i}`}
-                                                        className={`absolute bottom-0 left-1/2 ${
-                                                            isLarge ? 'w-5 h-5' : 'w-4 h-4'
-                                                        } rounded-full ${
-                                                            isOrange
+                                                        className={`absolute bottom-0 left-1/2 ${isLarge ? 'w-5 h-5' : 'w-4 h-4'
+                                                            } rounded-full ${isOrange
                                                                 ? 'bg-gradient-to-t from-orange-500 to-red-500'
                                                                 : 'bg-gradient-to-t from-yellow-400 to-orange-400'
-                                                        }`}
+                                                            }`}
                                                         style={{
                                                             boxShadow: isOrange
                                                                 ? '0 0 20px rgba(251, 146, 60, 1)'

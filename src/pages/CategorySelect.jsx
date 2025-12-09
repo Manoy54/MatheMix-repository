@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Background3D from '../components/Background3D.jsx';
 import {
-    Calculator, Sparkles, Ruler, PieChart, Flame, Info,
+    Calculator, Sparkles, Ruler, PieChart, Flame, Info, Menu, LogOut,
     // Math Symbols
     Plus, Minus, X, Divide,
     // Geometry Symbols
@@ -14,7 +14,7 @@ import {
     BarChart, LineChart, TrendingUp, Percent
 } from 'lucide-react';
 
-export default function CategorySelect({ username, onLogout }) {
+export default function CategorySelect({ username, onLogout, onOpenSidebar }) {
     const navigate = useNavigate();
     const [hoveredCategory, setHoveredCategory] = useState(null);
 
@@ -66,7 +66,7 @@ export default function CategorySelect({ username, onLogout }) {
 
             {/* Main Content Layer */}
             {/* Added pointer-events-none to container so mouse reaches 3D bg */}
-            <div className="relative z-10 container mx-auto px-4 h-screen flex flex-col pointer-events-none">
+            <div className="relative z-10 px-4 h-screen flex flex-col pointer-events-none">
 
                 {/* Header */}
                 <motion.div
@@ -75,6 +75,17 @@ export default function CategorySelect({ username, onLogout }) {
                     className="flex items-center justify-between pt-4 pb-2 shrink-0 pointer-events-auto"
                 >
                     <div className="flex items-center gap-3">
+                        {/* Hamburger Menu Button */}
+                        {onOpenSidebar && (
+                            <motion.button
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={onOpenSidebar}
+                                className="bg-white/10 backdrop-blur-md p-2 rounded-xl border border-white/20 text-white shadow-lg hover:bg-white/20 transition-all"
+                            >
+                                <Menu className="w-6 h-6" />
+                            </motion.button>
+                        )}
                         <motion.div
                             animate={{ rotate: [0, 360] }}
                             transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
@@ -97,7 +108,18 @@ export default function CategorySelect({ username, onLogout }) {
                             </h1>
                         </div>
                     </div>
-                    {/* Back Button Removed Here */}
+                    <motion.button
+                        onClick={onLogout}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="relative group"
+                    >
+                        <div className="absolute inset-0 bg-red-500 rounded-lg blur-md opacity-50 group-hover:opacity-75 transition-opacity" />
+                        <div className="relative bg-gradient-to-br from-red-500 to-red-600 text-white px-5 py-2 rounded-lg flex items-center gap-2 border border-red-400/30 font-bold text-sm shadow-lg">
+                            <LogOut className="w-4 h-4" />
+                            Logout
+                        </div>
+                    </motion.button>
                 </motion.div>
 
                 {/* Centered Content */}
@@ -158,9 +180,8 @@ export default function CategorySelect({ username, onLogout }) {
                                         onClick={() => handleSelect(category.id)}
                                         whileHover={{ scale: 1.05, y: -5 }}
                                         whileTap={{ scale: 0.98 }}
-                                        className={`w-full h-full relative overflow-hidden rounded-3xl p-6 bg-gradient-to-br ${category.color} border-2 border-white/30 shadow-2xl text-left backdrop-blur-sm transition-all ${
-                                            hoveredCategory === category.id ? category.glowColor : ''
-                                        }`}
+                                        className={`w-full h-full relative overflow-hidden rounded-3xl p-6 bg-gradient-to-br ${category.color} border-2 border-white/30 shadow-2xl text-left backdrop-blur-sm transition-all ${hoveredCategory === category.id ? category.glowColor : ''
+                                            }`}
                                     >
                                         {/* SHINE EFFECT */}
                                         <div className="absolute inset-0 -translate-x-full group-hover:animate-[shine_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent z-20" />
@@ -171,11 +192,10 @@ export default function CategorySelect({ username, onLogout }) {
                                                     <div className={`bg-gradient-to-br ${category.iconBg} w-16 h-16 rounded-2xl flex items-center justify-center shadow-inner border border-white/20 backdrop-blur-sm`}>
                                                         <category.icon className="w-9 h-9 text-white" />
                                                     </div>
-                                                    <div className={`w-3 h-3 rounded-full transition-all ${
-                                                        hoveredCategory === category.id
-                                                            ? 'bg-yellow-300 shadow-[0_0_10px_#fde047]'
-                                                            : 'bg-white/20'
-                                                    }`} />
+                                                    <div className={`w-3 h-3 rounded-full transition-all ${hoveredCategory === category.id
+                                                        ? 'bg-yellow-300 shadow-[0_0_10px_#fde047]'
+                                                        : 'bg-white/20'
+                                                        }`} />
                                                 </div>
 
                                                 <h3 className="text-white text-2xl font-black mb-2 leading-tight">

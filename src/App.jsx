@@ -82,8 +82,9 @@ function App() {
     const isFullScreen = fullScreenRoutes.includes(location.pathname);
     const isLoginPage = location.pathname === "/";
 
-    // NEW: Check if we are specifically in the lobby
-    const isLobby = location.pathname === "/lobby";
+    // NEW: Check if we are specifically in the lobby, mode select, category select, or game screens
+    // These screens have their own internal sidebar toggle buttons
+    const isLobbyOrModeSelect = location.pathname === "/lobby" || location.pathname === "/mode-select" || location.pathname === "/category-select" || location.pathname === "/game";
 
     return (
         <div className={isFullScreen ? "font-nunito min-h-screen w-full relative" : "bg-[#023e8a] text-white min-h-screen p-4 font-sans relative"}>
@@ -100,9 +101,9 @@ function App() {
                     />
 
                     {/* FLOATING MENU BUTTON */}
-                    {/* CHANGE: We added '!isLobby' here. We hide this floating button on the lobby
-                        because Lobby.jsx has its own integrated button now. */}
-                    {!isLobby && (
+                    {/* CHANGE: We hide this floating button on lobby, mode-select, category-select, and game
+                        because they now have their own integrated buttons. */}
+                    {!isLobbyOrModeSelect && (
                         <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
@@ -128,7 +129,11 @@ function App() {
                         path="/mode-select"
                         element={
                             <ProtectedRoute user={currentUser}>
-                                <ModeSelect username={username} onLogout={handleLogout} />
+                                <ModeSelect
+                                    username={username}
+                                    onLogout={handleLogout}
+                                    onOpenSidebar={() => setSidebarOpen(true)}
+                                />
                             </ProtectedRoute>
                         }
                     />
@@ -137,7 +142,11 @@ function App() {
                         path="/category-select"
                         element={
                             <ProtectedRoute user={currentUser}>
-                                <CategorySelect />
+                                <CategorySelect
+                                    username={username}
+                                    onLogout={handleLogout}
+                                    onOpenSidebar={() => setSidebarOpen(true)}
+                                />
                             </ProtectedRoute>
                         }
                     />
@@ -146,7 +155,11 @@ function App() {
                         path="/game"
                         element={
                             <ProtectedRoute user={currentUser}>
-                                <Game onGameEnd={handleSoloGameEnd} />
+                                <Game
+                                    onGameEnd={handleSoloGameEnd}
+                                    onOpenSidebar={() => setSidebarOpen(true)}
+                                    onLogout={handleLogout}
+                                />
                             </ProtectedRoute>
                         }
                     />
@@ -159,6 +172,7 @@ function App() {
                                 <Lobby
                                     user={currentUser}
                                     onOpenSidebar={() => setSidebarOpen(true)}
+                                    onLogout={handleLogout}
                                 />
                             </ProtectedRoute>
                         }

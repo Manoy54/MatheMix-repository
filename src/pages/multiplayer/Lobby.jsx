@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calculator, Sparkles, Menu } from 'lucide-react';
+import { Calculator, Sparkles, Menu, LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
 import RoomSelection from './RoomSelection';
 import HostLobby from './HostLobby';
@@ -7,12 +7,12 @@ import PlayerWaiting from './PlayerWaiting';
 
 // Mock Firebase functions for demo - replace with actual imports
 const db = {};
-const doc = () => {};
-const setDoc = () => {};
+const doc = () => { };
+const setDoc = () => { };
 const getDoc = () => ({ exists: () => false });
-const updateDoc = () => {};
-const onSnapshot = () => () => {};
-const arrayUnion = () => {};
+const updateDoc = () => { };
+const onSnapshot = () => () => { };
+const arrayUnion = () => { };
 
 // Mock data
 const QUESTIONS = {
@@ -25,7 +25,7 @@ const generateRoomCode = () => {
     return Math.random().toString(36).substring(2, 7).toUpperCase();
 };
 
-export default function Lobby({ user, onOpenSidebar }) {
+export default function Lobby({ user, onOpenSidebar, onLogout }) {
     const mathSymbols = ['+', '−', '×', '÷', '=', 'π', '∑', '√', '∞', 'α', 'β', 'θ'];
 
     // UI state
@@ -202,14 +202,14 @@ export default function Lobby({ user, onOpenSidebar }) {
             />
 
             {/* Content */}
-            <div className="relative z-10 container mx-auto px-4 h-screen flex flex-col">
-                {/* Header - MATCHING ModeSelect.jsx */}
+            <div className="relative z-10 px-4 h-screen flex flex-col">
+                {/* Header - Left-aligned Logo */}
                 <motion.div
                     initial={{ y: -20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     className="flex items-center justify-between pt-4 pb-2 shrink-0"
                 >
-                    {/* Left side with Menu button and Logo */}
+                    {/* Logo & Sidebar Toggle */}
                     <div className="flex items-center gap-3">
                         {/* Hamburger Menu Button */}
                         {onOpenSidebar && (
@@ -248,10 +248,24 @@ export default function Lobby({ user, onOpenSidebar }) {
                             </h1>
                         </div>
                     </div>
+
+                    {/* Logout Button */}
+                    <motion.button
+                        onClick={onLogout}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="relative group"
+                    >
+                        <div className="absolute inset-0 bg-red-500 rounded-lg blur-md opacity-50 group-hover:opacity-75 transition-opacity" />
+                        <div className="relative bg-gradient-to-br from-red-500 to-red-600 text-white px-5 py-2 rounded-lg flex items-center gap-2 border border-red-400/30 font-bold text-sm shadow-lg">
+                            <LogOut className="w-4 h-4" />
+                            Logout
+                        </div>
+                    </motion.button>
                 </motion.div>
 
-                {/* Main Content - Scrollable Area */}
-                <div className="flex-1 flex items-center justify-center min-h-0 overflow-y-auto">
+                {/* Main Content - Non-scrollable */}
+                <div className="flex-1 flex items-center justify-center">
                     <div className="w-full max-w-5xl py-4">
                         {/* SELECT VIEW */}
                         {view === "select" && (
