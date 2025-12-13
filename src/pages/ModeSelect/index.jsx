@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Users, Trophy, Zap, Target, Sparkles, Brain, Calculator, Star, Award, Crown, Menu } from 'lucide-react';
 import { motion } from 'framer-motion';
-import Background3D from '../components/Background3D.jsx';
+import Background3D from '../../components/Background3D.jsx';
 
 export default function ModeSelect({ username, onOpenSidebar }) {
     const navigate = useNavigate();

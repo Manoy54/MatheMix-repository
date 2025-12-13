@@ -1,20 +1,26 @@
-import { useState, useEffect } from 'react';
-import { Calculator, Sparkles, Menu, LogOut } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import {
+    doc,
+    setDoc,
+    getDoc,
+    updateDoc,
+    onSnapshot,
+    arrayUnion,
+    collection,
+    query,
+    where,
+    getDocs,
+    deleteDoc,
+} from 'firebase/firestore';
+import { db } from '../../firebaseConfig';
+import MultiplayerGame from '../../components/MultiplayerGame';
 import { motion } from 'framer-motion';
+import { Menu, Calculator, Sparkles } from 'lucide-react';
 import RoomSelection from './RoomSelection';
 import HostLobby from './HostLobby';
 import PlayerWaiting from './PlayerWaiting';
 
-// Mock Firebase functions for demo - replace with actual imports
-const db = {};
-const doc = () => { };
-const setDoc = () => { };
-const getDoc = () => ({ exists: () => false });
-const updateDoc = () => { };
-const onSnapshot = () => () => { };
-const arrayUnion = () => { };
 
-// Mock data
 const QUESTIONS = {
     "Number & Algebra": [],
     "Geometry": [],
@@ -25,22 +31,19 @@ const generateRoomCode = () => {
     return Math.random().toString(36).substring(2, 7).toUpperCase();
 };
 
-export default function Lobby({ user, onOpenSidebar, onLogout }) {
+export default function Lobby({ user, onOpenSidebar }) {
     const mathSymbols = ['+', '−', '×', '÷', '=', 'π', '∑', '√', '∞', 'α', 'β', 'θ'];
 
-    // UI state
     const [view, setView] = useState("select");
     const [nickname, setNickname] = useState(user?.username || "Player");
     const [roomCode, setRoomCode] = useState("");
     const [error, setError] = useState("");
 
-    // Game state
     const [roomData, setRoomData] = useState(null);
     const [gameStarted, setGameStarted] = useState(false);
 
     const isHost = roomData?.hostId === user?.uid;
 
-    // Real-time listener
     useEffect(() => {
         if (!roomCode) return;
 
@@ -65,7 +68,23 @@ export default function Lobby({ user, onOpenSidebar, onLogout }) {
         return () => unsubscribe();
     }, [roomCode, view]);
 
-    // Handlers
+    // This effect cleans up the room if the host navigates away
+    useEffect(() => {
+        return () => {
+            if (isHost && roomCode) {
+                const roomRef = doc(db, "rooms", roomCode);
+                deleteDoc(roomRef);
+            }
+        };
+    }, [isHost, roomCode]);
+
+
+    const checkRoomExists = async (code) => {
+        const roomRef = doc(db, "rooms", code);
+        const roomSnap = await getDoc(roomRef);
+        return roomSnap.exists();
+    };
+
     const handleHostGame = async (playerNickname) => {
         if (!playerNickname.trim()) {
             setError("Please enter a nickname.");
@@ -73,23 +92,41 @@ export default function Lobby({ user, onOpenSidebar, onLogout }) {
         }
         setError("");
 
-        const newRoomCode = generateRoomCode();
+        console.log("Attempting to host game with nickname:", playerNickname);
+
+        let newRoomCode = generateRoomCode();
+        let roomExists = await checkRoomExists(newRoomCode);
+        while (roomExists) {
+            newRoomCode = generateRoomCode();
+            roomExists = await checkRoomExists(newRoomCode);
+        }
+        
+        console.log("Generated new room code:", newRoomCode);
+
         setRoomCode(newRoomCode);
         setView("host");
 
         const roomRef = doc(db, "rooms", newRoomCode);
         const newPlayer = { uid: user.uid, nickname: playerNickname, score: 0 };
 
-        await setDoc(roomRef, {
-            hostId: user.uid,
-            hostName: playerNickname,
-            roomCode: newRoomCode,
-            players: [newPlayer],
-            category: "Number & Algebra",
-            status: "waiting",
-            currentQuestion: null,
-            answers: [],
-        });
+        try {
+            await setDoc(roomRef, {
+                hostId: user.uid,
+                hostName: playerNickname,
+                roomCode: newRoomCode,
+                players: [newPlayer],
+                category: "Number & Algebra",
+                status: "waiting",
+                currentQuestion: null,
+                answers: [],
+            });
+            console.log("Room created successfully in Firestore.");
+        } catch (e) {
+            console.error("Error creating room:", e);
+            setError("Failed to create room. Please try again.");
+            setRoomCode("");
+            setView("select");
+        }
     };
 
     const handleJoinGame = async (playerNickname, codeToJoin) => {
@@ -98,35 +135,73 @@ export default function Lobby({ user, onOpenSidebar, onLogout }) {
             return;
         }
         setError("");
+        console.log(`Attempting to join room ${codeToJoin} with nickname ${playerNickname}`);
 
         const roomRef = doc(db, "rooms", codeToJoin);
-        const roomSnap = await getDoc(roomRef);
+        try {
+            const roomSnap = await getDoc(roomRef);
 
-        if (!roomSnap.exists()) {
-            setError("Room not found. Check the code and try again.");
-            return;
+            if (!roomSnap.exists()) {
+                setError("Room not found. Check the code and try again.");
+                console.error(`Room ${codeToJoin} does not exist.`);
+                return;
+            }
+
+            const data = roomSnap.data();
+            if (data.status === "playing") {
+                setError("Game is already in progress. Cannot join.");
+                console.error(`Game in room ${codeToJoin} is already in progress.`);
+                return;
+            }
+
+            // Check if user is already in the lobby
+            const playerExists = data.players.find(p => p.uid === user.uid);
+            if (playerExists) {
+                console.log("Player already in lobby, rejoining...");
+            } else {
+                const newPlayer = { uid: user.uid, nickname: playerNickname, score: 0 };
+                await updateDoc(roomRef, {
+                    players: arrayUnion(newPlayer)
+                });
+                console.log(`Player ${playerNickname} successfully joined room ${codeToJoin}`);
+            }
+
+
+            setRoomCode(codeToJoin);
+            setView("waiting");
+        } catch (e) {
+            console.error("Error joining room:", e);
+            setError("Failed to join room. Please try again.");
         }
-
-        const data = roomSnap.data();
-        if (data.status === "playing") {
-            setError("Game is already in progress. Cannot join.");
-            return;
-        }
-
-        const newPlayer = { uid: user.uid, nickname: playerNickname, score: 0 };
-        await updateDoc(roomRef, {
-            players: arrayUnion(newPlayer)
-        });
-
-        setRoomCode(codeToJoin);
-        setView("waiting");
     };
 
     const handleStartGame = async () => {
         if (!roomData) return;
 
         const category = roomData.category;
-        const question = QUESTIONS[category][Math.floor(Math.random() * QUESTIONS[category].length)];
+        const qBank = QUESTIONS[category];
+
+        if (!qBank || qBank.length === 0) {
+            setError(`No questions available for the "${category}" category.`);
+            return;
+        }
+
+        // Get a random question that hasn't been played yet in this session
+        const playedQuestions = roomData.playedQuestions || [];
+        const availableQuestions = qBank.filter(q => !playedQuestions.includes(q.id));
+
+        if (availableQuestions.length === 0) {
+            // All questions have been played, reset or notify
+            // For now, let's just allow re-playing questions
+            console.warn("All questions for this category have been played. Resetting played questions.");
+            playedQuestions.length = 0; // Reset
+        }
+
+
+        const question = availableQuestions.length > 0
+            ? availableQuestions[Math.floor(Math.random() * availableQuestions.length)]
+            : qBank[Math.floor(Math.random() * qBank.length)];
+
 
         const roomRef = doc(db, "rooms", roomCode);
         await updateDoc(roomRef, {
@@ -144,12 +219,38 @@ export default function Lobby({ user, onOpenSidebar, onLogout }) {
             category: newCategory
         });
     };
+    const leaveLobby = async () => {
+        if (isHost) {
+            // If host leaves, delete the entire room
+            const roomRef = doc(db, "rooms", roomCode);
+            await deleteDoc(roomRef);
+        } else {
+            // If a player leaves, remove them from the players list
+            const roomRef = doc(db, "rooms", roomCode);
+            const updatedPlayers = roomData.players.filter(p => p.uid !== user.uid);
+            await updateDoc(roomRef, { players: updatedPlayers });
+        }
+        setRoomCode("");
+        setRoomData(null);
+        setView("select");
+        setError("");
+    };
+
+    
 
     if (gameStarted && roomData) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7] flex items-center justify-center p-4">
-                <div className="text-white text-2xl">Game Started! (MultiplayerGame component would render here)</div>
-            </div>
+            <MultiplayerGame
+                user={user}
+                roomCode={roomCode}
+                roomData={roomData}
+                onLeave={() => {
+                    setGameStarted(false);
+                    setView("select");
+                    setRoomCode("");
+                    setRoomData(null);
+                }}
+            />
         );
     }
 
@@ -249,24 +350,12 @@ export default function Lobby({ user, onOpenSidebar, onLogout }) {
                         </div>
                     </div>
 
-                    {/* Logout Button */}
-                    <motion.button
-                        onClick={onLogout}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="relative group"
-                    >
-                        <div className="absolute inset-0 bg-red-500 rounded-lg blur-md opacity-50 group-hover:opacity-75 transition-opacity" />
-                        <div className="relative bg-gradient-to-br from-red-500 to-red-600 text-white px-5 py-2 rounded-lg flex items-center gap-2 border border-red-400/30 font-bold text-sm shadow-lg">
-                            <LogOut className="w-4 h-4" />
-                            Logout
-                        </div>
-                    </motion.button>
+
                 </motion.div>
 
                 {/* Main Content - Non-scrollable */}
-                <div className="flex-1 flex items-center justify-center">
-                    <div className="w-full max-w-5xl py-4">
+                <div className="flex-1 flex items-center justify-center p-4">
+                    <div className="w-full max-w-5xl">
                         {/* SELECT VIEW */}
                         {view === "select" && (
                             <RoomSelection
@@ -287,6 +376,7 @@ export default function Lobby({ user, onOpenSidebar, onLogout }) {
                                 user={user}
                                 onStartGame={handleStartGame}
                                 onCategoryChange={handleCategoryChange}
+                                leaveLobby={leaveLobby}
                             />
                         )}
 
@@ -296,6 +386,7 @@ export default function Lobby({ user, onOpenSidebar, onLogout }) {
                                 roomCode={roomCode}
                                 roomData={roomData}
                                 user={user}
+                                leaveLobby={leaveLobby}
                             />
                         )}
                     </div>

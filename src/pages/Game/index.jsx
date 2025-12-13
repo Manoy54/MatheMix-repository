@@ -2,8 +2,8 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Calculator, Sparkles, Flame, Trophy, Brain, AlertCircle, Menu } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { QUESTIONS } from '../data.js';
-import Keyboard from '../components/Keyboard.jsx';
+import { QUESTIONS } from '../../data.js';
+import Keyboard from '../../components/Keyboard.jsx';
 
 export default function Game({ onGameEnd, onOpenSidebar }) {
     const location = useLocation();

@@ -1,15 +1,15 @@
 // src/App.jsx
-
+// NAG GANA
 import React, { useState, useEffect } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Menu } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 // Pages
-import Game from "./pages/Game.jsx";
+import Game from "./pages/Game";
 import Lobby from "./pages/multiplayer/Lobby.jsx";
-import ModeSelect from "./pages/ModeSelect.jsx";
-import LoginPage from "./pages/LoginPage.jsx";
+import ModeSelect from "./pages/ModeSelect";
+import LoginPage from "./pages/LoginPage";
 import CategorySelect from "./pages/CategorySelect.jsx";
 
 // Components

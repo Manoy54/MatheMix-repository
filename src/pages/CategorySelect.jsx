@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Background3D from '../components/Background3D.jsx';
 import {
-    Calculator, Sparkles, Ruler, PieChart, Flame, Info, Menu, LogOut,
+    Calculator, Sparkles, Ruler, PieChart, Flame, Info, Menu,
     // Math Symbols
     Plus, Minus, X, Divide,
     // Geometry Symbols
@@ -14,7 +14,7 @@ import {
     BarChart, LineChart, TrendingUp, Percent
 } from 'lucide-react';
 
-export default function CategorySelect({ username, onLogout, onOpenSidebar }) {
+export default function CategorySelect({ username, onOpenSidebar }) {
     const navigate = useNavigate();
     const [hoveredCategory, setHoveredCategory] = useState(null);
 
@@ -108,18 +108,7 @@ export default function CategorySelect({ username, onLogout, onOpenSidebar }) {
                             </h1>
                         </div>
                     </div>
-                    <motion.button
-                        onClick={onLogout}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="relative group"
-                    >
-                        <div className="absolute inset-0 bg-red-500 rounded-lg blur-md opacity-50 group-hover:opacity-75 transition-opacity" />
-                        <div className="relative bg-gradient-to-br from-red-500 to-red-600 text-white px-5 py-2 rounded-lg flex items-center gap-2 border border-red-400/30 font-bold text-sm shadow-lg">
-                            <LogOut className="w-4 h-4" />
-                            Logout
-                        </div>
-                    </motion.button>
+
                 </motion.div>
 
                 {/* Centered Content */}

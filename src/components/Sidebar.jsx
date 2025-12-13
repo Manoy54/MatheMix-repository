@@ -82,7 +82,7 @@ export function Sidebar({ isOpen, onClose, onLogout, username }) {
                             </div>
 
                             {/* Navigation Sections */}
-                            <div className="flex-1 overflow-y-auto p-4 space-y-6">
+                            <div className="flex-1 p-4 space-y-6">
                                 {/* Core Navigation */}
                                 <div>
                                     <h3 className="text-cyan-200 text-xs uppercase tracking-wider px-3 mb-3 font-semibold">Navigation</h3>

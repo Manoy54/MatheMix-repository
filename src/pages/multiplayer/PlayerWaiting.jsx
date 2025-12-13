@@ -1,6 +1,6 @@
-import { Users } from 'lucide-react';
+import { Users, LogOut } from 'lucide-react';
 
-export default function PlayerWaiting({ roomCode, roomData, user }) {
+export default function PlayerWaiting({ roomCode, roomData, user, leaveLobby }) {
     return (
         <div className="bg-gradient-to-br from-white/25 via-white/20 to-white/15 backdrop-blur-2xl rounded-3xl border-2 border-white/40 shadow-2xl p-8 animate-scale-in">
             <div className="text-center mb-6">
@@ -32,7 +32,7 @@ export default function PlayerWaiting({ roomCode, roomData, user }) {
             </div>
 
             {/* Waiting Message */}
-            <div className="relative animate-pulse">
+            <div className="relative animate-pulse mb-6">
                 <div className="absolute inset-0 bg-yellow-400/20 rounded-xl blur-lg" />
                 <div className="relative bg-yellow-300/30 backdrop-blur-sm p-6 rounded-xl border-2 border-yellow-200/50 text-center">
                     <p className="text-yellow-100 text-2xl" style={{ fontWeight: 700 }}>
@@ -40,6 +40,16 @@ export default function PlayerWaiting({ roomCode, roomData, user }) {
                     </p>
                 </div>
             </div>
+
+            {/* Leave Lobby Button */}
+            <button
+                onClick={leaveLobby}
+                className="w-full py-4 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white rounded-xl shadow-lg shadow-red-500/40 transition-all border-2 border-red-300/50 flex items-center justify-center gap-2 text-lg hover:scale-105 hover:translate-y-[-2px] active:scale-95"
+                style={{ fontWeight: 700 }}
+            >
+                <LogOut className="w-6 h-6" />
+                Leave Lobby
+            </button>
         </div>
     );
 }

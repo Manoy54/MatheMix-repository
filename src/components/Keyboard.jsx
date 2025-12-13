@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Check } from 'lucide-react';
 
 export default function Keyboard({ onChar, onDelete, onClear, onSpace, onSubmit, onSkip, pressedKey }) {
     const row1 = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '-'];
@@ -83,13 +84,14 @@ export default function Keyboard({ onChar, onDelete, onClear, onSpace, onSubmit,
                             y: pressedKey === 'ENTER' ? -2 : 0,
                         }}
                         onClick={onSubmit}
-                        className={`flex-1 h-12 text-white text-sm rounded-xl shadow-xl transition-all border-2 font-semibold ${
+                        className={`flex-1 h-12 text-white text-sm rounded-xl shadow-xl transition-all border-2 font-semibold flex items-center justify-center gap-2 ${
                             pressedKey === 'ENTER'
                                 ? 'bg-gradient-to-r from-green-400 to-emerald-500 border-green-200 shadow-green-400/60'
                                 : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 border-green-300/50 shadow-green-500/40'
                         }`}
                     >
-                        SUBMIT ✓
+                        <span>SUBMIT</span>
+                        <Check className="w-5 h-5" strokeWidth={3} />
                     </motion.button>
                 </div>
             </div>
