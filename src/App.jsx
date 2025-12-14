@@ -1,6 +1,5 @@
 // src/App.jsx
-// NAG GANA
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Menu } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -11,9 +10,11 @@ import Lobby from "./pages/multiplayer/Lobby.jsx";
 import ModeSelect from "./pages/ModeSelect";
 import LoginPage from "./pages/LoginPage";
 import CategorySelect from "./pages/CategorySelect.jsx";
+const Stats = lazy(() => import("./pages/Stats.jsx"));
 
 // Components
 import { Sidebar } from "./components/Sidebar.jsx";
+import AnimatedBackground from "./components/AnimatedBackground.jsx";
 
 import { auth, db } from "./firebaseConfig.js";
 import { onAuthStateChanged, signOut } from "firebase/auth";
@@ -28,10 +29,7 @@ function App() {
     const [currentUser, setCurrentUser] = useState(null);
     const [username, setUsername] = useState("");
     const [loading, setLoading] = useState(true);
-
-    // Sidebar Control State
     const [isSidebarOpen, setSidebarOpen] = useState(false);
-
     const location = useLocation();
 
     useEffect(() => {
@@ -55,55 +53,35 @@ function App() {
 
     const handleLogout = async () => {
         await signOut(auth);
-        setSidebarOpen(false); // Close sidebar on logout
-    };
-
-    const handleSoloGameEnd = async (didWin) => {
-        // Logic handled in Game.jsx usually
+        setSidebarOpen(false);
     };
 
     if (loading) {
         return (
-            <div className="bg-[#023e8a] text-white min-h-screen p-4 flex justify-center items-center font-sans">
+            <div className="bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7] text-white min-h-screen p-4 flex justify-center items-center font-sans">
                 <h2 className="text-2xl">Loading Mathemix...</h2>
             </div>
         );
     }
 
-    // List of pages that handle their own full-screen layout
-    const fullScreenRoutes = [
-        "/",
-        "/mode-select",
-        "/category-select",
-        "/lobby",
-        "/game"
-    ];
-
+    const fullScreenRoutes = ["/", "/mode-select", "/category-select", "/lobby", "/game", "/stats"];
     const isFullScreen = fullScreenRoutes.includes(location.pathname);
     const isLoginPage = location.pathname === "/";
-
-    // NEW: Check if we are specifically in the lobby, mode select, category select, or game screens
-    // These screens have their own internal sidebar toggle buttons
-    const isLobbyOrModeSelect = location.pathname === "/lobby" || location.pathname === "/mode-select" || location.pathname === "/category-select" || location.pathname === "/game";
+    const hasOwnSidebarButton = ["/lobby", "/mode-select", "/category-select", "/game"].includes(location.pathname);
 
     return (
-        <div className={isFullScreen ? "font-nunito min-h-screen w-full relative" : "bg-[#023e8a] text-white min-h-screen p-4 font-sans relative"}>
+        <div className="font-nunito min-h-screen w-full relative bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]">
+            {location.pathname !== "/" && <AnimatedBackground />}
 
-            {/* --- SIDEBAR SYSTEM --- */}
             {!isLoginPage && currentUser && (
                 <>
-                    {/* The Sidebar Component */}
                     <Sidebar
                         isOpen={isSidebarOpen}
                         onClose={() => setSidebarOpen(false)}
                         onLogout={handleLogout}
                         username={username}
                     />
-
-                    {/* FLOATING MENU BUTTON */}
-                    {/* CHANGE: We hide this floating button on lobby, mode-select, category-select, and game
-                        because they now have their own integrated buttons. */}
-                    {!isLobbyOrModeSelect && (
+                    {!hasOwnSidebarButton && (
                         <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
@@ -116,69 +94,15 @@ function App() {
                 </>
             )}
 
-            <div className={isFullScreen ? "w-full h-full" : "max-w-4xl mx-auto text-center"}>
-
-                {/* Routes */}
+            <div className={`relative z-10 ${isFullScreen ? "w-full h-full" : "max-w-6xl mx-auto p-4"}`}>
                 <Routes>
-                    <Route
-                        path="/"
-                        element={currentUser ? <Navigate to="/mode-select" /> : <LoginPage />}
-                    />
-
-                    <Route
-                        path="/mode-select"
-                        element={
-                            <ProtectedRoute user={currentUser}>
-                                <ModeSelect
-                                    username={username}
-                                    onLogout={handleLogout}
-                                    onOpenSidebar={() => setSidebarOpen(true)}
-                                />
-                            </ProtectedRoute>
-                        }
-                    />
-
-                    <Route
-                        path="/category-select"
-                        element={
-                            <ProtectedRoute user={currentUser}>
-                                <CategorySelect
-                                    username={username}
-                                    onLogout={handleLogout}
-                                    onOpenSidebar={() => setSidebarOpen(true)}
-                                />
-                            </ProtectedRoute>
-                        }
-                    />
-
-                    <Route
-                        path="/game"
-                        element={
-                            <ProtectedRoute user={currentUser}>
-                                <Game
-                                    onGameEnd={handleSoloGameEnd}
-                                    onOpenSidebar={() => setSidebarOpen(true)}
-                                    onLogout={handleLogout}
-                                />
-                            </ProtectedRoute>
-                        }
-                    />
-
-                    <Route
-                        path="/lobby"
-                        element={
-                            <ProtectedRoute user={currentUser}>
-                                {/* CHANGE: We pass 'onOpenSidebar' function down to Lobby */}
-                                <Lobby
-                                    user={currentUser}
-                                    onOpenSidebar={() => setSidebarOpen(true)}
-                                    onLogout={handleLogout}
-                                />
-                            </ProtectedRoute>
-                        }
-                    />
+                    <Route path="/" element={currentUser ? <Navigate to="/mode-select" /> : <LoginPage />} />
+                    <Route path="/mode-select" element={<ProtectedRoute user={currentUser}><ModeSelect username={username} onLogout={handleLogout} onOpenSidebar={() => setSidebarOpen(true)} /></ProtectedRoute>} />
+                    <Route path="/category-select" element={<ProtectedRoute user={currentUser}><CategorySelect username={username} onLogout={handleLogout} onOpenSidebar={() => setSidebarOpen(true)} /></ProtectedRoute>} />
+                    <Route path="/game" element={<ProtectedRoute user={currentUser}><Game onGameEnd={() => { }} onOpenSidebar={() => setSidebarOpen(true)} /></ProtectedRoute>} />
+                    <Route path="/lobby" element={<ProtectedRoute user={currentUser}><Lobby user={currentUser} onOpenSidebar={() => setSidebarOpen(true)} onLogout={handleLogout} /></ProtectedRoute>} />
+                    <Route path="/stats" element={<ProtectedRoute user={currentUser}><Suspense fallback={<div className="text-white text-center">Loading Stats...</div>}><Stats user={currentUser} /></Suspense></ProtectedRoute>} />
                 </Routes>
-
             </div>
         </div>
     );

@@ -12,20 +12,15 @@ import {
     getDocs,
     deleteDoc,
 } from 'firebase/firestore';
-import { db } from '../../firebaseConfig';
+import { db } from '../../firebaseConfig.js';
 import MultiplayerGame from '../../components/MultiplayerGame';
 import { motion } from 'framer-motion';
 import { Menu, Calculator, Sparkles } from 'lucide-react';
 import RoomSelection from './RoomSelection';
 import HostLobby from './HostLobby';
 import PlayerWaiting from './PlayerWaiting';
+import { QUESTIONS } from '../../data.js';
 
-
-const QUESTIONS = {
-    "Number & Algebra": [],
-    "Geometry": [],
-    "Statistics": []
-};
 
 const generateRoomCode = () => {
     return Math.random().toString(36).substring(2, 7).toUpperCase();
@@ -100,7 +95,7 @@ export default function Lobby({ user, onOpenSidebar }) {
             newRoomCode = generateRoomCode();
             roomExists = await checkRoomExists(newRoomCode);
         }
-        
+
         console.log("Generated new room code:", newRoomCode);
 
         setRoomCode(newRoomCode);
@@ -236,7 +231,7 @@ export default function Lobby({ user, onOpenSidebar }) {
         setError("");
     };
 
-    
+
 
     if (gameStarted && roomData) {
         return (
@@ -250,7 +245,9 @@ export default function Lobby({ user, onOpenSidebar }) {
                     setRoomCode("");
                     setRoomData(null);
                 }}
+                onOpenSidebar={onOpenSidebar}
             />
+
         );
     }
 

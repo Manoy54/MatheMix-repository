@@ -45,12 +45,36 @@ function LoginPage() {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
                 await updateProfile(user, { displayName: username });
+                // 1. Create User Profile
                 await setDoc(doc(db, "users", user.uid), {
                     username: username,
                     email: email,
                     birthday: `${bMonth}/${bDay}/${bYear}`,
-                    longestStreak: 0,
                 });
+
+                // 2. Initialize User Stats (in separate collection)
+                await setDoc(doc(db, "userStats", user.uid), {
+                    totalGames: 0,
+                    totalWins: 0,
+                    totalPlayTime: 0,
+                    accuracy: 0,
+                    longestStreak: 0,
+                    totalQuestions: 0,
+                    avgAnswerTime: 0,
+                    fastestAnswer: 0,
+                    mastery: {
+                        algebra: 0,
+                        geometry: 0,
+                        statistics: 0
+                    },
+                    categoryCounts: {
+                        algebra: { total: 0, correct: 0 },
+                        geometry: { total: 0, correct: 0 },
+                        statistics: { total: 0, correct: 0 }
+                    },
+                    recentGames: []
+                });
+
                 setMessage("Account created! Logging you in...");
             } catch (firebaseError) {
                 setError(firebaseError.message);
