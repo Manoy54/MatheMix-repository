@@ -15,6 +15,7 @@ const Stats = lazy(() => import("./pages/Stats.jsx"));
 // Components
 import { Sidebar } from "./components/Sidebar.jsx";
 import AnimatedBackground from "./components/AnimatedBackground.jsx";
+import LoadingScreen from "./components/LoadingScreen.jsx";
 
 import { auth, db } from "./firebaseConfig.js";
 import { onAuthStateChanged, signOut } from "firebase/auth";
@@ -57,11 +58,7 @@ function App() {
     };
 
     if (loading) {
-        return (
-            <div className="bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7] text-white min-h-screen p-4 flex justify-center items-center font-sans">
-                <h2 className="text-2xl">Loading Mathemix...</h2>
-            </div>
-        );
+        return <LoadingScreen />;
     }
 
     const fullScreenRoutes = ["/", "/mode-select", "/category-select", "/lobby", "/game", "/stats"];

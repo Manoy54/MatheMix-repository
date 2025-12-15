@@ -1,47 +1,60 @@
 // src/components/ui/Background3D.jsx
 
-import React, { useMemo, useRef, useState, Suspense } from "react";
+import React, { useMemo, useRef, useState, Suspense, useEffect } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Text3D, Center } from "@react-three/drei";
 import * as THREE from "three";
 
 const symbols = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "+", "-", "%", "π", "÷", "×", "∑", "√"];
 
+function LoadSignal({ onLoaded }) {
+    useEffect(() => {
+        if (onLoaded) onLoaded();
+    }, [onLoaded]);
+    return null;
+}
+
 function Particle({ symbol, position }) {
     const ref = useRef();
-    const { viewport } = useThree();
 
-    const [initialRotation] = useState(() => new THREE.Euler(0, 0, Math.random() * Math.PI * 2));
-    const [velocity] = useState(() => new THREE.Vector3((Math.random() - 0.5) * 0.015, (Math.random() - 0.5) * 0.015, 0));
-    const [rotationSpeed] = useState(() => new THREE.Vector3(0, 0, (Math.random() - 0.5) * 0.01));
+    // Store random animation data once
+    const [randomData] = useState(() => ({
+        phaseX: Math.random() * Math.PI * 2,
+        phaseY: Math.random() * Math.PI * 2,
+        speedX: 0.2 + Math.random() * 0.3,
+        speedY: 0.2 + Math.random() * 0.3,
+        ampX: 0.5 + Math.random() * 0.5,
+        ampY: 0.5 + Math.random() * 0.5,
+        initialRotation: new THREE.Euler(0, 0, Math.random() * Math.PI * 2),
+        rotationSpeed: (Math.random() - 0.5) * 0.005
+    }));
 
     useFrame((state) => {
         if (!ref.current) return;
 
-        ref.current.position.add(velocity);
-        ref.current.rotation.z += rotationSpeed.z;
+        const t = state.clock.getElapsedTime();
+
+        // Floating motion anchored to initial position (prevents drifting away)
+        ref.current.position.x = position.x + Math.sin(t * randomData.speedX + randomData.phaseX) * randomData.ampX;
+        ref.current.position.y = position.y + Math.cos(t * randomData.speedY + randomData.phaseY) * randomData.ampY;
+        ref.current.rotation.z += randomData.rotationSpeed;
 
         // Mouse Interaction
         const x = (state.pointer.x * state.viewport.width) / 2;
         const y = (state.pointer.y * state.viewport.height) / 2;
-        const dist = Math.sqrt(Math.pow(x - ref.current.position.x, 2) + Math.pow(y - ref.current.position.y, 2));
+        // Optimization: Dist squared check
+        const dx = x - ref.current.position.x;
+        const dy = y - ref.current.position.y;
+        const distSq = dx * dx + dy * dy;
 
-        const isNear = dist < 4;
+        const isNear = distSq < 16; // 4^2
         const targetScale = isNear ? 2 : 0.8;
 
         ref.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.1);
-
-        const halfWidth = viewport.width / 2 + 2;
-        const halfHeight = viewport.height / 2 + 2;
-
-        if (ref.current.position.x > halfWidth) ref.current.position.x = -halfWidth;
-        if (ref.current.position.x < -halfWidth) ref.current.position.x = halfWidth;
-        if (ref.current.position.y > halfHeight) ref.current.position.y = -halfHeight;
-        if (ref.current.position.y < -halfHeight) ref.current.position.y = halfHeight;
     });
 
     return (
-        <mesh ref={ref} position={position} rotation={initialRotation}>
+        <mesh ref={ref} position={position} rotation={randomData.initialRotation}>
             <Center>
                 <Text3D
                     font="/helvetiker_regular.typeface.json"
@@ -60,24 +73,30 @@ function Particles() {
 
     const particlesData = useMemo(() => {
         const data = [];
-        const cols = Math.floor(viewport.width / 2);
-        const rows = Math.floor(viewport.height / 2);
-        const offsetX = viewport.width / 2;
-        const offsetY = viewport.height / 2;
+        const spacing = 2; // Decreased spacing for higher density
+        // Calculate columns/rows relative to spacing to cover the viewport + margins
+        const cols = Math.ceil(viewport.width / spacing) + 2;
+        const rows = Math.ceil(viewport.height / spacing) + 2;
+
+        const startX = -((cols - 1) * spacing) / 2;
+        const startY = -((rows - 1) * spacing) / 2;
+
         let symbolIndex = 0;
 
         for (let i = 0; i < cols; i++) {
             for (let j = 0; j < rows; j++) {
-                let x = (i / cols) * viewport.width - offsetX + (viewport.width / cols) / 2;
-                let y = (j / rows) * viewport.height - offsetY + (viewport.height / rows) / 2;
-                x += (Math.random() - 0.5) * 1.5;
-                y += (Math.random() - 0.5) * 1.5;
-                const z = (Math.random() - 0.5) * 5;
+                // Fixed grid position
+                const x = startX + i * spacing;
+                const y = startY + j * spacing;
+
+                // Add moderate jitter to avoid rigid grid look
+                const jitterX = (Math.random() - 0.5) * 1.5;
+                const jitterY = (Math.random() - 0.5) * 1.5;
 
                 data.push({
-                    id: `${i}-${j}`,
+                    id: `${i}-${j}`, // Stable ID system for grid
                     symbol: symbols[symbolIndex % symbols.length],
-                    position: new THREE.Vector3(x, y, z)
+                    position: new THREE.Vector3(x + jitterX, y + jitterY, (Math.random() - 0.5) * 2)
                 });
                 symbolIndex++;
             }
@@ -94,7 +113,7 @@ function Particles() {
     );
 }
 
-export default function Background3D() {
+const Background3D = React.memo(function Background3D({ onLoaded }) {
     return (
         <div className="absolute inset-0 w-full h-full z-0">
             <Canvas
@@ -107,8 +126,11 @@ export default function Background3D() {
                     <ambientLight intensity={1.5} />
                     <pointLight position={[10, 10, 10]} intensity={2.5} />
                     <Particles />
+                    <LoadSignal onLoaded={onLoaded} />
                 </Suspense>
             </Canvas>
         </div>
     );
-}
+});
+
+export default Background3D;
