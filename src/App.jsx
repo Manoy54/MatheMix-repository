@@ -10,6 +10,7 @@ import Lobby from "./pages/multiplayer/Lobby.jsx";
 import ModeSelect from "./pages/ModeSelect";
 import LoginPage from "./pages/LoginPage";
 import CategorySelect from "./pages/CategorySelect.jsx";
+import Admin from "./pages/Admin.jsx";
 const Stats = lazy(() => import("./pages/Stats.jsx"));
 
 // Components
@@ -61,7 +62,7 @@ function App() {
         return <LoadingScreen />;
     }
 
-    const fullScreenRoutes = ["/", "/mode-select", "/category-select", "/lobby", "/game", "/stats"];
+    const fullScreenRoutes = ["/", "/mode-select", "/category-select", "/lobby", "/game", "/stats", "/admin"];
     const isFullScreen = fullScreenRoutes.includes(location.pathname);
     const isLoginPage = location.pathname === "/";
     const hasOwnSidebarButton = ["/lobby", "/mode-select", "/category-select", "/game"].includes(location.pathname);
@@ -70,7 +71,7 @@ function App() {
         <div className="font-nunito min-h-screen w-full relative bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]">
             {location.pathname !== "/" && <AnimatedBackground />}
 
-            {!isLoginPage && currentUser && (
+            {!isLoginPage && location.pathname !== "/admin" && currentUser && (
                 <>
                     <Sidebar
                         isOpen={isSidebarOpen}
@@ -98,6 +99,7 @@ function App() {
                     <Route path="/category-select" element={<ProtectedRoute user={currentUser}><CategorySelect username={username} onLogout={handleLogout} onOpenSidebar={() => setSidebarOpen(true)} /></ProtectedRoute>} />
                     <Route path="/game" element={<ProtectedRoute user={currentUser}><Game onGameEnd={() => { }} onOpenSidebar={() => setSidebarOpen(true)} /></ProtectedRoute>} />
                     <Route path="/lobby" element={<ProtectedRoute user={currentUser}><Lobby user={currentUser} onOpenSidebar={() => setSidebarOpen(true)} onLogout={handleLogout} /></ProtectedRoute>} />
+                    <Route path="/admin" element={<ProtectedRoute user={currentUser}><Admin username={username} onLogout={handleLogout} /></ProtectedRoute>} />
                     <Route path="/stats" element={<ProtectedRoute user={currentUser}><Suspense fallback={<div className="text-white text-center">Loading Stats...</div>}><Stats user={currentUser} /></Suspense></ProtectedRoute>} />
                 </Routes>
             </div>

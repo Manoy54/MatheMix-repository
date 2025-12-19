@@ -1,10 +1,12 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutGrid, Gamepad2, Trophy, BarChart3, Award, Settings, HelpCircle, LogOut, X } from 'lucide-react';
+import { LayoutGrid, Gamepad2, Trophy, BarChart3, Award, Settings, HelpCircle, LogOut, X, Menu } from 'lucide-react';
 
-export function Sidebar({ isOpen, onClose, onLogout, username }) {
+export function Sidebar({ isOpen, onClose, onOpen, onLogout, username, showBackdrop = true }) {
     const navigate = useNavigate();
+    const location = useLocation();
+    const isAdminRoute = location.pathname.startsWith('/admin');
 
     const handleNavigation = (path) => {
         navigate(path);
@@ -29,17 +31,19 @@ export function Sidebar({ isOpen, onClose, onLogout, username }) {
     };
 
     return (
-        <AnimatePresence initial={false}>
+        <AnimatePresence mode="wait">
             {isOpen && (
-                <>
+                <div key="full-sidebar">
                     {/* Backdrop */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={onClose}
-                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
-                    />
+                    {showBackdrop && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={onClose}
+                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+                        />
+                    )}
 
                     {/* Sidebar */}
                     <motion.aside
@@ -52,7 +56,7 @@ export function Sidebar({ isOpen, onClose, onLogout, username }) {
                             duration: 0.24
                         }}
                         style={{ willChange: 'transform' }}
-                        className="fixed left-0 top-0 h-full w-80 z-50"
+                        className="fixed left-0 top-0 h-full w-80 z-50 flex flex-col"
                     >
                         {/* Glowing background effects */}
                         <div className="absolute inset-0 bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7] opacity-95" />
@@ -72,17 +76,19 @@ export function Sidebar({ isOpen, onClose, onLogout, username }) {
                                         </h2>
                                         <p className="text-white/60 text-sm mt-1">Control Center</p>
                                     </div>
-                                    <motion.button
-                                        whileHover={{ scale: 1.1, rotate: 90 }}
-                                        whileTap={{ scale: 0.9 }}
-                                        onClick={onClose}
-                                        className="relative group"
-                                    >
-                                        <div className="absolute inset-0 bg-white/20 rounded-xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
-                                        <div className="relative bg-white/20 p-2 rounded-xl border-2 border-white/30 hover:bg-white/30 transition-all">
-                                            <X className="w-5 h-5 text-white" />
-                                        </div>
-                                    </motion.button>
+                                    {!isAdminRoute && (
+                                        <motion.button
+                                            whileHover={{ scale: 1.1, rotate: 90 }}
+                                            whileTap={{ scale: 0.9 }}
+                                            onClick={onClose}
+                                            className="relative group"
+                                        >
+                                            <div className="absolute inset-0 bg-white/20 rounded-xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
+                                            <div className="relative bg-white/20 p-2 rounded-xl border-2 border-white/30 hover:bg-white/30 transition-all">
+                                                <X className="w-5 h-5 text-white" />
+                                            </div>
+                                        </motion.button>
+                                    )}
                                 </div>
                             </div>
 
@@ -173,7 +179,7 @@ export function Sidebar({ isOpen, onClose, onLogout, username }) {
                             </div>
                         </div>
                     </motion.aside>
-                </>
+                </div>
             )}
         </AnimatePresence>
     );
