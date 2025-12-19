@@ -1,16 +1,56 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Calculator, Zap } from 'lucide-react';
+import { useLoading } from '../context/LoadingContext';
 
 const LoadingScreen = () => {
+    const { isModeDataReady, isBg3DReady, markAsFinished } = useLoading();
+    const [progress, setProgress] = useState(0);
+    const progressRef = useRef(0);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            let targetProgress = progressRef.current;
+
+            if (!isModeDataReady) {
+                // Cap at 60 until mode data is ready
+                if (targetProgress < 60) {
+                    targetProgress += 0.5;
+                }
+            } else if (!isBg3DReady) {
+                // Cap at 95 until background is ready
+                if (targetProgress < 95) {
+                    targetProgress += 0.3;
+                } else {
+                    targetProgress = 95;
+                }
+                // Ensure we at least reached 60 if data is ready
+                if (targetProgress < 60) targetProgress = 60;
+            } else {
+                // Everything ready, push to 100
+                targetProgress += 2;
+                if (targetProgress > 100) {
+                    targetProgress = 100;
+                    clearInterval(interval);
+                    // Add a tiny delay before finishing to show 100%
+                    setTimeout(markAsFinished, 500);
+                }
+            }
+
+            progressRef.current = targetProgress;
+            setProgress(targetProgress);
+        }, 30);
+
+        return () => clearInterval(interval);
+    }, [isModeDataReady, isBg3DReady, markAsFinished]);
+
     return (
         <motion.div
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="fixed inset-0 z-50 bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7] flex flex-col items-center justify-center text-white overflow-hidden"
+            transition={{ duration: 0.8, ease: "easeInOut" }}
+            className="fixed inset-0 z-[100] bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7] flex flex-col items-center justify-center text-white overflow-hidden"
         >
-
             {/* Background geometric shapes for depth */}
             <motion.div
                 className="absolute top-1/4 left-1/4 w-64 h-64 bg-white/5 rounded-full blur-3xl"
@@ -73,16 +113,26 @@ const LoadingScreen = () => {
                     </h2>
 
                     {/* Loading Bar */}
-                    <div className="w-64 h-2 bg-black/20 rounded-full overflow-hidden backdrop-blur-sm mt-4">
+                    <div className="w-64 h-3 bg-black/20 rounded-full overflow-hidden backdrop-blur-sm mt-4 border border-white/10 relative">
                         <motion.div
-                            className="h-full bg-yellow-400"
+                            className="h-full bg-gradient-to-r from-yellow-400 to-yellow-200"
                             initial={{ width: "0%" }}
-                            animate={{ width: "100%" }}
-                            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                            animate={{ width: `${progress}%` }}
+                            transition={{ duration: 0.1 }}
                         />
                     </div>
 
-                    <p className="mt-4 text-white/60 text-sm font-medium">Preparing your math adventure</p>
+                    <motion.p
+                        className="mt-2 text-yellow-300/80 text-xs font-black tracking-widest uppercase"
+                        animate={{ opacity: [0.5, 1, 0.5] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                    >
+                        {Math.round(progress)}%
+                    </motion.p>
+
+                    <p className="mt-4 text-white/60 text-sm font-medium">
+                        {!isModeDataReady ? "Fetching game data..." : !isBg3DReady ? "Initializing 3D environment..." : "Finalizing adventure..."}
+                    </p>
                 </motion.div>
             </div>
         </motion.div>

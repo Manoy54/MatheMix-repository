@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Calculator, Sparkles, Flame, Trophy, Brain, AlertCircle, Menu, RotateCcw, Home } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -6,19 +6,21 @@ import { QUESTIONS } from '../data.js';
 import Keyboard from '../components/Keyboard.jsx';
 import { auth, db } from '../firebaseConfig.js';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { useMobile } from '../hooks/useMobile.jsx';
 
 export default function Game({ onGameEnd, onOpenSidebar }) {
+    const isMobile = useMobile();
     const location = useLocation();
     const navigate = useNavigate();
 
     // --- 1. Get Category & Questions ---
     const category = location.state?.category || "Number & Algebra";
-    const categoryQuestions = QUESTIONS[category] || [];
+    const categoryQuestions = useMemo(() => QUESTIONS[category] || [], [category]);
 
-    const getRandomQuestion = () => {
+    const getRandomQuestion = useCallback(() => {
         if (categoryQuestions.length === 0) return { definition: "No questions found.", answer: "ERROR" };
         return categoryQuestions[Math.floor(Math.random() * categoryQuestions.length)];
-    };
+    }, [categoryQuestions]);
 
     // --- 2. State Management ---
     const [currentQ, setCurrentQ] = useState(() => getRandomQuestion());
@@ -35,8 +37,8 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
     const [answerStatus, setAnswerStatus] = useState(null);
     const [pressedKey, setPressedKey] = useState(null);
 
-    const answer = currentQ.answer.toUpperCase();
-    const answerWithSpaces = answer.replace(/ /g, '');
+    const answer = useMemo(() => currentQ.answer.toUpperCase(), [currentQ.answer]);
+    const answerWithSpaces = useMemo(() => answer.replace(/ /g, ''), [answer]);
 
     const getMasteryKey = (cat) => {
         if (cat.includes("Algebra")) return "algebra";
@@ -119,16 +121,16 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
         setCurrentQ(getRandomQuestion());
         setInput('');
         setAnswerStatus(null);
-    }, []);
+    }, [getRandomQuestion]);
 
-    const resetGame = () => {
+    const resetGame = useCallback(() => {
         setIsGameOver(false);
         setStreak(0);
         setQuestionNumber(1);
         setAnswerStatus(null);
         setInput('');
         setCurrentQ(getRandomQuestion());
-    };
+    }, [getRandomQuestion]);
 
     const handleChar = useCallback((char) => {
         if (answerStatus || isGameOver) return;
@@ -169,7 +171,6 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
         } else {
             setAnswerStatus('wrong');
             const finalStreak = streak;
-            // setStreak(0); // Don't reset streak yet, show it in Game Over
             if (onGameEnd) onGameEnd(false);
             updateStats(false, finalStreak);
             setTimeout(() => {
@@ -185,7 +186,6 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
     const confirmGiveUp = () => {
         setShowGiveUpModal(false);
         const finalStreak = streak;
-        // setStreak(0); // Don't reset streak yet
         if (onGameEnd) onGameEnd(false);
         updateStats(false, finalStreak);
         const cleanAnswer = answer.replace(/ /g, '');
@@ -200,30 +200,49 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
         setShowGiveUpModal(false);
     };
 
-    // --- 4. Physical Keyboard ---
+    // --- 4. Physical Keyboard & Container Measurement ---
+    const containerRef = useRef(null);
+    const [containerWidth, setContainerWidth] = useState(0);
+
+    useEffect(() => {
+        if (!containerRef.current) return;
+
+        const observer = new ResizeObserver((entries) => {
+            for (let entry of entries) {
+                setContainerWidth(entry.contentRect.width);
+            }
+        });
+
+        observer.observe(containerRef.current);
+        return () => observer.disconnect();
+    }, []);
+
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (showGiveUpModal || isGameOver) return;
+
+            let keyToPress = null;
             if (e.key.length === 1 && (/[a-zA-Z]/.test(e.key) || e.key === '-')) {
-                const key = e.key.toUpperCase();
-                setPressedKey(key);
-                handleChar(key);
-                setTimeout(() => setPressedKey(null), 150);
+                keyToPress = e.key.toUpperCase();
+                handleChar(keyToPress);
             }
             else if (e.key === 'Backspace' || e.key === 'Delete') {
-                setPressedKey('DELETE');
+                keyToPress = 'DELETE';
                 handleDelete();
-                setTimeout(() => setPressedKey(null), 150);
             }
             else if (e.key === 'Enter') {
-                setPressedKey('ENTER');
+                keyToPress = 'ENTER';
                 handleSubmit();
-                setTimeout(() => setPressedKey(null), 150);
             }
             else if (e.key === 'Escape') {
-                setPressedKey('CLEAR');
+                keyToPress = 'CLEAR';
                 handleClear();
-                setTimeout(() => setPressedKey(null), 150);
+            }
+
+            if (keyToPress) {
+                setPressedKey(keyToPress);
+                const timer = setTimeout(() => setPressedKey(null), 150);
+                return () => clearTimeout(timer);
             }
         };
 
@@ -232,7 +251,7 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
     }, [handleChar, handleDelete, handleSubmit, handleClear, showGiveUpModal, isGameOver]);
 
     return (
-        <div className="px-4 py-3 h-screen flex flex-col">
+        <div className={`px-4 py-3 min-h-screen preserve-3d flex flex-col ${isMobile ? 'pb-[280px]' : ''}`}>
             <AnimatePresence>
                 {showGiveUpModal && (
                     <motion.div
@@ -448,70 +467,16 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
                             </p>
                         </div>
                     </motion.div>
-                    <motion.div
-                        initial={{ scale: 0.95, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ delay: 0.2 }}
-                        className="flex justify-center items-center gap-6 flex-wrap max-w-5xl mx-auto min-h-[80px]"
-                    >
-                        {(() => {
-                            const words = answer.split(' ');
-                            const inputCharsOnly = input.split('');
-                            let globalInputIndex = 0;
 
-                            return words.map((word, wordIndex) => (
-                                <div key={`word-${wordIndex}`} className="flex gap-2 items-center">
-                                    {word.split('').map((char, charIndex) => {
-                                        const inputChar = inputCharsOnly[globalInputIndex] || '';
-                                        const currentGlobalIndex = globalInputIndex;
-                                        globalInputIndex++;
-                                        const getAnimation = () => {
-                                            if (answerStatus === 'correct') {
-                                                return { scale: [1, 1.05, 1], rotate: [0, -2, 2, -2, 0] };
-                                            }
-                                            if (answerStatus === 'wrong') {
-                                                return { x: [0, -10, 10, -10, 10, 0] };
-                                            }
-                                            if (answerStatus === 'revealed') {
-                                                return {
-                                                    rotateX: [0, 90, 0], // Flip
-                                                    transition: { delay: currentGlobalIndex * 0.1, duration: 0.6 }
-                                                };
-                                            }
-                                            return { y: 0, x: 0, scale: 1, rotate: 0 };
-                                        };
+                    <CharacterBoxes
+                        containerRef={containerRef}
+                        answer={answer}
+                        input={input}
+                        answerStatus={answerStatus}
+                        isMobile={isMobile}
+                        containerWidth={containerWidth}
+                    />
 
-                                        const getBackgroundColor = () => {
-                                            if (answerStatus === 'correct') return 'bg-gradient-to-br from-green-400 to-emerald-500';
-                                            if (answerStatus === 'wrong') return 'bg-gradient-to-br from-red-400 to-red-600';
-                                            if (answerStatus === 'revealed') return 'bg-gradient-to-br from-orange-400 to-orange-600';
-                                            return 'bg-white/20';
-                                        };
-
-                                        return (
-                                            <motion.div
-                                                key={`${wordIndex}-${charIndex}`}
-                                                initial={{ y: 20, opacity: 0 }}
-                                                animate={{ y: 0, opacity: 1, x: 0, ...getAnimation() }}
-                                                transition={{ y: { delay: 0.3 + currentGlobalIndex * 0.03 }, opacity: { delay: 0.3 + currentGlobalIndex * 0.03 }, }}
-                                                className="relative perspective-1000"
-                                            >
-                                                <div className={`absolute inset-0 rounded-xl blur-md ${answerStatus === 'correct' ? 'bg-green-400/50' : answerStatus === 'wrong' ? 'bg-red-400/50' : 'bg-cyan-400/30'}`} />
-                                                <motion.div
-                                                    className={`relative w-12 h-16 ${getBackgroundColor()} backdrop-blur-sm border-2 rounded-xl flex items-center justify-center shadow-xl transition-colors duration-300`}
-                                                    style={{ borderColor: inputChar ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.4)' }}
-                                                >
-                                                    <span className="text-white text-3xl font-bold">
-                                                        {inputChar}
-                                                    </span>
-                                                </motion.div>
-                                            </motion.div>
-                                        );
-                                    })}
-                                </div>
-                            ));
-                        })()}
-                    </motion.div>
                     <motion.div
                         initial={{ y: 30, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
@@ -532,3 +497,114 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
         </div>
     );
 }
+
+// --- Optimized Character Boxes Subcomponent ---
+const CharacterBoxes = React.memo(({ containerRef, answer, input, answerStatus, isMobile, containerWidth }) => {
+    const words = useMemo(() => answer.split(' '), [answer]);
+    const inputCharsOnly = useMemo(() => input.split(''), [input]);
+
+    const layout = useMemo(() => {
+        const GAP = isMobile ? 6 : 8;
+        const BASE_BOX_WIDTH = isMobile ? 38 : 48;
+        const BASE_BOX_HEIGHT = isMobile ? 52 : 64;
+        const BASE_FONT_SIZE = isMobile ? 22 : 30;
+
+        let scale = 1;
+        if (containerWidth > 0) {
+            let maxWordWidthNeeded = 0;
+            words.forEach(word => {
+                const width = (word.length * BASE_BOX_WIDTH) + ((word.length - 1) * GAP);
+                if (width > maxWordWidthNeeded) maxWordWidthNeeded = width;
+            });
+
+            const availableWidth = containerWidth - 32;
+            if (maxWordWidthNeeded > availableWidth) {
+                scale = Math.max(0.45, availableWidth / maxWordWidthNeeded);
+            }
+        }
+
+        return {
+            boxWidth: BASE_BOX_WIDTH * scale,
+            boxHeight: BASE_BOX_HEIGHT * scale,
+            fontSize: BASE_FONT_SIZE * scale,
+            currentGap: GAP * scale
+        };
+    }, [words, isMobile, containerWidth]);
+
+    let globalInputIndex = 0;
+
+    return (
+        <motion.div
+            ref={containerRef}
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="flex flex-wrap items-center justify-center gap-x-8 gap-y-6 max-w-5xl mx-auto min-h-[120px] w-full px-2"
+        >
+            {words.map((word, wordIndex) => (
+                <div
+                    key={`word-${wordIndex}`}
+                    className="flex flex-nowrap justify-center"
+                    style={{ gap: layout.currentGap }}
+                >
+                    {word.split('').map((char, charIndex) => {
+                        const inputChar = inputCharsOnly[globalInputIndex] || '';
+                        const currentGlobalIndex = globalInputIndex;
+                        globalInputIndex++;
+
+                        return (
+                            <CharacterBox
+                                key={`${wordIndex}-${charIndex}`}
+                                inputChar={inputChar}
+                                index={currentGlobalIndex}
+                                answerStatus={answerStatus}
+                                boxWidth={layout.boxWidth}
+                                boxHeight={layout.boxHeight}
+                                fontSize={layout.fontSize}
+                            />
+                        );
+                    })}
+                </div>
+            ))}
+        </motion.div>
+    );
+});
+
+const CharacterBox = React.memo(({ inputChar, index, answerStatus, boxWidth, boxHeight, fontSize }) => {
+    const getAnimation = () => {
+        if (answerStatus === 'correct') return { scale: [1, 1.05, 1], rotate: [0, -2, 2, -2, 0] };
+        if (answerStatus === 'wrong') return { x: [0, -10, 10, -10, 10, 0] };
+        if (answerStatus === 'revealed') return { rotateX: [0, 90, 0], transition: { delay: index * 0.1, duration: 0.6 } };
+        return { y: 0, x: 0, scale: 1, rotate: 0 };
+    };
+
+    const getBackgroundColor = () => {
+        if (answerStatus === 'correct') return 'bg-gradient-to-br from-green-400 to-emerald-500';
+        if (answerStatus === 'wrong') return 'bg-gradient-to-br from-red-400 to-red-600';
+        if (answerStatus === 'revealed') return 'bg-gradient-to-br from-orange-400 to-orange-600';
+        return 'bg-white/20';
+    };
+
+    return (
+        <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1, x: 0, ...getAnimation() }}
+            transition={{ y: { delay: 0.3 + index * 0.03 }, opacity: { delay: 0.3 + index * 0.03 } }}
+            className="relative perspective-1000"
+            style={{ width: boxWidth, height: boxHeight }}
+        >
+            <div className={`absolute inset-0 rounded-xl blur-md ${answerStatus === 'correct' ? 'bg-green-400/50' : answerStatus === 'wrong' ? 'bg-red-400/50' : 'bg-cyan-400/30'}`} />
+            <motion.div
+                className={`relative w-full h-full ${getBackgroundColor()} backdrop-blur-sm border-2 rounded-xl flex items-center justify-center shadow-xl transition-colors duration-300`}
+                style={{
+                    borderColor: inputChar ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.4)',
+                    fontSize: fontSize
+                }}
+            >
+                <span className="text-white font-bold">
+                    {inputChar}
+                </span>
+            </motion.div>
+        </motion.div>
+    );
+});

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     doc,
     setDoc,
@@ -26,8 +26,19 @@ const generateRoomCode = () => {
     return Math.random().toString(36).substring(2, 7).toUpperCase();
 };
 
+const mathSymbols = ['+', '−', '×', '÷', '=', 'π', '∑', '√', '∞', 'α', 'β', 'θ'];
+
 export default function Lobby({ user, onOpenSidebar }) {
-    const mathSymbols = ['+', '−', '×', '÷', '=', 'π', '∑', '√', '∞', 'α', 'β', 'θ'];
+    const symbolsData = useMemo(() => {
+        return mathSymbols.map((symbol, i) => ({
+            symbol,
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+            fontSize: `${Math.random() * 80 + 60}px`,
+            duration: Math.max(15, Math.random() * 15 + 15),
+            delay: `${i * 0.5}s`
+        }));
+    }, []);
 
     const [view, setView] = useState("select");
     const [nickname, setNickname] = useState(user?.username || "Player");
@@ -255,29 +266,24 @@ export default function Lobby({ user, onOpenSidebar }) {
         <div className="h-screen w-full relative overflow-hidden bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]">
             {/* Animated background elements */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                {mathSymbols.map((symbol, i) => {
-                    const duration = Math.max(15, Math.random() * 15 + 15);
-
-                    return (
-                        <div
-                            key={`symbol-${i}`}
-                            className="absolute text-white/10 select-none animate-float"
-                            style={{
-                                left: `${Math.random() * 100}%`,
-                                top: `${Math.random() * 100}%`,
-                                fontSize: `${Math.random() * 80 + 60}px`,
-                                animation: `float ${duration}s ease-in-out infinite`,
-                                animationDelay: `${i * 0.5}s`
-                            }}
-                        >
-                            {symbol}
-                        </div>
-                    );
-                })}
+                {symbolsData.map((data, i) => (
+                    <div
+                        key={`symbol-${i}`}
+                        className="absolute text-white/10 select-none"
+                        style={{
+                            left: data.left,
+                            top: data.top,
+                            fontSize: data.fontSize,
+                            animation: `float ${data.duration}s ease-in-out ${data.delay} infinite`
+                        }}
+                    >
+                        {data.symbol}
+                    </div>
+                ))}
 
                 {/* Glowing orbs */}
                 <div className="absolute top-1/4 right-1/4 w-[500px] h-[500px] bg-gradient-to-br from-cyan-400/30 to-blue-500/30 rounded-full blur-3xl animate-pulse-slow" />
-                <div className="absolute bottom-1/4 left-1/4 w-[500px] h-[500px] bg-gradient-to-br from-purple-500/30 to-violet-500/30 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '4s' }} />
+                <div className="absolute bottom-1/4 left-1/4 w-[500px] h-[500px] bg-gradient-to-br from-purple-500/30 to-violet-500/30 rounded-full blur-3xl" style={{ animation: 'pulse-slow 8s ease-in-out 4s infinite' }} />
 
                 {/* Geometric patterns */}
                 <div className="absolute top-1/3 left-1/2 w-64 h-64 border-2 border-cyan-400/20 rounded-full animate-spin-slow" />

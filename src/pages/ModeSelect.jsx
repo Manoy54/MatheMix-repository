@@ -5,18 +5,27 @@ import { useNavigate } from 'react-router-dom';
 import { User, Users, Trophy, Zap, Target, Sparkles, Brain, Calculator, Star, Award, Crown, Menu } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Background3D from '../components/Background3D.jsx';
-import LoadingScreen from '../components/LoadingScreen.jsx';
 import { useMobile } from '../hooks/useMobile';
+import { useLoading } from '../context/LoadingContext';
 
 const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
     const isMobile = useMobile();
     const navigate = useNavigate();
+    const { setModeDataReady, setBg3DReady } = useLoading();
     const [hoveredMode, setHoveredMode] = useState(null);
     const [isBackgroundReady, setBackgroundReady] = useState(false);
     const [cardBounds, setCardBounds] = useState({ solo: null, multi: null });
 
     const soloCardRef = useRef(null);
     const multiCardRef = useRef(null);
+
+    // Simulate data fetching readiness
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setModeDataReady(true);
+        }, 800);
+        return () => clearTimeout(timer);
+    }, [setModeDataReady]);
 
     const updateCardBounds = useCallback(() => {
         const bounds = {};
@@ -52,9 +61,11 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
     }, [updateCardBounds, isBackgroundReady]);
 
     const handleBackgroundLoaded = React.useCallback(() => {
-        // Add a small delay to ensure canvas is painted
+        // Signal global loading context that 3D is ready
+        setBg3DReady(true);
+        // Local state for UI components in this page
         setTimeout(() => setBackgroundReady(true), 100);
-    }, []);
+    }, [setBg3DReady]);
 
     const stats = [
         { icon: Trophy, label: 'Games Won', value: '12', color: 'from-yellow-400 to-orange-500' },
@@ -69,7 +80,7 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
     ];
 
     return (
-        <div className="h-screen w-full relative overflow-hidden bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]">
+        <div className={`w-full relative ${isMobile ? 'min-h-screen' : 'h-screen overflow-hidden'} bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]`}>
 
             {/* 1. 3D Background Layer */}
             <Background3D
@@ -79,14 +90,11 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
                 cardBounds={isMobile ? null : cardBounds}
             />
 
-            {/* Loading Overlay */}
-            <AnimatePresence>
-                {!isBackgroundReady && <LoadingScreen key="loading-screen" />}
-            </AnimatePresence>
+            {/* Local Loading Overlay removed - now handled globally in App.jsx */}
 
             {/* 2. Main Content Layer - RESTRUCTURED */}
             {isBackgroundReady && (
-                <div className="relative z-10 px-4 h-screen flex flex-col">
+                <div className={`relative z-10 px-4 flex flex-col ${isMobile ? 'min-h-screen pt-[env(safe-area-inset-top)] pb-8' : 'h-screen'}`}>
 
                     {/* Header - Now full-width with padding */}
                     <motion.div
@@ -136,9 +144,9 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
                     {/* Centered Content and Footer Wrapper */}
                     <div className="container mx-auto flex-1 flex flex-col">
                         {/* Scrollable Content Area - Centered */}
-                        <div className="flex-1 flex items-center justify-center min-h-0">
+                        <div className={`flex-1 flex flex-col items-center ${isMobile ? 'justify-start pt-8' : 'justify-center'}`}>
                             {/* Reduced max-width to keep things tighter */}
-                            <div className="w-full max-w-5xl flex flex-col justify-center">
+                            <div className={`w-full max-w-5xl flex flex-col ${isMobile ? 'justify-start' : 'justify-center'}`}>
 
                                 {/* Welcome Section - Reduced margins and text size */}
                                 <motion.div

@@ -9,9 +9,15 @@ import { useMobile } from "../hooks/useMobile";
 const symbols = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "+", "-", "%", "π", "÷", "×", "∑", "√"];
 
 function LoadSignal({ onLoaded }) {
-    useEffect(() => {
-        if (onLoaded) onLoaded();
-    }, [onLoaded]);
+    const hasSignaled = useRef(false);
+
+    useFrame(() => {
+        if (!hasSignaled.current && onLoaded) {
+            hasSignaled.current = true;
+            onLoaded();
+        }
+    });
+
     return null;
 }
 
@@ -183,7 +189,7 @@ function Particles({ interactive, activeCardId, cardBounds }) {
 
 const Background3D = React.memo(function Background3D({ onLoaded, interactive = true, activeCardId = null, cardBounds = null }) {
     return (
-        <div className="absolute inset-0 w-full h-full z-0">
+        <div className="fixed inset-0 w-full h-full z-0 pointer-events-none">
             <Canvas
                 orthographic
                 camera={{ position: [0, 0, 50], zoom: 40 }}

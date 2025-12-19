@@ -2,7 +2,7 @@
 import React, { useState, useEffect, lazy, Suspense } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Menu } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Pages
 import Game from "./pages/Game";
@@ -17,6 +17,7 @@ const Stats = lazy(() => import("./pages/Stats.jsx"));
 import { Sidebar } from "./components/Sidebar.jsx";
 import AnimatedBackground from "./components/AnimatedBackground.jsx";
 import LoadingScreen from "./components/LoadingScreen.jsx";
+import { LoadingProvider, useLoading } from "./context/LoadingContext.jsx";
 
 import { auth, db } from "./firebaseConfig.js";
 import { onAuthStateChanged, signOut } from "firebase/auth";
@@ -27,12 +28,13 @@ const ProtectedRoute = ({ user, children }) => {
     return children;
 };
 
-function App() {
+function AppContent() {
     const [currentUser, setCurrentUser] = useState(null);
     const [username, setUsername] = useState("");
-    const [loading, setLoading] = useState(true);
+    const [authLoading, setAuthLoading] = useState(true);
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     const location = useLocation();
+    const { hasFinishedLoading, setModeDataReady, setBg3DReady, isModeDataReady, resetLoading } = useLoading();
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -48,19 +50,40 @@ function App() {
                 setCurrentUser(null);
                 setUsername("");
             }
-            setLoading(false);
+            setAuthLoading(false);
         });
         return () => unsubscribe();
     }, []);
+
+    // Auto-ready signal for routes that don't have Background3D or custom data signals
+    useEffect(() => {
+        if (!authLoading) {
+            const background3DRoutes = ["/mode-select", "/category-select"];
+            const isOn3DRoute = background3DRoutes.includes(location.pathname);
+
+            if (!isOn3DRoute) {
+                // If we're not on a 3D route, we just signal readiness immediately
+                setModeDataReady(true);
+                setBg3DReady(true);
+            }
+        }
+    }, [authLoading, location.pathname, setModeDataReady, setBg3DReady]);
+
+    // Reset loading state on entry to specific routes to force re-showing LoadingScreen
+    useEffect(() => {
+        const triggerLoadingRoutes = ["/mode-select", "/category-select"];
+        if (triggerLoadingRoutes.includes(location.pathname)) {
+            resetLoading();
+        }
+    }, [location.pathname, resetLoading]);
 
     const handleLogout = async () => {
         await signOut(auth);
         setSidebarOpen(false);
     };
 
-    if (loading) {
-        return <LoadingScreen />;
-    }
+    // If still checking auth, we show a basic loading state or the full loading screen
+    // Given the requirement to only show the progress loading screen once, we handle it carefully.
 
     const fullScreenRoutes = ["/", "/mode-select", "/category-select", "/lobby", "/game", "/stats", "/admin"];
     const isFullScreen = fullScreenRoutes.includes(location.pathname);
@@ -69,6 +92,10 @@ function App() {
 
     return (
         <div className="font-nunito min-h-screen w-full relative bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]">
+            <AnimatePresence>
+                {!hasFinishedLoading && <LoadingScreen key="app-loading" />}
+            </AnimatePresence>
+
             {location.pathname !== "/" && <AnimatedBackground />}
 
             {!isLoginPage && location.pathname !== "/admin" && currentUser && (
@@ -92,7 +119,7 @@ function App() {
                 </>
             )}
 
-            <div className={`relative z-10 ${isFullScreen ? "w-full h-full" : "max-w-6xl mx-auto p-4"}`}>
+            <div className={`relative z-10 ${isFullScreen ? "w-full min-h-full" : "max-w-6xl mx-auto p-4"}`}>
                 <Routes>
                     <Route path="/" element={currentUser ? <Navigate to="/mode-select" /> : <LoginPage />} />
                     <Route path="/mode-select" element={<ProtectedRoute user={currentUser}><ModeSelect username={username} onLogout={handleLogout} onOpenSidebar={() => setSidebarOpen(true)} /></ProtectedRoute>} />
@@ -104,6 +131,14 @@ function App() {
                 </Routes>
             </div>
         </div>
+    );
+}
+
+function App() {
+    return (
+        <LoadingProvider>
+            <AppContent />
+        </LoadingProvider>
     );
 }
 
