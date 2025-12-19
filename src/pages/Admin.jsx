@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from '../components/Sidebar';
+import AnimatedBackground from '../components/AnimatedBackground';
 import { Menu, X, Layout, Users, Shield, Settings, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -12,6 +13,7 @@ const Admin = ({ username, onLogout }) => {
 
     return (
         <div className="min-h-screen w-full relative overflow-hidden bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]">
+            <AnimatedBackground />
             {/* 1. Sidebar Component */}
             <Sidebar
                 isOpen={isSidebarOpen}
