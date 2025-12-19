@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { Users, Plus, LogIn, Info } from 'lucide-react';
 
 export default function RoomSelection({
-                                          nickname,
-                                          setNickname,
-                                          onHostGame,
-                                          onJoinGame,
-                                          error
-                                      }) {
+    nickname,
+    setNickname,
+    onHostGame,
+    onJoinGame,
+    error
+}) {
     const [joinInput, setJoinInput] = useState("");
 
     const handleHostClick = () => {
@@ -94,7 +94,7 @@ export default function RoomSelection({
                                 <div className="bg-gradient-to-br from-purple-500/30 to-violet-500/30 w-14 h-14 rounded-xl flex items-center justify-center shadow-inner border border-white/20 backdrop-blur-sm flex-shrink-0">
                                     <Plus className="w-7 h-7 text-white" />
                                 </div>
-                                
+
                                 <div className="flex-1">
                                     <h3 className="text-white text-lg mb-0.5 leading-tight" style={{ fontWeight: 900 }}>
                                         Host a Game
@@ -128,7 +128,7 @@ export default function RoomSelection({
                                 <div className="bg-gradient-to-br from-blue-500/30 to-cyan-500/30 w-14 h-14 rounded-xl flex items-center justify-center shadow-inner border border-white/20 backdrop-blur-sm flex-shrink-0">
                                     <LogIn className="w-7 h-7 text-white" />
                                 </div>
-                                
+
                                 <div className="flex-1">
                                     <h3 className="text-white text-lg mb-0.5 leading-tight" style={{ fontWeight: 900 }}>
                                         Join a Game
@@ -146,11 +146,11 @@ export default function RoomSelection({
                                     value={joinInput}
                                     onChange={(e) => setJoinInput(e.target.value.toUpperCase())}
                                     placeholder="ABC123"
-                                    className="flex-1 px-4 py-2.5 bg-white/90 backdrop-blur-sm border-2 border-white/50 rounded-xl focus:border-white focus:ring-4 focus:ring-white/30 outline-none transition-all placeholder-gray-400 text-gray-800 shadow-lg tracking-widest text-center text-sm"
+                                    className="flex-1 min-w-0 px-4 py-2.5 bg-white/90 backdrop-blur-sm border-2 border-white/50 rounded-xl focus:border-white focus:ring-4 focus:ring-white/30 outline-none transition-all placeholder-gray-400 text-gray-800 shadow-lg tracking-widest text-center text-sm"
                                     style={{ fontWeight: 700 }}
                                     maxLength={6}
                                 />
-                                
+
                                 <button
                                     onClick={handleJoinClick}
                                     className="px-5 py-2.5 bg-white/20 hover:bg-white/30 text-white rounded-xl shadow-lg transition-all border-2 border-white/40 backdrop-blur-sm flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] flex-shrink-0"

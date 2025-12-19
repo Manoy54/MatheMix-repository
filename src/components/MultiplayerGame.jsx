@@ -43,6 +43,8 @@ export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onO
     const pureAnswer = answer.replace(/[^A-Z0-9]/g, '');
     const numGuessableBoxes = pureAnswer.length;
 
+    if (!currentQuestion) return null;
+
     const isHost = hostId === user.uid;
     const hasAnswered = answers.some(a => a.uid === user.uid);
 
@@ -292,9 +294,9 @@ export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onO
 
                     {/* Leaderboard Section (Appears first on mobile, right side on desktop) */}
                     <motion.div
-                        initial={isMobile ? { y: -20, opacity: 0 } : { x: 50, opacity: 0 }}
-                        animate={isMobile ? { y: 0, opacity: 1 } : { x: 0, opacity: 1 }}
-                        className="w-full max-w-md mx-auto md:max-w-none md:mx-0 md:w-80 flex-shrink-0 z-10 flex flex-col gap-4"
+                        initial={isMobile ? { y: -20, x: 0, opacity: 0 } : { x: 50, y: 0, opacity: 0 }}
+                        animate={{ x: 0, y: 0, opacity: 1 }}
+                        className="w-full max-w-md md:max-w-none md:w-80 flex-shrink-0 z-10 flex flex-col gap-4"
                     >
                         {/* Rank & Score Widget */}
                         <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 flex items-center justify-around shadow-lg">

@@ -244,7 +244,7 @@ export default function Lobby({ user, onOpenSidebar }) {
 
 
 
-    if (gameStarted && roomData) {
+    if (gameStarted && roomData && roomData.currentQuestion) {
         return (
             <MultiplayerGame
                 user={user}
