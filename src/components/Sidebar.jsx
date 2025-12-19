@@ -29,7 +29,7 @@ export function Sidebar({ isOpen, onClose, onLogout, username }) {
     };
 
     return (
-        <AnimatePresence>
+        <AnimatePresence initial={false}>
             {isOpen && (
                 <>
                     {/* Backdrop */}
@@ -42,11 +42,16 @@ export function Sidebar({ isOpen, onClose, onLogout, username }) {
                     />
 
                     {/* Sidebar */}
-                    <motion.div
-                        initial={{ x: -320 }}
+                    <motion.aside
+                        initial={{ x: '-100%' }}
                         animate={{ x: 0 }}
-                        exit={{ x: -320 }}
-                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                        exit={{ x: '-100%' }}
+                        transition={{
+                            type: 'tween',
+                            ease: [0.2, 0.8, 0.2, 1],
+                            duration: 0.24
+                        }}
+                        style={{ willChange: 'transform' }}
                         className="fixed left-0 top-0 h-full w-80 z-50"
                     >
                         {/* Glowing background effects */}
@@ -167,7 +172,7 @@ export function Sidebar({ isOpen, onClose, onLogout, username }) {
                                 </div>
                             </div>
                         </div>
-                    </motion.div>
+                    </motion.aside>
                 </>
             )}
         </AnimatePresence>

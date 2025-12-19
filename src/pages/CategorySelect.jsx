@@ -1,9 +1,10 @@
 // src/pages/CategorySelect.jsx
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Background3D from '../components/Background3D.jsx';
+import { useMobile } from '../hooks/useMobile.jsx';
 import {
     Calculator, Sparkles, Ruler, PieChart, Flame, Info, Menu,
     // Math Symbols
@@ -15,8 +16,39 @@ import {
 } from 'lucide-react';
 
 export default function CategorySelect({ username, onOpenSidebar }) {
+    const isMobile = useMobile();
     const navigate = useNavigate();
     const [hoveredCategory, setHoveredCategory] = useState(null);
+    const [cardBounds, setCardBounds] = useState({});
+
+    // Create refs for each category card
+    const cardRefs = useRef({});
+
+    const updateCardBounds = useCallback(() => {
+        const bounds = {};
+        Object.entries(cardRefs.current).forEach(([id, ref]) => {
+            if (ref) {
+                const rect = ref.getBoundingClientRect();
+                bounds[id] = {
+                    x: rect.left,
+                    y: rect.top,
+                    width: rect.width,
+                    height: rect.height
+                };
+            }
+        });
+        setCardBounds(bounds);
+    }, []);
+
+    useEffect(() => {
+        updateCardBounds();
+        window.addEventListener('resize', updateCardBounds);
+        window.addEventListener('scroll', updateCardBounds);
+        return () => {
+            window.removeEventListener('resize', updateCardBounds);
+            window.removeEventListener('scroll', updateCardBounds);
+        };
+    }, [updateCardBounds]);
 
     const categories = [
         {
@@ -62,7 +94,11 @@ export default function CategorySelect({ username, onOpenSidebar }) {
         <div className="h-screen w-full relative overflow-hidden bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]">
 
             {/* 3D Background Layer */}
-            <Background3D />
+            <Background3D
+                interactive={!isMobile && (!hoveredCategory || (hoveredCategory !== 'ui'))}
+                activeCardId={!isMobile ? hoveredCategory : null}
+                cardBounds={isMobile ? null : cardBounds}
+            />
 
             {/* Main Content Layer */}
             {/* Added pointer-events-none to container so mouse reaches 3D bg */}
@@ -72,6 +108,8 @@ export default function CategorySelect({ username, onOpenSidebar }) {
                 <motion.div
                     initial={{ y: -20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
+                    onMouseEnter={() => !isMobile && setHoveredCategory('ui')}
+                    onMouseLeave={() => !isMobile && setHoveredCategory(null)}
                     className="flex items-center justify-between pt-4 pb-2 shrink-0 pointer-events-auto"
                 >
                     <div className="flex items-center gap-3">
@@ -138,6 +176,8 @@ export default function CategorySelect({ username, onOpenSidebar }) {
                             initial={{ y: -20, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
                             transition={{ delay: 0.3 }}
+                            onMouseEnter={() => !isMobile && setHoveredCategory('ui')}
+                            onMouseLeave={() => !isMobile && setHoveredCategory(null)}
                             className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 backdrop-blur-md rounded-2xl p-4 border border-yellow-400/30 mb-6 shadow-lg pointer-events-auto"
                         >
                             <div className="flex items-start gap-3">
@@ -161,11 +201,12 @@ export default function CategorySelect({ username, onOpenSidebar }) {
                                     initial={{ y: 50, opacity: 0 }}
                                     animate={{ y: 0, opacity: 1 }}
                                     transition={{ delay: 0.4 + index * 0.1 }}
-                                    onMouseEnter={() => setHoveredCategory(category.id)}
-                                    onMouseLeave={() => setHoveredCategory(null)}
+                                    onMouseEnter={() => !isMobile && setHoveredCategory(category.id)}
+                                    onMouseLeave={() => !isMobile && setHoveredCategory(null)}
                                     className="relative group"
                                 >
                                     <motion.button
+                                        ref={(el) => (cardRefs.current[category.id] = el)}
                                         onClick={() => handleSelect(category.id)}
                                         whileHover={{ scale: 1.05, y: -5 }}
                                         whileTap={{ scale: 0.98 }}
@@ -216,6 +257,8 @@ export default function CategorySelect({ username, onOpenSidebar }) {
                             initial={{ y: 30, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
                             transition={{ delay: 0.8 }}
+                            onMouseEnter={() => !isMobile && setHoveredCategory('ui')}
+                            onMouseLeave={() => !isMobile && setHoveredCategory(null)}
                             className="mt-6 bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/10 pointer-events-auto"
                         >
                             <div className="flex items-center justify-between">
@@ -243,6 +286,8 @@ export default function CategorySelect({ username, onOpenSidebar }) {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.9 }}
+                    onMouseEnter={() => !isMobile && setHoveredCategory('ui')}
+                    onMouseLeave={() => !isMobile && setHoveredCategory(null)}
                     className="text-center text-white/40 text-xs font-semibold py-3"
                 >
                     <p>Select a category to start building your streak! 🔥</p>

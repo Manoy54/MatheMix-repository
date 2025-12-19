@@ -1,16 +1,55 @@
 // src/pages/ModeSelect.jsx
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Users, Trophy, Zap, Target, Sparkles, Brain, Calculator, Star, Award, Crown, Menu } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Background3D from '../components/Background3D.jsx';
 import LoadingScreen from '../components/LoadingScreen.jsx';
+import { useMobile } from '../hooks/useMobile';
 
 const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
+    const isMobile = useMobile();
     const navigate = useNavigate();
     const [hoveredMode, setHoveredMode] = useState(null);
     const [isBackgroundReady, setBackgroundReady] = useState(false);
+    const [cardBounds, setCardBounds] = useState({ solo: null, multi: null });
+
+    const soloCardRef = useRef(null);
+    const multiCardRef = useRef(null);
+
+    const updateCardBounds = useCallback(() => {
+        const bounds = {};
+        if (soloCardRef.current) {
+            const rect = soloCardRef.current.getBoundingClientRect();
+            bounds.solo = {
+                x: rect.left,
+                y: rect.top,
+                width: rect.width,
+                height: rect.height
+            };
+        }
+        if (multiCardRef.current) {
+            const rect = multiCardRef.current.getBoundingClientRect();
+            bounds.multi = {
+                x: rect.left,
+                y: rect.top,
+                width: rect.width,
+                height: rect.height
+            };
+        }
+        setCardBounds(bounds);
+    }, []);
+
+    useEffect(() => {
+        updateCardBounds();
+        window.addEventListener('resize', updateCardBounds);
+        window.addEventListener('scroll', updateCardBounds);
+        return () => {
+            window.removeEventListener('resize', updateCardBounds);
+            window.removeEventListener('scroll', updateCardBounds);
+        };
+    }, [updateCardBounds, isBackgroundReady]);
 
     const handleBackgroundLoaded = React.useCallback(() => {
         // Add a small delay to ensure canvas is painted
@@ -33,7 +72,12 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
         <div className="h-screen w-full relative overflow-hidden bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]">
 
             {/* 1. 3D Background Layer */}
-            <Background3D onLoaded={handleBackgroundLoaded} interactive={!hoveredMode} />
+            <Background3D
+                onLoaded={handleBackgroundLoaded}
+                interactive={!isMobile && (!hoveredMode || (hoveredMode !== 'ui'))}
+                activeCardId={!isMobile && (hoveredMode === 'solo' || hoveredMode === 'multi') ? hoveredMode : null}
+                cardBounds={isMobile ? null : cardBounds}
+            />
 
             {/* Loading Overlay */}
             <AnimatePresence>
@@ -124,11 +168,12 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
                                         initial={{ x: -50, opacity: 0 }}
                                         animate={{ x: 0, opacity: 1 }}
                                         transition={{ delay: 0.4 }}
-                                        onMouseEnter={() => setHoveredMode('solo')}
-                                        onMouseLeave={() => setHoveredMode(null)}
+                                        onMouseEnter={() => !isMobile && setHoveredMode('solo')}
+                                        onMouseLeave={() => !isMobile && setHoveredMode(null)}
                                         className="relative group h-full"
                                     >
                                         <motion.button
+                                            ref={soloCardRef}
                                             onClick={() => navigate('/category-select')}
                                             whileHover={{ scale: 1.02 }}
                                             whileTap={{ scale: 0.98 }}
@@ -161,11 +206,12 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
                                         initial={{ x: 50, opacity: 0 }}
                                         animate={{ x: 0, opacity: 1 }}
                                         transition={{ delay: 0.4 }}
-                                        onMouseEnter={() => setHoveredMode('multi')}
-                                        onMouseLeave={() => setHoveredMode(null)}
+                                        onMouseEnter={() => !isMobile && setHoveredMode('multi')}
+                                        onMouseLeave={() => !isMobile && setHoveredMode(null)}
                                         className="relative group h-full"
                                     >
                                         <motion.button
+                                            ref={multiCardRef}
                                             onClick={() => navigate('/lobby')}
                                             whileHover={{ scale: 1.02 }}
                                             whileTap={{ scale: 0.98 }}
