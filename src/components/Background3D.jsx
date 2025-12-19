@@ -14,7 +14,7 @@ function LoadSignal({ onLoaded }) {
     return null;
 }
 
-function Particle({ symbol, position }) {
+function Particle({ symbol, position, interactive = true }) {
     const ref = useRef();
 
     // Store random animation data once
@@ -40,14 +40,15 @@ function Particle({ symbol, position }) {
         ref.current.rotation.z += randomData.rotationSpeed;
 
         // Mouse Interaction
-        const x = (state.pointer.x * state.viewport.width) / 2;
-        const y = (state.pointer.y * state.viewport.height) / 2;
+        const vector = new THREE.Vector3(state.pointer.x, state.pointer.y, 0).unproject(state.camera);
+        const x = vector.x;
+        const y = vector.y;
         // Optimization: Dist squared check
         const dx = x - ref.current.position.x;
         const dy = y - ref.current.position.y;
         const distSq = dx * dx + dy * dy;
 
-        const isNear = distSq < 16; // 4^2
+        const isNear = interactive && distSq < 16; // 4^2
         const targetScale = isNear ? 2 : 0.8;
 
         ref.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.1);
@@ -68,7 +69,7 @@ function Particle({ symbol, position }) {
     );
 }
 
-function Particles() {
+function Particles({ interactive }) {
     const { viewport } = useThree();
 
     const particlesData = useMemo(() => {
@@ -107,13 +108,13 @@ function Particles() {
     return (
         <>
             {particlesData.map((data) => (
-                <Particle key={data.id} symbol={data.symbol} position={data.position} />
+                <Particle key={data.id} symbol={data.symbol} position={data.position} interactive={interactive} />
             ))}
         </>
     );
 }
 
-const Background3D = React.memo(function Background3D({ onLoaded }) {
+const Background3D = React.memo(function Background3D({ onLoaded, interactive = true }) {
     return (
         <div className="absolute inset-0 w-full h-full z-0">
             <Canvas
@@ -125,7 +126,7 @@ const Background3D = React.memo(function Background3D({ onLoaded }) {
                 <Suspense fallback={null}>
                     <ambientLight intensity={1.5} />
                     <pointLight position={[10, 10, 10]} intensity={2.5} />
-                    <Particles />
+                    <Particles interactive={interactive} />
                     <LoadSignal onLoaded={onLoaded} />
                 </Suspense>
             </Canvas>

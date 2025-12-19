@@ -33,7 +33,7 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
         <div className="h-screen w-full relative overflow-hidden bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]">
 
             {/* 1. 3D Background Layer */}
-            <Background3D onLoaded={handleBackgroundLoaded} />
+            <Background3D onLoaded={handleBackgroundLoaded} interactive={!hoveredMode} />
 
             {/* Loading Overlay */}
             <AnimatePresence>
@@ -48,6 +48,8 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
                     <motion.div
                         initial={{ y: -20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
+                        onMouseEnter={() => setHoveredMode('ui')}
+                        onMouseLeave={() => setHoveredMode(null)}
                         className="flex items-center justify-between pt-4 pb-2 shrink-0"
                     >
                         <div className="flex items-center gap-3">
@@ -99,6 +101,8 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
                                     initial={{ scale: 0.9, opacity: 0 }}
                                     animate={{ scale: 1, opacity: 1 }}
                                     transition={{ delay: 0.2 }}
+                                    onMouseEnter={() => setHoveredMode('ui')}
+                                    onMouseLeave={() => setHoveredMode(null)}
                                     className="text-center mb-6"
                                 >
                                     <div className="inline-flex items-center gap-2 bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm px-5 py-2 rounded-full border border-white/30 mb-3 shadow-lg">
@@ -197,6 +201,8 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
                                         initial={{ y: 30, opacity: 0 }}
                                         animate={{ y: 0, opacity: 1 }}
                                         transition={{ delay: 0.6 }}
+                                        onMouseEnter={() => setHoveredMode('ui')}
+                                        onMouseLeave={() => setHoveredMode(null)}
                                         className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/10"
                                     >
                                         <h3 className="text-white/90 text-sm font-bold mb-3 flex items-center gap-2 uppercase tracking-wide">
@@ -220,6 +226,8 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
                                         initial={{ y: 30, opacity: 0 }}
                                         animate={{ y: 0, opacity: 1 }}
                                         transition={{ delay: 0.7 }}
+                                        onMouseEnter={() => setHoveredMode('ui')}
+                                        onMouseLeave={() => setHoveredMode(null)}
                                         className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/10"
                                     >
                                         <h3 className="text-white/90 text-sm font-bold mb-3 flex items-center gap-2 uppercase tracking-wide">
@@ -257,6 +265,8 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.8 }}
+                            onMouseEnter={() => setHoveredMode('ui')}
+                            onMouseLeave={() => setHoveredMode(null)}
                             className="text-center text-white/40 text-xs font-semibold py-3"
                         >
                             <p>Choose wisely and may the best mathematician win! 🎯</p>
