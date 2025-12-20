@@ -88,6 +88,7 @@ export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onO
             guess: finalGuess,
             isCorrect,
             score,
+            timestamp: Date.now(), // Critical for fair tie-breaking
         };
 
         await updateDoc(roomRef, {
@@ -106,14 +107,24 @@ export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onO
 
         if (guess.trim().toUpperCase() === pureAnswer) {
             isCorrect = true;
-            const timeTaken = (Date.now() - roundStartTime) / 1000;
-            const timeBonus = Math.max(0, 10 - Math.floor(timeTaken));
-            score = 10 + timeBonus;
+
+            // Calculate Rank based on how many correct answers already exist
+            const correctAnswersSoFar = answers ? answers.filter(a => a.isCorrect).length : 0;
+            const myRank = correctAnswersSoFar + 1;
+
+            // Base Score + Ranking Bonus
+            // 1st: +30, 2nd: +20, 3rd: +10, 4th+: +0
+            const baseScore = 100;
+            const rankBonus = Math.max(0, 30 - ((myRank - 1) * 10));
+
+            score = baseScore + rankBonus;
+
             setStatus("correct");
-            setScoreMessage(`+${score} points!`);
+            setScoreMessage(`+${score} pts! (#${myRank})`);
         } else {
             setStatus("wrong");
-            setScoreMessage("Wrong answer!");
+            setScoreMessage("Wrong answer (+0)");
+            score = 0;
         }
 
         await submitAnswerToFirestore(isCorrect, score, guess.toUpperCase());
@@ -146,13 +157,28 @@ export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onO
 
         const roomRef = doc(db, "rooms", roomCode);
 
-        // Update player scores persistently
+        // --- HOST-SIDE SCORE RECALCULATION ---
+        // We recalculate scores based on strict timestamp ordering to resolve any client-side race conditions.
+        // This ensures that even if two players thought they were #1, the one who hit server first gets the points.
+
+        // 1. Get all correct answers and sort by timestamp
+        const correctAnswers = answers
+            .filter(a => a.isCorrect)
+            .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+        // 2. Create a map of officially verified scores for this round
+        const roundScores = {};
+        correctAnswers.forEach((answerData, index) => {
+            const rank = index + 1;
+            const baseScore = 100;
+            const rankBonus = Math.max(0, 30 - ((rank - 1) * 10));
+            roundScores[answerData.uid] = baseScore + rankBonus;
+        });
+
+        // 3. Update player totals using the verified round scores
         const updatedPlayers = players.map(p => {
-            const playerAnswer = answers.find(a => a.uid === p.uid);
-            if (playerAnswer && playerAnswer.isCorrect) {
-                return { ...p, score: p.score + playerAnswer.score };
-            }
-            return p;
+            const verifiedRoundScore = roundScores[p.uid] || 0; // Default to 0 if not playing/wrong
+            return { ...p, score: p.score + verifiedRoundScore };
         });
 
         await updateDoc(roomRef, {

@@ -114,9 +114,35 @@ export default function Stats({ user }) {
     }, [user]);
 
     // 5. Calculate Derived Metrics (UI Logic)
-    const winRate = currentStats.totalGames > 0
-        ? ((currentStats.totalWins / currentStats.totalGames) * 100).toFixed(1)
+
+    // --- WEEKLY STATS CALCULATION ---
+    const now = Date.now();
+    const oneWeekAgo = now - 7 * 24 * 60 * 60 * 1000;
+
+    const weeklyGames = currentStats.recentGames ? currentStats.recentGames.filter(g => {
+        // Handle both legacy string dates and new timestamp fields
+        if (g.timestamp) return g.timestamp > oneWeekAgo;
+        // Fallback for rough string estimation if needed, though timestamp is better
+        return true; // Show all if only 10 are stored anyway, as they are "recent"
+    }) : [];
+
+    // If we want to be strict about "Past Week" vs "All Time", we should ideally store a full history.
+    // However, given current data constraints (10 recent games), we can treat the "Recent History" as the proxy for "This Week" 
+    // IF the user plays frequently. 
+    // To properly "display stats of the past week", we will calculate metrics ONLY from `weeklyGames`.
+
+    const weeklyTotalGames = weeklyGames.length;
+    const weeklyWins = weeklyGames.filter(g => g.result === 'Victory').length;
+    const weeklyWinRate = weeklyTotalGames > 0
+        ? ((weeklyWins / weeklyTotalGames) * 100).toFixed(1)
         : 0;
+
+    // We will toggle the UI to show these "Weekly" stats instead of "All Time"
+    const [showWeekly, setShowWeekly] = useState(true);
+
+    const displayTotalGames = showWeekly ? weeklyTotalGames : currentStats.totalGames;
+    const displayTotalWins = showWeekly ? weeklyWins : currentStats.totalWins;
+    const displayWinRate = showWeekly ? weeklyWinRate : (currentStats.totalGames > 0 ? ((currentStats.totalWins / currentStats.totalGames) * 100).toFixed(1) : 0);
 
     const mpWinRate = currentStats.multiplayer.gamesPlayed > 0
         ? ((currentStats.multiplayer.wins / currentStats.multiplayer.gamesPlayed) * 100).toFixed(1)
@@ -148,7 +174,34 @@ export default function Stats({ user }) {
                 <h1 className="text-white text-3xl mb-1" style={{ fontWeight: 900 }}>
                     Performance <span className="text-purple-400">Dashboard</span>
                 </h1>
-                <p className="text-white/80 text-sm" style={{ fontWeight: 500 }}>Track your progress across all game modes</p>
+
+                {/* --- TOGGLE FILTER --- */}
+                <div className="flex justify-center mt-4">
+                    <div className="bg-white/10 backdrop-blur-md p-1 rounded-lg flex gap-1 border border-white/20">
+                        <button
+                            onClick={() => setShowWeekly(true)}
+                            className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${showWeekly
+                                ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg'
+                                : 'text-white/60 hover:text-white hover:bg-white/5'
+                                }`}
+                        >
+                            This Week
+                        </button>
+                        <button
+                            onClick={() => setShowWeekly(false)}
+                            className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${!showWeekly
+                                ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg'
+                                : 'text-white/60 hover:text-white hover:bg-white/5'
+                                }`}
+                        >
+                            All Time
+                        </button>
+                    </div>
+                </div>
+
+                <p className="text-white/80 text-sm mt-3" style={{ fontWeight: 500 }}>
+                    {showWeekly ? "Tracking progress from the last 7 days" : "Tracking all history"}
+                </p>
             </div>
 
             {/* --- SECTION 1: SOLO MODE --- */}
@@ -171,9 +224,9 @@ export default function Stats({ user }) {
                             <div className="bg-white/20 rounded-lg p-1.5">
                                 <Trophy className="w-4 h-4 text-white" />
                             </div>
-                            <span className="text-white/80 text-xs" style={{ fontWeight: 600 }}>Total Games</span>
+                            <span className="text-white/80 text-xs" style={{ fontWeight: 600 }}>{showWeekly ? "Weekly Games" : "Total Games"}</span>
                         </div>
-                        <div className="text-white text-2xl" style={{ fontWeight: 900 }}>{currentStats.totalGames}</div>
+                        <div className="text-white text-2xl" style={{ fontWeight: 900 }}>{displayTotalGames}</div>
                     </div>
 
                     {/* Total Wins */}
@@ -182,9 +235,9 @@ export default function Stats({ user }) {
                             <div className="bg-white/20 rounded-lg p-1.5">
                                 <Award className="w-4 h-4 text-white" />
                             </div>
-                            <span className="text-white/80 text-xs" style={{ fontWeight: 600 }}>Total Wins</span>
+                            <span className="text-white/80 text-xs" style={{ fontWeight: 600 }}>{showWeekly ? "Weekly Wins" : "Total Wins"}</span>
                         </div>
-                        <div className="text-white text-2xl" style={{ fontWeight: 900 }}>{currentStats.totalWins}</div>
+                        <div className="text-white text-2xl" style={{ fontWeight: 900 }}>{displayTotalWins}</div>
                     </div>
 
                     {/* Win Rate */}
@@ -195,7 +248,7 @@ export default function Stats({ user }) {
                             </div>
                             <span className="text-white/80 text-xs" style={{ fontWeight: 600 }}>Win Rate</span>
                         </div>
-                        <div className="text-white text-2xl" style={{ fontWeight: 900 }}>{winRate}%</div>
+                        <div className="text-white text-2xl" style={{ fontWeight: 900 }}>{displayWinRate}%</div>
                     </div>
 
                     {/* Play Time */}

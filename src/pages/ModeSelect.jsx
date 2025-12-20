@@ -310,22 +310,22 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
                                         </div>
                                     </motion.div>
                                 </div>
-
                             </div>
-                        </div>
 
-                        {/* Footer - Reduced padding */}
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.8 }}
-                            onMouseEnter={() => setHoveredMode('ui')}
-                            onMouseLeave={() => setHoveredMode(null)}
-                            className="text-center text-white/40 text-xs font-semibold py-3"
-                        >
-                            <p>Choose wisely and may the best mathematician win! 🎯</p>
-                        </motion.div>
+                        </div>
                     </div>
+
+                    {/* Footer - Reduced padding */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.8 }}
+                        onMouseEnter={() => setHoveredMode('ui')}
+                        onMouseLeave={() => setHoveredMode(null)}
+                        className="text-center text-white/40 text-xs font-semibold py-3"
+                    >
+                        <p>Choose wisely and may the best mathematician win! 🎯</p>
+                    </motion.div>
                 </div>
             )}
 

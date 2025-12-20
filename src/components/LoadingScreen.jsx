@@ -15,31 +15,31 @@ const LoadingScreen = () => {
             if (!isModeDataReady) {
                 // Cap at 60 until mode data is ready
                 if (targetProgress < 60) {
-                    targetProgress += 0.5;
+                    targetProgress += 8.0; // Extremely fast (was 2.5)
                 }
             } else if (!isBg3DReady) {
                 // Cap at 95 until background is ready
                 if (targetProgress < 95) {
-                    targetProgress += 0.3;
+                    targetProgress += 6.0; // Extremely fast (was 2.0)
                 } else {
                     targetProgress = 95;
                 }
                 // Ensure we at least reached 60 if data is ready
                 if (targetProgress < 60) targetProgress = 60;
             } else {
-                // Everything ready, push to 100
-                targetProgress += 2;
+                // Everything ready, push to 100 instantly
+                targetProgress += 20; // Instant finish (was 6)
                 if (targetProgress > 100) {
                     targetProgress = 100;
                     clearInterval(interval);
-                    // Add a tiny delay before finishing to show 100%
-                    setTimeout(markAsFinished, 500);
+                    // Almost no delay
+                    setTimeout(markAsFinished, 100); // Was 250
                 }
             }
 
             progressRef.current = targetProgress;
             setProgress(targetProgress);
-        }, 30);
+        }, 15); // Faster tick rate (was 30)
 
         return () => clearInterval(interval);
     }, [isModeDataReady, isBg3DReady, markAsFinished]);

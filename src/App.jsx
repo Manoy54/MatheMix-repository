@@ -11,6 +11,7 @@ import ModeSelect from "./pages/ModeSelect";
 import LoginPage from "./pages/LoginPage";
 import CategorySelect from "./pages/CategorySelect.jsx";
 import Admin from "./pages/Admin.jsx";
+import Leaderboard from "./pages/Leaderboard.jsx";
 const Stats = lazy(() => import("./pages/Stats.jsx"));
 
 // Components
@@ -85,7 +86,7 @@ function AppContent() {
     // If still checking auth, we show a basic loading state or the full loading screen
     // Given the requirement to only show the progress loading screen once, we handle it carefully.
 
-    const fullScreenRoutes = ["/", "/mode-select", "/category-select", "/lobby", "/game", "/stats", "/admin"];
+    const fullScreenRoutes = ["/", "/mode-select", "/category-select", "/lobby", "/game", "/stats", "/leaderboard", "/admin"];
     const isFullScreen = fullScreenRoutes.includes(location.pathname);
     const isLoginPage = location.pathname === "/";
     const hasOwnSidebarButton = ["/lobby", "/mode-select", "/category-select", "/game"].includes(location.pathname);
@@ -127,6 +128,7 @@ function AppContent() {
                     <Route path="/game" element={<ProtectedRoute user={currentUser}><Game onGameEnd={() => { }} onOpenSidebar={() => setSidebarOpen(true)} /></ProtectedRoute>} />
                     <Route path="/lobby" element={<ProtectedRoute user={currentUser}><Lobby user={currentUser} onOpenSidebar={() => setSidebarOpen(true)} onLogout={handleLogout} /></ProtectedRoute>} />
                     <Route path="/admin" element={<ProtectedRoute user={currentUser}><Admin username={username} onLogout={handleLogout} /></ProtectedRoute>} />
+                    <Route path="/leaderboard" element={<ProtectedRoute user={currentUser}><Leaderboard /></ProtectedRoute>} />
                     <Route path="/stats" element={<ProtectedRoute user={currentUser}><Suspense fallback={<div className="text-white text-center">Loading Stats...</div>}><Stats user={currentUser} /></Suspense></ProtectedRoute>} />
                 </Routes>
             </div>

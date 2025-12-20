@@ -82,6 +82,7 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
                 totalWins: newTotalWins,
                 accuracy: newAccuracy,
                 longestStreak: newLongestStreak,
+                username: auth.currentUser?.displayName || "Player", // Ensure username is saved for leaderboard
                 mastery: {
                     ...masteryStats,
                     [masteryKey]: masteryPercent
@@ -100,7 +101,8 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
                     result: 'Defeat',
                     mode: `Solo - ${category}`,
                     score: endedStreakCount,
-                    date: new Date().toLocaleDateString()
+                    date: new Date().toLocaleDateString(),
+                    timestamp: Date.now() // For accurate weekly filtering
                 };
                 const recentGames = currentStats.recentGames || [];
                 const updatedRecent = [newGameEntry, ...recentGames].slice(0, 10);
