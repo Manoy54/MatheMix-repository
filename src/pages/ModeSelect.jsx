@@ -79,16 +79,24 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
         { icon: Crown, label: 'Champion', earned: false },
     ];
 
+    useEffect(() => {
+        if (isMobile) {
+            handleBackgroundLoaded();
+        }
+    }, [isMobile, handleBackgroundLoaded]);
+
     return (
         <div className={`w-full relative ${isMobile ? 'min-h-screen' : 'h-screen overflow-hidden'} bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]`}>
 
             {/* 1. 3D Background Layer */}
-            <Background3D
-                onLoaded={handleBackgroundLoaded}
-                interactive={!isMobile && (!hoveredMode || (hoveredMode !== 'ui'))}
-                activeCardId={!isMobile && (hoveredMode === 'solo' || hoveredMode === 'multi') ? hoveredMode : null}
-                cardBounds={isMobile ? null : cardBounds}
-            />
+            {!isMobile && (
+                <Background3D
+                    onLoaded={handleBackgroundLoaded}
+                    interactive={!isMobile && (!hoveredMode || (hoveredMode !== 'ui'))}
+                    activeCardId={!isMobile && (hoveredMode === 'solo' || hoveredMode === 'multi') ? hoveredMode : null}
+                    cardBounds={isMobile ? null : cardBounds}
+                />
+            )}
 
             {/* Local Loading Overlay removed - now handled globally in App.jsx */}
 

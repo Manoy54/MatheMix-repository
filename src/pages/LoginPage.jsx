@@ -12,6 +12,8 @@ import {
 import { getFirestore, doc, setDoc } from "firebase/firestore";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react"; // Imported ChevronDown
+import { useLoading } from "../context/LoadingContext";
+import { useMobile } from "../hooks/useMobile";
 
 
 import createAccImg from "../assets/createaccimg.jpg";
@@ -52,6 +54,7 @@ try {
 
 
 function App() {
+    const isMobile = useMobile();
     const [isRegister, setIsRegister] = useState(true);
 
     // Form States
@@ -73,8 +76,14 @@ function App() {
     // Math Symbols for Background
     const mathSymbols = ['+', '−', '×', '÷', '=', 'π', '∑', '√', '∞'];
 
+    const { setModeDataReady, setBg3DReady } = useLoading();
+
     // Initialize Auth (Preview Environment Pattern)
     useEffect(() => {
+        // Signal that the login page is ready to hide the loading screen
+        setModeDataReady(true);
+        setBg3DReady(true);
+
         const initAuth = async () => {
             if (!auth) return;
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -162,31 +171,33 @@ function App() {
             <div className="w-full md:w-1/2 h-full bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7] flex flex-col pt-12 md:pt-24 px-4 md:px-16 overflow-y-auto shadow-xl relative">
 
                 {/* --- FLOATING SYMBOLS (Background Animation) --- */}
-                <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    {mathSymbols.map((symbol, i) => (
-                        <motion.div
-                            key={`symbol-${i}`}
-                            className="absolute text-white/5 select-none font-black"
-                            style={{
-                                left: `${Math.random() * 100}%`,
-                                top: `${Math.random() * 100}%`,
-                                fontSize: `${Math.random() * 60 + 40}px`,
-                            }}
-                            animate={{
-                                y: [0, -40, 0],
-                                x: [0, Math.random() * 20 - 10, 0],
-                                rotate: [0, 360],
-                            }}
-                            transition={{
-                                duration: Math.random() * 15 + 15,
-                                repeat: Infinity,
-                                ease: "easeInOut",
-                            }}
-                        >
-                            {symbol}
-                        </motion.div>
-                    ))}
-                </div>
+                {!isMobile && (
+                    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                        {mathSymbols.map((symbol, i) => (
+                            <motion.div
+                                key={`symbol-${i}`}
+                                className="absolute text-white/5 select-none font-black"
+                                style={{
+                                    left: `${Math.random() * 100}%`,
+                                    top: `${Math.random() * 100}%`,
+                                    fontSize: `${Math.random() * 60 + 40}px`,
+                                }}
+                                animate={{
+                                    y: [0, -40, 0],
+                                    x: [0, Math.random() * 20 - 10, 0],
+                                    rotate: [0, 360],
+                                }}
+                                transition={{
+                                    duration: Math.random() * 15 + 15,
+                                    repeat: Infinity,
+                                    ease: "easeInOut",
+                                }}
+                            >
+                                {symbol}
+                            </motion.div>
+                        ))}
+                    </div>
+                )}
 
                 {/* Form Wrapper (Z-index ensures it sits above symbols) */}
                 <div className="w-full max-w-[480px] mx-auto z-10">

@@ -1,7 +1,9 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { useMobile } from '../hooks/useMobile';
 
 export default function AnimatedBackground() {
+    const isMobile = useMobile();
     const mathSymbols = useMemo(() => {
         const symbols = ['+', '−', '×', '÷', '=', 'π', '∑', '√', '∞', 'α', 'β', 'θ'];
         return symbols.map((symbol, i) => ({
@@ -15,6 +17,8 @@ export default function AnimatedBackground() {
             yOffset: Math.random() * 30 - 15,
         }));
     }, []);
+
+    if (isMobile) return null;
 
     return (
         <>

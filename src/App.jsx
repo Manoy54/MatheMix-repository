@@ -1,8 +1,10 @@
 // src/App.jsx
 import React, { useState, useEffect, lazy, Suspense } from "react";
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation, useNavigationType } from "react-router-dom";
 import { Menu } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLoading } from "./context/LoadingContext";
+import { useMobile } from "./hooks/useMobile";
 
 // Pages
 import Game from "./pages/Game";
@@ -10,15 +12,17 @@ import Lobby from "./pages/multiplayer/Lobby.jsx";
 import ModeSelect from "./pages/ModeSelect";
 import LoginPage from "./pages/LoginPage";
 import CategorySelect from "./pages/CategorySelect.jsx";
-import Admin from "./pages/Admin.jsx";
-import Leaderboard from "./pages/Leaderboard.jsx";
+import LandingPage from "./pages/LandingPage";
+import Leaderboard from "./pages/Leaderboard";
+import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
+import TermsOfService from "./pages/legal/TermsOfService";
+import CookiePolicy from "./pages/legal/CookiePolicy";
 const Stats = lazy(() => import("./pages/Stats.jsx"));
 
 // Components
 import { Sidebar } from "./components/Sidebar.jsx";
 import AnimatedBackground from "./components/AnimatedBackground.jsx";
 import LoadingScreen from "./components/LoadingScreen.jsx";
-import { LoadingProvider, useLoading } from "./context/LoadingContext.jsx";
 
 import { auth, db } from "./firebaseConfig.js";
 import { onAuthStateChanged, signOut } from "firebase/auth";
@@ -29,13 +33,16 @@ const ProtectedRoute = ({ user, children }) => {
     return children;
 };
 
-function AppContent() {
+function App() {
+    const isMobile = useMobile();
     const [currentUser, setCurrentUser] = useState(null);
     const [username, setUsername] = useState("");
-    const [authLoading, setAuthLoading] = useState(true);
+    const [loading, setLoading] = useState(true);
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     const location = useLocation();
-    const { hasFinishedLoading, setModeDataReady, setBg3DReady, isModeDataReady, resetLoading } = useLoading();
+    const navigationType = useNavigationType();
+    const lastNavRef = React.useRef("");
+    const { isLoading, startLoading } = useLoading();
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -51,55 +58,48 @@ function AppContent() {
                 setCurrentUser(null);
                 setUsername("");
             }
-            setAuthLoading(false);
+            setLoading(false);
         });
         return () => unsubscribe();
     }, []);
 
-    // Auto-ready signal for routes that don't have Background3D or custom data signals
+    // Centralized route-entry loading trigger
     useEffect(() => {
-        if (!authLoading) {
-            const background3DRoutes = ["/mode-select", "/category-select"];
-            const isOn3DRoute = background3DRoutes.includes(location.pathname);
+        const routesToLoad = ["/mode-select", "/category-select"];
+        const currentKey = location.key || "initial";
+        const navId = `${currentKey}:${location.pathname}`;
 
-            if (!isOn3DRoute) {
-                // If we're not on a 3D route, we just signal readiness immediately
-                setModeDataReady(true);
-                setBg3DReady(true);
-            }
+        // Only trigger if entering a specified route AND it's a new navigation event
+        if (routesToLoad.includes(location.pathname) && lastNavRef.current !== navId) {
+            lastNavRef.current = navId;
+            startLoading();
         }
-    }, [authLoading, location.pathname, setModeDataReady, setBg3DReady]);
-
-    // Reset loading state on entry to specific routes to force re-showing LoadingScreen
-    useEffect(() => {
-        const triggerLoadingRoutes = ["/mode-select", "/category-select"];
-        if (triggerLoadingRoutes.includes(location.pathname)) {
-            resetLoading();
-        }
-    }, [location.pathname, resetLoading]);
+    }, [location.pathname, location.key, startLoading]);
 
     const handleLogout = async () => {
         await signOut(auth);
         setSidebarOpen(false);
     };
 
-    // If still checking auth, we show a basic loading state or the full loading screen
-    // Given the requirement to only show the progress loading screen once, we handle it carefully.
+    const { hasFinishedLoading } = useLoading();
 
-    const fullScreenRoutes = ["/", "/mode-select", "/category-select", "/lobby", "/game", "/stats", "/leaderboard", "/admin"];
+    // The loading screen will handle both auth loading and game initialization
+    const showLoading = loading || isLoading;
+
+    const fullScreenRoutes = ["/", "/mode-select", "/category-select", "/lobby", "/game", "/stats", "/leaderboard", "/welcome", "/privacy-policy", "/terms-of-service", "/cookie-policy"];
     const isFullScreen = fullScreenRoutes.includes(location.pathname);
-    const isLoginPage = location.pathname === "/";
+    const isPublicPage = ["/", "/welcome"].includes(location.pathname);
     const hasOwnSidebarButton = ["/lobby", "/mode-select", "/category-select", "/game"].includes(location.pathname);
 
     return (
         <div className="font-nunito min-h-screen w-full relative bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]">
             <AnimatePresence>
-                {!hasFinishedLoading && <LoadingScreen key="app-loading" />}
+                {showLoading && <LoadingScreen key="global-loading" />}
             </AnimatePresence>
 
-            {location.pathname !== "/" && <AnimatedBackground />}
+            {!isPublicPage && !showLoading && location.pathname !== "/lobby" && !isMobile && <AnimatedBackground />}
 
-            {!isLoginPage && location.pathname !== "/admin" && currentUser && (
+            {!isPublicPage && currentUser && (
                 <>
                     <Sidebar
                         isOpen={isSidebarOpen}
@@ -120,27 +120,22 @@ function AppContent() {
                 </>
             )}
 
-            <div className={`relative z-10 ${isFullScreen ? "w-full min-h-full" : "max-w-6xl mx-auto p-4"}`}>
+            <div className={`relative z-10 ${isFullScreen ? "w-full h-full" : "max-w-6xl mx-auto p-4"}`}>
                 <Routes>
                     <Route path="/" element={currentUser ? <Navigate to="/mode-select" /> : <LoginPage />} />
+                    <Route path="/welcome" element={<LandingPage />} />
                     <Route path="/mode-select" element={<ProtectedRoute user={currentUser}><ModeSelect username={username} onLogout={handleLogout} onOpenSidebar={() => setSidebarOpen(true)} /></ProtectedRoute>} />
                     <Route path="/category-select" element={<ProtectedRoute user={currentUser}><CategorySelect username={username} onLogout={handleLogout} onOpenSidebar={() => setSidebarOpen(true)} /></ProtectedRoute>} />
                     <Route path="/game" element={<ProtectedRoute user={currentUser}><Game onGameEnd={() => { }} onOpenSidebar={() => setSidebarOpen(true)} /></ProtectedRoute>} />
                     <Route path="/lobby" element={<ProtectedRoute user={currentUser}><Lobby user={currentUser} onOpenSidebar={() => setSidebarOpen(true)} onLogout={handleLogout} /></ProtectedRoute>} />
-                    <Route path="/admin" element={<ProtectedRoute user={currentUser}><Admin username={username} onLogout={handleLogout} /></ProtectedRoute>} />
-                    <Route path="/leaderboard" element={<ProtectedRoute user={currentUser}><Leaderboard /></ProtectedRoute>} />
                     <Route path="/stats" element={<ProtectedRoute user={currentUser}><Suspense fallback={<div className="text-white text-center">Loading Stats...</div>}><Stats user={currentUser} /></Suspense></ProtectedRoute>} />
+                    <Route path="/leaderboard" element={<ProtectedRoute user={currentUser}><Leaderboard /></ProtectedRoute>} />
+                    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                    <Route path="/terms-of-service" element={<TermsOfService />} />
+                    <Route path="/cookie-policy" element={<CookiePolicy />} />
                 </Routes>
             </div>
         </div>
-    );
-}
-
-function App() {
-    return (
-        <LoadingProvider>
-            <AppContent />
-        </LoadingProvider>
     );
 }
 

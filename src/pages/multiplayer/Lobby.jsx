@@ -20,6 +20,7 @@ import RoomSelection from './RoomSelection';
 import HostLobby from './HostLobby';
 import PlayerWaiting from './PlayerWaiting';
 import { QUESTIONS } from '../../data.js';
+import { useMobile } from '../../hooks/useMobile';
 
 
 const generateRoomCode = () => {
@@ -29,6 +30,7 @@ const generateRoomCode = () => {
 const mathSymbols = ['+', '−', '×', '÷', '=', 'π', '∑', '√', '∞', 'α', 'β', 'θ'];
 
 export default function Lobby({ user, onOpenSidebar }) {
+    const isMobile = useMobile();
     const symbolsData = useMemo(() => {
         return mathSymbols.map((symbol, i) => ({
             symbol,
@@ -264,46 +266,50 @@ export default function Lobby({ user, onOpenSidebar }) {
 
     return (
         <div className="h-screen w-full relative overflow-hidden bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]">
-            {/* Animated background elements */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                {symbolsData.map((data, i) => (
-                    <div
-                        key={`symbol-${i}`}
-                        className="absolute text-white/10 select-none"
-                        style={{
-                            left: data.left,
-                            top: data.top,
-                            fontSize: data.fontSize,
-                            animation: `float ${data.duration}s ease-in-out ${data.delay} infinite`
-                        }}
-                    >
-                        {data.symbol}
+            {/* Animated background elements - Disabled on mobile for performance */}
+            {!isMobile && (
+                <>
+                    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                        {symbolsData.map((data, i) => (
+                            <div
+                                key={`symbol-${i}`}
+                                className="absolute text-white/10 select-none"
+                                style={{
+                                    left: data.left,
+                                    top: data.top,
+                                    fontSize: data.fontSize,
+                                    animation: `float ${data.duration}s ease-in-out ${data.delay} infinite`
+                                }}
+                            >
+                                {data.symbol}
+                            </div>
+                        ))}
+
+                        {/* Glowing orbs */}
+                        <div className="absolute top-1/4 right-1/4 w-[500px] h-[500px] bg-gradient-to-br from-cyan-400/30 to-blue-500/30 rounded-full blur-3xl animate-pulse-slow" />
+                        <div className="absolute bottom-1/4 left-1/4 w-[500px] h-[500px] bg-gradient-to-br from-purple-500/30 to-violet-500/30 rounded-full blur-3xl" style={{ animation: 'pulse-slow 8s ease-in-out 4s infinite' }} />
+
+                        {/* Geometric patterns */}
+                        <div className="absolute top-1/3 left-1/2 w-64 h-64 border-2 border-cyan-400/20 rounded-full animate-spin-slow" />
+                        <div
+                            className="absolute bottom-1/3 right-1/3 w-48 h-48 border-2 border-purple-400/20 animate-spin-reverse"
+                            style={{ clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }}
+                        />
                     </div>
-                ))}
 
-                {/* Glowing orbs */}
-                <div className="absolute top-1/4 right-1/4 w-[500px] h-[500px] bg-gradient-to-br from-cyan-400/30 to-blue-500/30 rounded-full blur-3xl animate-pulse-slow" />
-                <div className="absolute bottom-1/4 left-1/4 w-[500px] h-[500px] bg-gradient-to-br from-purple-500/30 to-violet-500/30 rounded-full blur-3xl" style={{ animation: 'pulse-slow 8s ease-in-out 4s infinite' }} />
-
-                {/* Geometric patterns */}
-                <div className="absolute top-1/3 left-1/2 w-64 h-64 border-2 border-cyan-400/20 rounded-full animate-spin-slow" />
-                <div
-                    className="absolute bottom-1/3 right-1/3 w-48 h-48 border-2 border-purple-400/20 animate-spin-reverse"
-                    style={{ clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }}
-                />
-            </div>
-
-            {/* Grid pattern overlay */}
-            <div
-                className="absolute inset-0 opacity-10"
-                style={{
-                    backgroundImage: `
-            linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)
-          `,
-                    backgroundSize: '50px 50px'
-                }}
-            />
+                    {/* Grid pattern overlay */}
+                    <div
+                        className="absolute inset-0 opacity-10"
+                        style={{
+                            backgroundImage: `
+                                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                                linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)
+                            `,
+                            backgroundSize: '50px 50px'
+                        }}
+                    />
+                </>
+            )}
 
             {/* Content */}
             <div className="relative z-10 px-4 h-screen flex flex-col">

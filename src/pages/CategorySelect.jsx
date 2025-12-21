@@ -106,16 +106,24 @@ export default function CategorySelect({ username, onOpenSidebar }) {
         navigate('/game', { state: { category: categoryId } });
     };
 
+    useEffect(() => {
+        if (isMobile) {
+            handleBackgroundLoaded();
+        }
+    }, [isMobile, handleBackgroundLoaded]);
+
     return (
         <div className={`w-full relative ${isMobile ? 'min-h-screen' : 'h-screen overflow-hidden'} bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]`}>
 
             {/* 3D Background Layer */}
-            <Background3D
-                onLoaded={handleBackgroundLoaded}
-                interactive={!isMobile && (!hoveredCategory || (hoveredCategory !== 'ui'))}
-                activeCardId={!isMobile ? hoveredCategory : null}
-                cardBounds={isMobile ? null : cardBounds}
-            />
+            {!isMobile && (
+                <Background3D
+                    onLoaded={handleBackgroundLoaded}
+                    interactive={!isMobile && (!hoveredCategory || (hoveredCategory !== 'ui'))}
+                    activeCardId={!isMobile ? hoveredCategory : null}
+                    cardBounds={isMobile ? null : cardBounds}
+                />
+            )}
 
             {/* Main Content Layer */}
             {isBackgroundReady && (

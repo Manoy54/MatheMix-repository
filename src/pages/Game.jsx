@@ -204,6 +204,7 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
 
     // --- 4. Physical Keyboard & Container Measurement ---
     const containerRef = useRef(null);
+    const keyboardContainerRef = useRef(null);
     const [containerWidth, setContainerWidth] = useState(0);
 
     useEffect(() => {
@@ -251,6 +252,23 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [handleChar, handleDelete, handleSubmit, handleClear, showGiveUpModal, isGameOver]);
+
+    // Focus/Blur management for modals
+    useEffect(() => {
+        const isAnyModalOpen = showGiveUpModal || isGameOver;
+        if (isAnyModalOpen) {
+            // Blur the active element (e.g., if there's an invisible input or a clicked button)
+            if (document.activeElement instanceof HTMLElement) {
+                document.activeElement.blur();
+            }
+
+            // Also explicitly blur any focused buttons within the keyboard to ensure it doesn't stay highlighted/active
+            const keyboardButtons = keyboardContainerRef.current?.querySelectorAll('button, [role="button"]');
+            keyboardButtons?.forEach(btn => {
+                if (btn instanceof HTMLElement) btn.blur();
+            });
+        }
+    }, [showGiveUpModal, isGameOver]);
 
     return (
         <div className={`px-4 py-3 min-h-screen preserve-3d flex flex-col ${isMobile ? 'pb-[280px]' : ''}`}>
@@ -340,135 +358,21 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
                 )}
             </AnimatePresence>
 
-            <motion.div initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="flex items-center justify-between mb-3 flex-shrink-0">
-                <div className="flex items-center gap-3">
-                    {onOpenSidebar && (
-                        <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={onOpenSidebar}
-                            className="bg-white/10 backdrop-blur-md p-2 rounded-xl border border-white/20 text-white shadow-lg hover:bg-white/20 transition-all"
-                        >
-                            <Menu className="w-6 h-6" />
-                        </motion.button>
-                    )}
-                    <motion.div
-                        animate={{ rotate: [0, 360] }}
-                        transition={{ duration: 20, repeat: Infinity, ease: "linear", repeatType: "loop" }}
-                        className="relative"
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl blur-lg opacity-50" />
-                        <div className="relative bg-gradient-to-br from-white/20 to-white/10 p-2 rounded-xl border-2 border-white/30 backdrop-blur-sm">
-                            <Calculator className="w-6 h-6 text-white" />
-                        </div>
-                    </motion.div>
-                    <div>
-                        <h1 className="text-white flex items-center gap-2 text-xl">
-                            Mathemix
-                            <motion.div
-                                animate={{ rotate: [0, 15, -15, 0] }}
-                                transition={{ duration: 2, repeat: Infinity, repeatType: "loop" }}
-                            >
-                                <Sparkles className="w-5 h-5 text-yellow-300" />
-                            </motion.div>
-                        </h1>
-                        <p className="text-white/60 text-xs">Solo Mode - {category}</p>
-                    </div>
-                </div>
-            </motion.div>
+            <GameHeader onOpenSidebar={onOpenSidebar} category={category} />
 
             <div className="flex-1 flex items-center justify-center overflow-hidden py-2">
                 <div className="w-full max-w-5xl space-y-4">
-                    <motion.div
-                        initial={{ y: -20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 0.1 }}
-                        className="flex items-center justify-between"
-                    >
-                        <div className="relative">
-                            <div className="absolute inset-0 bg-white/20 rounded-xl blur-lg" />
-                            <div className="relative bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2 border-2 border-white/30 flex items-center gap-2 shadow-xl">
-                                <Brain className="w-4 h-4 text-cyan-300" />
-                                <div>
-                                    <div className="text-white/70 text-xs">Question</div>
-                                    <div className="text-white text-xl">#{questionNumber}</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <div className="relative">
-                                <div className="absolute inset-0 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl blur-lg opacity-60" />
-                                {streak > 0 && (
-                                    <>
-                                        {[...Array(12)].map((_, i) => {
-                                            const randomDelay = i * 0.2;
-                                            const randomX = (Math.random() - 0.5) * 80;
-                                            const isOrange = i % 2 === 0;
-                                            const isLarge = i % 3 === 0;
+                    <QuestionStats
+                        questionNumber={questionNumber}
+                        streak={streak}
+                        bestStreak={bestStreak}
+                    />
 
-                                            return (
-                                                <motion.div
-                                                    key={`particle-${i}`}
-                                                    className={`absolute bottom-0 left-1/2 ${isLarge ? 'w-5 h-5' : 'w-4 h-4'} rounded-full ${isOrange ? 'bg-gradient-to-t from-orange-500 to-red-500' : 'bg-gradient-to-t from-yellow-400 to-orange-400'}`}
-                                                    style={{ boxShadow: isOrange ? '0 0 20px rgba(251, 146, 60, 1)' : '0 0 20px rgba(250, 204, 21, 1)' }}
-                                                    animate={{ y: [-10, -100], x: [0, randomX], opacity: [1, 0], scale: [1, 0.3] }}
-                                                    transition={{ duration: 2.5, repeat: Infinity, ease: "easeOut", delay: randomDelay }}
-                                                />
-                                            );
-                                        })}
-                                    </>
-                                )}
-                                <motion.div
-                                    className="relative bg-gradient-to-br from-orange-500 to-red-600 backdrop-blur-sm rounded-xl px-4 py-2 border-2 border-orange-300/50 flex items-center gap-2"
-                                    animate={streak > 0 ? { boxShadow: ['0 0 40px rgba(251, 146, 60, 0.8), 0 0 80px rgba(239, 68, 68, 0.6)', '0 0 60px rgba(251, 146, 60, 1), 0 0 120px rgba(239, 68, 68, 0.9)', '0 0 40px rgba(251, 146, 60, 0.8), 0 0 80px rgba(239, 68, 68, 0.6)',], } : { boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)' }}
-                                    transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-                                >
-                                    <motion.div
-                                        animate={streak > 0 ? { rotate: [-5, 5, -5, 5, -5, 0], scale: [1, 1.2, 1, 1.15, 1] } : {}}
-                                        transition={{ duration: 0.8, repeat: Infinity, repeatDelay: 1.5 }}
-                                    >
-                                        <Flame className="w-4 h-4 text-white drop-shadow-lg" />
-                                    </motion.div>
-                                    <div>
-                                        <div className="text-orange-100 text-xs">Streak</div>
-                                        <motion.div className="text-white text-xl font-bold" key={streak} initial={{ scale: 1 }} animate={streak > 0 ? { scale: [1, 1.3, 1] } : {}}>
-                                            {streak}
-                                        </motion.div>
-                                    </div>
-                                </motion.div>
-                            </div>
-                            <div className="relative">
-                                <div className="absolute inset-0 bg-white/20 rounded-xl blur-lg" />
-                                <div className="relative bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2 border-2 border-white/30 flex items-center gap-2 shadow-xl">
-                                    <Trophy className="w-4 h-4 text-yellow-300" />
-                                    <div>
-                                        <div className="text-white/70 text-xs">Best</div>
-                                        <div className="text-white text-xl">{bestStreak}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </motion.div>
-                    <motion.div
-                        key={questionNumber}
-                        initial={{ scale: 0.95, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ delay: 0.1 }}
-                        className="relative"
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/30 to-blue-400/30 rounded-2xl blur-xl" />
-                        <div className="relative bg-white/15 backdrop-blur-xl p-5 rounded-2xl border-2 border-white/30 shadow-2xl">
-                            <div className="absolute top-3 right-3 bg-gradient-to-r from-yellow-300 to-orange-300 text-[#023e8a] px-4 py-1 rounded-full shadow-lg text-sm">
-                                Question #{questionNumber}
-                            </div>
-                            <div className="absolute top-3 left-3 bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs border border-white/30">
-                                {category}
-                            </div>
-                            <p className="text-white text-lg leading-relaxed mt-6 text-center">
-                                {currentQ.definition}
-                            </p>
-                        </div>
-                    </motion.div>
+                    <QuestionCard
+                        questionNumber={questionNumber}
+                        category={category}
+                        definition={currentQ.definition}
+                    />
 
                     <CharacterBoxes
                         containerRef={containerRef}
@@ -480,9 +384,11 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
                     />
 
                     <motion.div
+                        ref={keyboardContainerRef}
                         initial={{ y: 30, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.4 }}
+                        style={{ pointerEvents: (showGiveUpModal || isGameOver) ? 'none' : 'auto' }}
                     >
                         <Keyboard
                             onChar={handleChar}
@@ -500,7 +406,153 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
     );
 }
 
-// --- Optimized Character Boxes Subcomponent ---
+// --- HOT PATH SUBCOMPONENTS (Optimized for latency) ---
+
+const GameHeader = React.memo(({ onOpenSidebar, category }) => (
+    <motion.div initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="flex items-center justify-between mb-3 flex-shrink-0">
+        <div className="flex items-center gap-3">
+            {onOpenSidebar && (
+                <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={onOpenSidebar}
+                    className="bg-white/10 backdrop-blur-md p-2 rounded-xl border border-white/20 text-white shadow-lg hover:bg-white/20 transition-all"
+                >
+                    <Menu className="w-6 h-6" />
+                </motion.button>
+            )}
+            <motion.div
+                animate={{ rotate: [0, 360] }}
+                transition={{ duration: 20, repeat: Infinity, ease: "linear", repeatType: "loop" }}
+                className="relative"
+            >
+                <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl blur-lg opacity-50" />
+                <div className="relative bg-gradient-to-br from-white/20 to-white/10 p-2 rounded-xl border-2 border-white/30 backdrop-blur-sm">
+                    <Calculator className="w-6 h-6 text-white" />
+                </div>
+            </motion.div>
+            <div>
+                <h1 className="text-white flex items-center gap-2 text-xl">
+                    Mathemix
+                    <motion.div
+                        animate={{ rotate: [0, 15, -15, 0] }}
+                        transition={{ duration: 2, repeat: Infinity, repeatType: "loop" }}
+                    >
+                        <Sparkles className="w-5 h-5 text-yellow-300" />
+                    </motion.div>
+                </h1>
+                <p className="text-white/60 text-xs">Solo Mode - {category}</p>
+            </div>
+        </div>
+    </motion.div>
+));
+
+const QuestionStats = React.memo(({ questionNumber, streak, bestStreak }) => (
+    <motion.div
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.1 }}
+        className="flex items-center justify-between"
+    >
+        <div className="relative">
+            <div className="absolute inset-0 bg-white/20 rounded-xl blur-lg" />
+            <div className="relative bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2 border-2 border-white/30 flex items-center gap-2 shadow-xl">
+                <Brain className="w-4 h-4 text-cyan-300" />
+                <div>
+                    <div className="text-white/70 text-xs">Question</div>
+                    <div className="text-white text-xl">#{questionNumber}</div>
+                </div>
+            </div>
+        </div>
+        <div className="flex items-center gap-3">
+            <FireStreak streak={streak} />
+            <div className="relative">
+                <div className="absolute inset-0 bg-white/20 rounded-xl blur-lg" />
+                <div className="relative bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2 border-2 border-white/30 flex items-center gap-2 shadow-xl">
+                    <Trophy className="w-4 h-4 text-yellow-300" />
+                    <div>
+                        <div className="text-white/70 text-xs">Best</div>
+                        <div className="text-white text-xl">{bestStreak}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </motion.div>
+));
+
+const FireStreak = React.memo(({ streak }) => {
+    // Generate static particle data so we don't call Math.random() on every keystroke
+    const particles = useMemo(() => [...Array(12)].map((_, i) => ({
+        delay: i * 0.2,
+        x: (Math.random() - 0.5) * 80,
+        isOrange: i % 2 === 0,
+        isLarge: i % 3 === 0
+    })), []);
+
+    return (
+        <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl blur-lg opacity-60" />
+            {streak > 0 && (
+                <>
+                    {particles.map((p, i) => (
+                        <motion.div
+                            key={`particle-${i}`}
+                            className={`absolute bottom-0 left-1/2 ${p.isLarge ? 'w-5 h-5' : 'w-4 h-4'} rounded-full ${p.isOrange ? 'bg-gradient-to-t from-orange-500 to-red-500' : 'bg-gradient-to-t from-yellow-400 to-orange-400'}`}
+                            style={{ boxShadow: p.isOrange ? '0 0 20px rgba(251, 146, 60, 1)' : '0 0 20px rgba(250, 204, 21, 1)' }}
+                            animate={{ y: [-10, -100], x: [0, p.x], opacity: [1, 0], scale: [1, 0.3] }}
+                            transition={{ duration: 2.5, repeat: Infinity, ease: "easeOut", delay: p.delay }}
+                        />
+                    ))}
+                </>
+            )}
+            <motion.div
+                className="relative bg-gradient-to-br from-orange-500 to-red-600 backdrop-blur-sm rounded-xl px-4 py-2 border-2 border-orange-300/50 flex items-center gap-2"
+                animate={streak > 0 ? { boxShadow: ['0 0 40px rgba(251, 146, 60, 0.8), 0 0 80px rgba(239, 68, 68, 0.6)', '0 0 60px rgba(251, 146, 60, 1), 0 0 120px rgba(239, 68, 68, 0.9)', '0 0 40px rgba(251, 146, 60, 0.8), 0 0 80px rgba(239, 68, 68, 0.6)',], } : { boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)' }}
+                transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+            >
+                <motion.div
+                    animate={streak > 0 ? { rotate: [-5, 5, -5, 5, -5, 0], scale: [1, 1.2, 1, 1.15, 1] } : {}}
+                    transition={{ duration: 0.8, repeat: Infinity, repeatDelay: 1.5 }}
+                >
+                    <Flame className="w-4 h-4 text-white drop-shadow-lg" />
+                </motion.div>
+                <div>
+                    <div className="text-orange-100 text-xs">Streak</div>
+                    <motion.div className="text-white text-xl font-bold" key={streak} initial={{ scale: 1 }} animate={streak > 0 ? { scale: [1, 1.3, 1] } : {}}>
+                        {streak}
+                    </motion.div>
+                </div>
+            </motion.div>
+        </div>
+    );
+});
+
+const QuestionCard = React.memo(({ questionNumber, category, definition }) => (
+    <motion.div
+        key={questionNumber}
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.1 }}
+        className="relative"
+    >
+        <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/30 to-blue-400/30 rounded-2xl blur-xl" />
+        <div className="relative bg-white/15 backdrop-blur-xl p-5 rounded-2xl border-2 border-white/30 shadow-2xl">
+            <div className="absolute top-3 right-3 bg-gradient-to-r from-yellow-300 to-orange-300 text-[#023e8a] px-4 py-1 rounded-full shadow-lg text-sm">
+                Question #{questionNumber}
+            </div>
+            <div className="absolute top-3 left-3 bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs border border-white/30">
+                {category}
+            </div>
+            <p className="text-white text-lg leading-relaxed mt-6 text-center">
+                {definition}
+            </p>
+        </div>
+    </motion.div>
+));
+
+
+
+// --- 5. Optimized Character Boxes Subcomponent ---
 const CharacterBoxes = React.memo(({ containerRef, answer, input, answerStatus, isMobile, containerWidth }) => {
     const words = useMemo(() => answer.split(' '), [answer]);
     const inputCharsOnly = useMemo(() => input.split(''), [input]);

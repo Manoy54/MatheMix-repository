@@ -6,6 +6,7 @@ import Keyboard from "./Keyboard.jsx";
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calculator, Sparkles, Trophy, Brain, Users, Zap, Menu, Crown, LogOut, CheckCircle, XCircle, Clock, AlertCircle, Maximize2, X } from 'lucide-react';
 import { useMobile } from "../hooks/useMobile.jsx";
+import AnimatedBackground from "./AnimatedBackground.jsx";
 
 export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onOpenSidebar }) {
     // --- Logic State ---
@@ -56,29 +57,34 @@ export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onO
         setShowGiveUpModal(false);
     }, [currentQuestion]);
 
-    // --- Handlers ---
-    const handleKey = (key) => {
+    // --- Handlers (Memoized for performance) ---
+    const handleKey = useCallback((key) => {
         if (status !== "playing" || hasAnswered || showGiveUpModal) return;
-        if (guess.length < numGuessableBoxes) {
-            setGuess(guess + key);
-            setPressedKey(key);
-            setTimeout(() => setPressedKey(null), 150);
-        }
-    };
-    const handleClear = () => {
+        setGuess(prev => {
+            if (prev.length < numGuessableBoxes) {
+                return prev + key;
+            }
+            return prev;
+        });
+        setPressedKey(key);
+        setTimeout(() => setPressedKey(null), 150);
+    }, [status, hasAnswered, showGiveUpModal, numGuessableBoxes]);
+
+    const handleClear = useCallback(() => {
         if (status === "playing" && !hasAnswered && !showGiveUpModal) {
             setGuess("");
             setPressedKey('CLEAR');
             setTimeout(() => setPressedKey(null), 150);
         }
-    };
-    const handleDelete = () => {
+    }, [status, hasAnswered, showGiveUpModal]);
+
+    const handleDelete = useCallback(() => {
         if (status === "playing" && !hasAnswered && !showGiveUpModal) {
-            setGuess(guess.slice(0, -1));
+            setGuess(prev => prev.slice(0, -1));
             setPressedKey('DELETE');
             setTimeout(() => setPressedKey(null), 150);
         }
-    };
+    }, [status, hasAnswered, showGiveUpModal]);
 
     const submitAnswerToFirestore = async (isCorrect, score, finalGuess) => {
         const roomRef = doc(db, "rooms", roomCode);
@@ -88,7 +94,7 @@ export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onO
             guess: finalGuess,
             isCorrect,
             score,
-            timestamp: Date.now(), // Critical for fair tie-breaking
+            timestamp: Date.now(),
         };
 
         await updateDoc(roomRef, {
@@ -96,7 +102,7 @@ export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onO
         });
     };
 
-    const handleSubmit = async () => {
+    const handleSubmit = useCallback(async () => {
         if (status !== "playing" || hasAnswered || guess.length !== numGuessableBoxes || showGiveUpModal) return;
 
         setPressedKey('ENTER');
@@ -107,20 +113,13 @@ export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onO
 
         if (guess.trim().toUpperCase() === pureAnswer) {
             isCorrect = true;
-
-            // Calculate Rank based on how many correct answers already exist
             const correctAnswersSoFar = answers ? answers.filter(a => a.isCorrect).length : 0;
-            const myRank = correctAnswersSoFar + 1;
-
-            // Base Score + Ranking Bonus
-            // 1st: +30, 2nd: +20, 3rd: +10, 4th+: +0
+            const myRankAtSubmit = correctAnswersSoFar + 1;
             const baseScore = 100;
-            const rankBonus = Math.max(0, 30 - ((myRank - 1) * 10));
-
+            const rankBonus = Math.max(0, 30 - ((myRankAtSubmit - 1) * 10));
             score = baseScore + rankBonus;
-
             setStatus("correct");
-            setScoreMessage(`+${score} pts! (#${myRank})`);
+            setScoreMessage(`+${score} pts! (#${myRankAtSubmit})`);
         } else {
             setStatus("wrong");
             setScoreMessage("Wrong answer (+0)");
@@ -128,13 +127,13 @@ export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onO
         }
 
         await submitAnswerToFirestore(isCorrect, score, guess.toUpperCase());
-    };
+    }, [status, hasAnswered, guess, numGuessableBoxes, showGiveUpModal, pureAnswer, answers, roomCode, user.uid, user.username]);
 
-    const handleSkip = () => {
+    const handleSkip = useCallback(() => {
         if (status === "playing" && !hasAnswered) {
             setShowGiveUpModal(true);
         }
-    };
+    }, [status, hasAnswered]);
 
     const confirmGiveUp = async () => {
         setShowGiveUpModal(false);
@@ -228,10 +227,12 @@ export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onO
     // Sort players for leaderboard
     const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
     const myPlayer = sortedPlayers.find(p => p.uid === user.uid);
-    const myRank = sortedPlayers.indexOf(myPlayer) + 1;
+    const myCurrentRank = sortedPlayers.indexOf(myPlayer) + 1;
 
     return (
-        <div className="h-screen w-full flex flex-col overflow-hidden">
+        <div className="h-screen w-full flex flex-col overflow-hidden bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]">
+            {!isMobile && <AnimatedBackground />}
+
             {/* Give Up Modal */}
             <AnimatePresence>
                 {showGiveUpModal && (
@@ -267,188 +268,33 @@ export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onO
                 )}
             </AnimatePresence>
 
-            {/* --- TOP BAR --- */}
-            <motion.div
-                initial={{ y: -50, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                className="px-4 py-3 flex items-center justify-between flex-shrink-0 z-20"
-            >
-                <div className="flex items-center gap-3">
-                    {onOpenSidebar && (
-                        <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={onOpenSidebar}
-                            className="bg-white/10 backdrop-blur-md p-2 rounded-xl border border-white/20 text-white shadow-lg hover:bg-white/20 transition-all"
-                        >
-                            <Menu className="w-6 h-6" />
-                        </motion.button>
-                    )}
-                    <motion.div
-                        animate={{ rotate: [0, 360] }}
-                        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                        className="relative"
-                    >
-                        <div className="absolute inset-0 bg-yellow-400/50 rounded-xl blur-lg opacity-50" />
-                        <div className="relative bg-white/10 p-2 rounded-xl border border-white/20 backdrop-blur-sm">
-                            <Calculator className="w-6 h-6 text-white" />
-                        </div>
-                    </motion.div>
-                    <div>
-                        <h1 className="text-white flex items-center gap-2 text-xl font-black">
-                            Mathemix
-                            <Sparkles className="w-4 h-4 text-yellow-300" />
-                        </h1>
-                        <p className="text-white/60 text-xs font-semibold">Multiplayer • Room {roomCode}</p>
-                    </div>
-                </div>
+            <TopBar
+                onOpenSidebar={onOpenSidebar}
+                roomCode={roomCode}
+                onLeave={onLeave}
+            />
 
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={onLeave}
-                        className="p-2 bg-red-500/20 hover:bg-red-500/40 text-red-200 rounded-lg border border-red-500/30 transition-colors"
-                        title="Leave Game"
-                    >
-                        <LogOut className="w-5 h-5" />
-                    </button>
-                </div>
-            </motion.div>
-
-            {/* --- MAIN GAME AREA --- */}
             <div className={`flex-1 overflow-y-auto ${isMobile ? 'pb-[280px]' : ''}`}>
                 <div className={`flex flex-col md:flex-row-reverse ${isMobile ? 'items-center' : 'items-start'} justify-center p-4 gap-6 max-w-7xl mx-auto w-full`}>
 
-                    {/* Leaderboard Section (Appears first on mobile, right side on desktop) */}
-                    <motion.div
-                        initial={isMobile ? { y: -20, x: 0, opacity: 0 } : { x: 50, y: 0, opacity: 0 }}
-                        animate={{ x: 0, y: 0, opacity: 1 }}
-                        className="w-full max-w-md md:max-w-none md:w-80 flex-shrink-0 z-10 flex flex-col gap-4"
-                    >
-                        {/* Rank & Score Widget */}
-                        <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 flex items-center justify-around shadow-lg">
-                            <div className="flex flex-col items-center">
-                                <span className="text-white/60 text-xs font-bold uppercase tracking-wider mb-1">Your Rank</span>
-                                <div className="flex items-center gap-1.5">
-                                    <Crown className="w-5 h-5 text-yellow-300" />
-                                    <span className="text-yellow-300 font-black text-3xl leading-none">#{myRank}</span>
-                                </div>
-                            </div>
-                            <div className="h-10 w-[1px] bg-white/10"></div>
-                            <div className="flex flex-col items-center">
-                                <span className="text-white/60 text-xs font-bold uppercase tracking-wider mb-1">Score</span>
-                                <div className="flex items-center gap-1.5">
-                                    <span className="text-white font-black text-3xl leading-none">{myPlayer?.score || 0}</span>
-                                </div>
-                            </div>
-                        </div>
+                    <RankingsSidebar
+                        isMobile={isMobile}
+                        myRank={myCurrentRank}
+                        myScore={myPlayer?.score || 0}
+                        user={user}
+                        sortedPlayers={sortedPlayers}
+                        setShowRankingsModal={setShowRankingsModal}
+                    />
 
-                        {/* Leaderboard Logic - Modal on Mobile, Inline on Desktop */}
-                        {isMobile ? (
-                            <motion.button
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() => setShowRankingsModal(true)}
-                                className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 flex items-center justify-between shadow-lg group hover:bg-white/15 transition-all text-left"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-cyan-400/10 rounded-xl border border-cyan-400/20">
-                                        <Users className="w-4 h-4 text-cyan-300" />
-                                    </div>
-                                    <span className="text-white/60 text-xs font-bold uppercase tracking-wider">Leading</span>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <div className="flex flex-col items-end">
-                                        <span className={`font-bold truncate max-w-[120px] transition-all ${sortedPlayers[0]?.uid === user.uid
-                                            ? 'text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.9)]'
-                                            : 'text-white'
-                                            }`}>
-                                            {sortedPlayers[0]?.nickname || 'No players'}
-                                        </span>
-                                        {sortedPlayers[0]?.uid === user.uid && (
-                                            <span className="text-[10px] text-yellow-400/60 font-bold uppercase tracking-widest mt-0.5">You</span>
-                                        )}
-                                    </div>
-                                    <div className="p-1.5 bg-white/10 rounded-lg group-hover:bg-white/20 transition-colors">
-                                        <Maximize2 className="w-4 h-4 text-white/50" />
-                                    </div>
-                                </div>
-                            </motion.button>
-                        ) : (
-                            <div className="bg-[#0f172a]/40 backdrop-blur-xl rounded-2xl border border-white/10 p-4 h-full max-h-[500px] overflow-hidden flex flex-col">
-                                <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2 border-b border-white/10 pb-2">
-                                    <Users className="w-5 h-5 text-cyan-300" />
-                                    Live Rankings
-                                </h3>
-                                <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
-                                    {sortedPlayers.map((p, index) => (
-                                        <div
-                                            key={p.uid}
-                                            className={`relative p-3 rounded-xl border flex items-center justify-between transition-all ${p.uid === user.uid
-                                                ? 'bg-white/10 border-white/30 shadow-lg'
-                                                : 'bg-transparent border-transparent hover:bg-white/5'
-                                                }`}
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${index === 0 ? 'bg-yellow-400 text-black shadow-[0_0_10px_#fbbf24]' :
-                                                    index === 1 ? 'bg-gray-300 text-black' :
-                                                        index === 2 ? 'bg-orange-400 text-black' :
-                                                            'bg-white/10 text-white'
-                                                    }`}>
-                                                    {index + 1}
-                                                </div>
-                                                <div className="flex flex-col">
-                                                    <span className={`text-sm font-bold ${p.uid === user.uid ? 'text-white' : 'text-white/70'}`}>
-                                                        {p.nickname}
-                                                    </span>
-                                                    {p.uid === user.uid && <span className="text-[10px] text-cyan-300 uppercase font-bold">You</span>}
-                                                </div>
-                                            </div>
-                                            <span className="text-white font-black text-lg">{p.score}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </motion.div>
-
-                    {/* Game board section */}
                     <div className="flex-1 flex flex-col items-center max-w-4xl w-full z-10 space-y-4">
-                        {/* Question Card */}
-                        <motion.div
-                            key={currentQuestion.definition}
-                            initial={{ scale: 0.95, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            className="relative w-full max-w-3xl"
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 to-blue-400/20 rounded-2xl blur-xl" />
-                            <div className="relative bg-white/10 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-2xl text-center min-h-[130px] flex flex-col justify-center items-center">
-                                <div className="absolute top-3 left-3 bg-white/10 px-3 py-1 rounded-full text-[10px] font-bold text-white/50 border border-white/10 uppercase tracking-widest">
-                                    {roomData.category || "General"}
-                                </div>
-                                <p className="text-white text-lg md:text-xl font-medium leading-relaxed mt-2">
-                                    {currentQuestion.definition}
-                                </p>
+                        <QuestionCard
+                            category={roomData.category}
+                            definition={currentQuestion.definition}
+                            hasAnswered={hasAnswered}
+                            allPlayersAnswered={allPlayersAnswered}
+                            scoreMessage={scoreMessage}
+                        />
 
-                                {/* Status Indicator inside card */}
-                                {hasAnswered && !allPlayersAnswered && (
-                                    <div className="mt-4 flex items-center gap-2 text-yellow-300 animate-pulse bg-yellow-400/10 px-4 py-2 rounded-full">
-                                        <Clock className="w-4 h-4" />
-                                        <span className="text-sm font-bold">Waiting for opponents...</span>
-                                    </div>
-                                )}
-
-                                {scoreMessage && (
-                                    <motion.div
-                                        initial={{ scale: 0, opacity: 0 }}
-                                        animate={{ scale: 1, opacity: 1 }}
-                                        className={`mt-4 px-4 py-2 rounded-full font-bold text-sm bg-white/20 text-white shadow-lg border border-white/20`}
-                                    >
-                                        {scoreMessage}
-                                    </motion.div>
-                                )}
-                            </div>
-                        </motion.div>
-
-                        {/* Answer Area (Words & Letters) */}
                         <CharacterBoxes
                             containerRef={containerRef}
                             answer={answer}
@@ -460,7 +306,6 @@ export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onO
                             containerWidth={containerWidth}
                         />
 
-                        {/* Keyboard (Desktop only) */}
                         {!isMobile && (
                             <div className="w-full max-w-2xl transform scale-95 origin-top">
                                 <Keyboard
@@ -493,145 +338,320 @@ export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onO
                 </div>
             )}
 
-            {/* --- ROUND OVER OVERLAY --- */}
+            {/* Round Over Overlay */}
             <AnimatePresence>
                 {allPlayersAnswered && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm"
-                    >
-                        <motion.div
-                            initial={{ scale: 0.9, y: 20 }}
-                            animate={{ scale: 1, y: 0 }}
-                            className="bg-[#0f172a] border-2 border-white/20 p-8 rounded-3xl shadow-2xl max-w-md w-full text-center relative overflow-hidden"
-                        >
-                            {/* Background glow */}
-                            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-400 via-blue-500 to-purple-500" />
-
-                            <h2 className="text-3xl font-black text-white mb-2">Round Complete!</h2>
-                            <p className="text-white/60 mb-6">The answer was:</p>
-
-                            <div className="bg-white/10 p-4 rounded-xl mb-6">
-                                <span className="text-2xl font-black text-yellow-300 tracking-wider type-writer">
-                                    {answer}
-                                </span>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3 mb-8">
-                                <div className="bg-white/5 p-3 rounded-lg border border-white/10">
-                                    <div className="text-xs text-white/50 uppercase font-bold">Your Result</div>
-                                    <div className={`text-xl font-bold ${myAnswerData?.isCorrect ? 'text-green-400' : 'text-red-400'}`}>
-                                        {myAnswerData?.isCorrect ? 'Correct' : 'Wrong'}
-                                    </div>
-                                </div>
-                                <div className="bg-white/5 p-3 rounded-lg border border-white/10">
-                                    <div className="text-xs text-white/50 uppercase font-bold">Points Gained</div>
-                                    <div className="text-xl font-bold text-white">
-                                        +{myAnswerData?.score || 0}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {isHost ? (
-                                <div className="space-y-4">
-                                    <div className="flex flex-col gap-2 text-left">
-                                        <label className="text-xs font-bold text-white/70 uppercase">Next Category</label>
-                                        <select
-                                            value={nextCategory}
-                                            onChange={(e) => setNextCategory(e.target.value)}
-                                            className="w-full p-3 bg-white/10 border border-white/20 rounded-xl text-white outline-none focus:border-cyan-400 font-semibold"
-                                        >
-                                            {Object.keys(QUESTIONS).map((cat) => (
-                                                <option key={cat} value={cat} className="bg-slate-800">{cat}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <button
-                                        onClick={handleNextRound}
-                                        className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2 transition-transform active:scale-95"
-                                    >
-                                        Next Round <Zap className="w-5 h-5" />
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="flex flex-col items-center gap-2 animate-pulse">
-                                    <Clock className="w-8 h-8 text-white/50" />
-                                    <p className="text-white/50 font-medium">Waiting for host...</p>
-                                </div>
-                            )}
-
-                        </motion.div>
-                    </motion.div>
+                    <RoundOverOverlay
+                        roomData={roomData}
+                        user={user}
+                        sortedPlayers={sortedPlayers}
+                        isHost={isHost}
+                        onNextRound={handleNextRound}
+                        nextCategory={nextCategory}
+                        setNextCategory={setNextCategory}
+                    />
                 )}
             </AnimatePresence>
 
-            {/* Mobile Rankings Modal */}
+            {/* Rankings Modal for Mobile */}
             <AnimatePresence>
-                {isMobile && showRankingsModal && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={() => setShowRankingsModal(false)}
-                        className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md"
-                    >
-                        <motion.div
-                            initial={{ scale: 0.9, y: 20 }}
-                            animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.9, y: 20 }}
-                            onClick={(e) => e.stopPropagation()}
-                            className="bg-[#0f172a] border-2 border-white/10 p-6 rounded-3xl shadow-2xl max-w-md w-full max-h-[85vh] flex flex-col relative"
-                        >
-                            <button
-                                onClick={() => setShowRankingsModal(false)}
-                                className="absolute top-4 right-4 p-2 bg-white/5 hover:bg-white/10 rounded-full border border-white/10 text-white/50 hover:text-white transition-all"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
-
-                            <h3 className="text-white font-black text-2xl mb-6 flex items-center gap-3">
-                                <Users className="w-6 h-6 text-cyan-300" />
-                                Live Rankings
-                            </h3>
-
-                            <div className="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
-                                {sortedPlayers.map((p, index) => (
-                                    <div
-                                        key={p.uid}
-                                        className={`relative p-4 rounded-2xl border flex items-center justify-between transition-all ${p.uid === user.uid
-                                            ? 'bg-white/10 border-white/30 shadow-lg'
-                                            : 'bg-white/5 border-white/5'
-                                            }`}
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black ${index === 0 ? 'bg-yellow-400 text-black' :
-                                                index === 1 ? 'bg-gray-300 text-black' :
-                                                    index === 2 ? 'bg-orange-400 text-black' :
-                                                        'bg-white/10 text-white'
-                                                }`}>
-                                                {index + 1}
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className={`text-base font-bold ${p.uid === user.uid ? 'text-white' : 'text-white/70'}`}>
-                                                    {p.nickname}
-                                                </span>
-                                                {p.uid === user.uid && <span className="text-xs text-cyan-300 font-bold tracking-wider">YOU</span>}
-                                            </div>
-                                        </div>
-                                        <span className="text-white font-black text-xl">{p.score}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </motion.div>
-                    </motion.div>
+                {showRankingsModal && (
+                    <RankingsModal
+                        isOpen={showRankingsModal}
+                        onClose={() => setShowRankingsModal(false)}
+                        sortedPlayers={sortedPlayers}
+                        userId={user.uid}
+                    />
                 )}
             </AnimatePresence>
-
         </div>
     );
 }
+
+// --- HOT PATH SUBCOMPONENTS (Optimized for Multiplayer) ---
+
+const TopBar = React.memo(({ onOpenSidebar, roomCode, onLeave }) => (
+    <motion.div
+        initial={{ y: -50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="px-4 py-3 flex items-center justify-between flex-shrink-0 z-20"
+    >
+        <div className="flex items-center gap-3">
+            {onOpenSidebar && (
+                <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={onOpenSidebar}
+                    className="bg-white/10 backdrop-blur-md p-2 rounded-xl border border-white/20 text-white shadow-lg hover:bg-white/20 transition-all"
+                >
+                    <Menu className="w-6 h-6" />
+                </motion.button>
+            )}
+            <motion.div
+                animate={{ rotate: [0, 360] }}
+                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                className="relative"
+            >
+                <div className="absolute inset-0 bg-yellow-400/50 rounded-xl blur-lg opacity-50" />
+                <div className="relative bg-white/10 p-2 rounded-xl border border-white/20 backdrop-blur-sm">
+                    <Calculator className="w-6 h-6 text-white" />
+                </div>
+            </motion.div>
+            <div>
+                <h1 className="text-white flex items-center gap-2 text-xl font-black">
+                    Mathemix
+                    <Sparkles className="w-4 h-4 text-yellow-300" />
+                </h1>
+                <p className="text-white/60 text-xs font-semibold">Multiplayer • Room {roomCode}</p>
+            </div>
+        </div>
+        <div className="flex items-center gap-3">
+            <button
+                onClick={onLeave}
+                className="p-2 bg-red-500/20 hover:bg-red-500/40 text-red-200 rounded-lg border border-red-500/30 transition-colors"
+                title="Leave Game"
+            >
+                <LogOut className="w-5 h-5" />
+            </button>
+        </div>
+    </motion.div>
+));
+
+const RankingsSidebar = React.memo(({ isMobile, myRank, myScore, user, sortedPlayers, setShowRankingsModal }) => (
+    <motion.div
+        initial={isMobile ? { y: -20, x: 0, opacity: 0 } : { x: 50, y: 0, opacity: 0 }}
+        animate={{ x: 0, y: 0, opacity: 1 }}
+        className="w-full max-w-md md:max-w-none md:w-80 flex-shrink-0 z-10 flex flex-col gap-4"
+    >
+        <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 flex items-center justify-around shadow-lg">
+            <div className="flex flex-col items-center">
+                <span className="text-white/60 text-xs font-bold uppercase tracking-wider mb-1">Your Rank</span>
+                <div className="flex items-center gap-1.5">
+                    <Crown className="w-5 h-5 text-yellow-300" />
+                    <span className="text-yellow-300 font-black text-3xl leading-none">#{myRank}</span>
+                </div>
+            </div>
+            <div className="h-10 w-[1px] bg-white/10"></div>
+            <div className="flex flex-col items-center">
+                <span className="text-white/60 text-xs font-bold uppercase tracking-wider mb-1">Score</span>
+                <div className="flex items-center gap-1.5">
+                    <span className="text-white font-black text-3xl leading-none">{myScore}</span>
+                </div>
+            </div>
+        </div>
+
+        {isMobile ? (
+            <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setShowRankingsModal(true)}
+                className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 flex items-center justify-between shadow-lg group hover:bg-white/15 transition-all text-left"
+            >
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-cyan-400/10 rounded-xl border border-cyan-400/20">
+                        <Users className="w-4 h-4 text-cyan-300" />
+                    </div>
+                    <span className="text-white/60 text-xs font-bold uppercase tracking-wider">Leading</span>
+                </div>
+                <div className="flex items-center gap-3">
+                    <div className="flex flex-col items-end">
+                        <span className={`font-bold truncate max-w-[120px] transition-all ${sortedPlayers[0]?.uid === user.uid ? 'text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.9)]' : 'text-white'}`}>
+                            {sortedPlayers[0]?.nickname || 'No players'}
+                        </span>
+                        {sortedPlayers[0]?.uid === user.uid && (
+                            <span className="text-[10px] text-yellow-400/60 font-bold uppercase tracking-widest mt-0.5">You</span>
+                        )}
+                    </div>
+                    <div className="p-1.5 bg-white/10 rounded-lg group-hover:bg-white/20 transition-colors">
+                        <Maximize2 className="w-4 h-4 text-white/50" />
+                    </div>
+                </div>
+            </motion.button>
+        ) : (
+            <div className="bg-[#0f172a]/40 backdrop-blur-xl rounded-2xl border border-white/10 p-4 h-full max-h-[500px] overflow-hidden flex flex-col">
+                <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2 border-b border-white/10 pb-2">
+                    <Users className="w-5 h-5 text-cyan-300" />
+                    Live Rankings
+                </h3>
+                <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                    {sortedPlayers.map((p, index) => (
+                        <div
+                            key={p.uid}
+                            className={`relative p-3 rounded-xl border flex items-center justify-between transition-all ${p.uid === user.uid ? 'bg-white/10 border-white/30 shadow-lg' : 'bg-transparent border-transparent hover:bg-white/5'}`}
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${index === 0 ? 'bg-yellow-400 text-black shadow-[0_0_10px_#fbbf24]' : index === 1 ? 'bg-gray-300 text-black' : index === 2 ? 'bg-orange-400 text-black' : 'bg-white/10 text-white'}`}>
+                                    {index + 1}
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className={`text-sm font-bold ${p.uid === user.uid ? 'text-white' : 'text-white/70'}`}>
+                                        {p.nickname}
+                                    </span>
+                                    {p.uid === user.uid && <span className="text-[10px] text-cyan-300 uppercase font-bold">You</span>}
+                                </div>
+                            </div>
+                            <span className="text-white font-black text-lg">{p.score}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        )}
+    </motion.div>
+));
+
+const QuestionCard = React.memo(({ category, definition, hasAnswered, allPlayersAnswered, scoreMessage }) => (
+    <motion.div
+        key={definition}
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="relative w-full max-w-3xl"
+    >
+        <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 to-blue-400/20 rounded-2xl blur-xl" />
+        <div className="relative bg-white/10 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-2xl text-center min-h-[130px] flex flex-col justify-center items-center">
+            <div className="absolute top-3 left-3 bg-white/10 px-3 py-1 rounded-full text-[10px] font-bold text-white/50 border border-white/10 uppercase tracking-widest">
+                {category || "General"}
+            </div>
+            <p className="text-white text-lg md:text-xl font-medium leading-relaxed mt-2">
+                {definition}
+            </p>
+            {hasAnswered && !allPlayersAnswered && (
+                <div className="mt-4 flex items-center gap-2 text-yellow-300 animate-pulse bg-yellow-400/10 px-4 py-2 rounded-full">
+                    <Clock className="w-4 h-4" />
+                    <span className="text-sm font-bold">Waiting for opponents...</span>
+                </div>
+            )}
+            {scoreMessage && (
+                <motion.div
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="mt-4 px-4 py-2 rounded-full font-bold text-sm bg-white/20 text-white shadow-lg border border-white/20"
+                >
+                    {scoreMessage}
+                </motion.div>
+            )}
+        </div>
+    </motion.div>
+));
+
+const RankingsModal = React.memo(({ isOpen, onClose, sortedPlayers, userId }) => (
+    <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+    >
+        <motion.div
+            initial={{ scale: 0.9, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            className="bg-[#0f172a] border border-white/10 w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl"
+        >
+            <div className="p-6 border-b border-white/10 flex items-center justify-between bg-white/5">
+                <h2 className="text-white font-black text-xl flex items-center gap-2">
+                    <Trophy className="w-5 h-5 text-yellow-400" />
+                    Rankings
+                </h2>
+                <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-all">
+                    <X className="w-5 h-5 text-white/50" />
+                </button>
+            </div>
+            <div className="p-4 max-h-[60vh] overflow-y-auto space-y-2">
+                {sortedPlayers.map((p, index) => (
+                    <div
+                        key={p.uid}
+                        className={`p-3 rounded-2xl flex items-center justify-between ${p.uid === userId ? 'bg-cyan-500/20 border border-cyan-500/30' : 'bg-white/5'}`}
+                    >
+                        <div className="flex items-center gap-3">
+                            <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${index === 0 ? 'bg-yellow-400 text-black' : 'bg-white/10 text-white'}`}>
+                                {index + 1}
+                            </span>
+                            <span className="text-white font-bold">{p.nickname}</span>
+                        </div>
+                        <span className="text-cyan-300 font-black">{p.score}</span>
+                    </div>
+                ))}
+            </div>
+        </motion.div>
+    </motion.div>
+));
+
+const RoundOverOverlay = React.memo(({ roomData, user, sortedPlayers, isHost, onNextRound, nextCategory, setNextCategory }) => {
+    const isWinner = sortedPlayers[0]?.uid === user.uid;
+    const myPlayer = sortedPlayers.find(p => p.uid === user.uid);
+
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#023e8a]/90 backdrop-blur-xl"
+        >
+            <motion.div
+                initial={{ scale: 0.9, y: 50, opacity: 0 }}
+                animate={{ scale: 1, y: 0, opacity: 1 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                className="bg-[#0f172a] border-2 border-white/10 p-8 rounded-[40px] shadow-[0_0_100px_rgba(0,0,0,0.5)] max-w-xl w-full text-center space-y-8 relative overflow-hidden"
+            >
+                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500" />
+                <div className="space-y-2">
+                    <div className="inline-block p-4 bg-yellow-400/10 rounded-3xl mb-2">
+                        <Trophy className={`w-12 h-12 ${isWinner ? 'text-yellow-400 animate-bounce' : 'text-gray-400'}`} />
+                    </div>
+                    <h2 className="text-4xl font-black text-white tracking-tight">Round Over!</h2>
+                    <p className="text-white/60 font-medium">Amazing performance from everyone!</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="md:col-span-3 bg-gradient-to-r from-yellow-400/20 to-orange-500/20 p-4 rounded-3xl border border-yellow-400/30">
+                        <p className="text-yellow-400 text-xs font-bold uppercase tracking-widest mb-1">Round Winner</p>
+                        <p className="text-2xl font-black text-white">{sortedPlayers[0]?.nickname || "Calculating..."}</p>
+                    </div>
+                    <div className="bg-white/5 p-4 rounded-3xl border border-white/10">
+                        <p className="text-white/40 text-[10px] font-bold uppercase mb-1">Your Rank</p>
+                        <p className="text-2xl font-black text-cyan-400">#{sortedPlayers.findIndex(p => p.uid === user.uid) + 1}</p>
+                    </div>
+                    <div className="bg-white/5 p-4 rounded-3xl border border-white/10">
+                        <p className="text-white/40 text-[10px] font-bold uppercase mb-1">Your Score</p>
+                        <p className="text-2xl font-black text-white">{myPlayer?.score || 0}</p>
+                    </div>
+                    <div className="bg-white/5 p-4 rounded-3xl border border-white/10">
+                        <p className="text-white/40 text-[10px] font-bold uppercase mb-1">Total Answers</p>
+                        <p className="text-2xl font-black text-white">{roomData.answers?.length || 0}</p>
+                    </div>
+                </div>
+
+                {isHost ? (
+                    <div className="space-y-4 pt-4">
+                        <div className="relative group">
+                            <Menu className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                            <select
+                                value={nextCategory}
+                                onChange={(e) => setNextCategory(e.target.value)}
+                                className="w-full bg-white/5 border-2 border-white/10 text-white rounded-2xl py-4 pl-12 pr-4 font-bold appearance-none hover:bg-white/10 transition-all focus:outline-none focus:border-cyan-500/50"
+                            >
+                                {Object.keys(QUESTIONS).map(cat => (
+                                    <option key={cat} value={cat} className="bg-[#0f172a] text-white font-bold">{cat}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <button
+                            onClick={() => onNextRound(nextCategory)}
+                            className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black py-5 rounded-2xl shadow-[0_20px_40px_rgba(6,182,212,0.3)] transition-all flex items-center justify-center gap-3 group"
+                        >
+                            <Zap className="w-6 h-6 fill-white group-hover:scale-110 transition-transform" />
+                            START NEXT ROUND
+                        </button>
+                    </div>
+                ) : (
+                    <div className="bg-white/5 rounded-3xl p-6 border border-white/10 flex flex-col items-center gap-3">
+                        <div className="flex items-center gap-2">
+                            <Clock className="w-5 h-5 text-cyan-400 animate-spin-slow" />
+                            <span className="text-white/80 font-bold italic">Waiting for host to start next round...</span>
+                        </div>
+                    </div>
+                )}
+            </motion.div>
+        </motion.div>
+    );
+});
 
 // --- Optimized Character Boxes Subcomponent (Mobile Responsive) ---
 const CharacterBoxes = React.memo(({ containerRef, answer, guess, allPlayersAnswered, hasAnswered, myAnswerData, isMobile, containerWidth }) => {
