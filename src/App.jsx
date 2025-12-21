@@ -10,6 +10,10 @@ import Lobby from "./pages/multiplayer/Lobby.jsx";
 import ModeSelect from "./pages/ModeSelect";
 import LoginPage from "./pages/LoginPage";
 import CategorySelect from "./pages/CategorySelect.jsx";
+import LandingPage from "./pages/LandingPage";
+import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
+import TermsOfService from "./pages/legal/TermsOfService";
+import CookiePolicy from "./pages/legal/CookiePolicy";
 const Stats = lazy(() => import("./pages/Stats.jsx"));
 
 // Components
@@ -61,16 +65,16 @@ function App() {
         return <LoadingScreen />;
     }
 
-    const fullScreenRoutes = ["/", "/mode-select", "/category-select", "/lobby", "/game", "/stats"];
+    const fullScreenRoutes = ["/", "/mode-select", "/category-select", "/lobby", "/game", "/stats", "/welcome", "/privacy-policy", "/terms-of-service", "/cookie-policy"];
     const isFullScreen = fullScreenRoutes.includes(location.pathname);
-    const isLoginPage = location.pathname === "/";
+    const isPublicPage = ["/", "/welcome"].includes(location.pathname);
     const hasOwnSidebarButton = ["/lobby", "/mode-select", "/category-select", "/game"].includes(location.pathname);
 
     return (
         <div className="font-nunito min-h-screen w-full relative bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]">
-            {location.pathname !== "/" && <AnimatedBackground />}
+            {!isPublicPage && <AnimatedBackground />}
 
-            {!isLoginPage && currentUser && (
+            {!isPublicPage && currentUser && (
                 <>
                     <Sidebar
                         isOpen={isSidebarOpen}
@@ -94,11 +98,15 @@ function App() {
             <div className={`relative z-10 ${isFullScreen ? "w-full h-full" : "max-w-6xl mx-auto p-4"}`}>
                 <Routes>
                     <Route path="/" element={currentUser ? <Navigate to="/mode-select" /> : <LoginPage />} />
+                    <Route path="/welcome" element={<LandingPage />} />
                     <Route path="/mode-select" element={<ProtectedRoute user={currentUser}><ModeSelect username={username} onLogout={handleLogout} onOpenSidebar={() => setSidebarOpen(true)} /></ProtectedRoute>} />
                     <Route path="/category-select" element={<ProtectedRoute user={currentUser}><CategorySelect username={username} onLogout={handleLogout} onOpenSidebar={() => setSidebarOpen(true)} /></ProtectedRoute>} />
                     <Route path="/game" element={<ProtectedRoute user={currentUser}><Game onGameEnd={() => { }} onOpenSidebar={() => setSidebarOpen(true)} /></ProtectedRoute>} />
                     <Route path="/lobby" element={<ProtectedRoute user={currentUser}><Lobby user={currentUser} onOpenSidebar={() => setSidebarOpen(true)} onLogout={handleLogout} /></ProtectedRoute>} />
                     <Route path="/stats" element={<ProtectedRoute user={currentUser}><Suspense fallback={<div className="text-white text-center">Loading Stats...</div>}><Stats user={currentUser} /></Suspense></ProtectedRoute>} />
+                    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                    <Route path="/terms-of-service" element={<TermsOfService />} />
+                    <Route path="/cookie-policy" element={<CookiePolicy />} />
                 </Routes>
             </div>
         </div>
