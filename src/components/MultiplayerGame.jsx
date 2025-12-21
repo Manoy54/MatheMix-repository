@@ -8,7 +8,7 @@ import { Calculator, Sparkles, Trophy, Brain, Users, Zap, Menu, Crown, LogOut, C
 import { useMobile } from "../hooks/useMobile.jsx";
 import AnimatedBackground from "./AnimatedBackground.jsx";
 
-export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onOpenSidebar }) {
+export default function MultiplayerGame({ roomCode, roomData, user, nickname, onLeave, onOpenSidebar }) {
     // --- Logic State ---
     const [guess, setGuess] = useState("");
     const [status, setStatus] = useState("playing"); // playing, correct, wrong
@@ -17,7 +17,9 @@ export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onO
     const [showGiveUpModal, setShowGiveUpModal] = useState(false);
     const [showLeaveModal, setShowLeaveModal] = useState(false);
     const [showRankingsModal, setShowRankingsModal] = useState(false);
+    const [leaveNotifications, setLeaveNotifications] = useState([]);
     const [pressedKey, setPressedKey] = useState(null);
+    const prevPlayersRef = useRef(roomData.players);
     const isMobile = useMobile();
     const containerRef = useRef(null);
     const [containerWidth, setContainerWidth] = useState(0);
@@ -60,7 +62,7 @@ export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onO
 
     // --- Handlers (Memoized for performance) ---
     const handleKey = useCallback((key) => {
-        if (status !== "playing" || hasAnswered || showGiveUpModal) return;
+        if (status !== "playing" || hasAnswered || showGiveUpModal || roomData.status === "finished") return;
         setGuess(prev => {
             if (prev.length < numGuessableBoxes) {
                 return prev + key;
@@ -69,29 +71,29 @@ export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onO
         });
         setPressedKey(key);
         setTimeout(() => setPressedKey(null), 150);
-    }, [status, hasAnswered, showGiveUpModal, numGuessableBoxes]);
+    }, [status, hasAnswered, showGiveUpModal, numGuessableBoxes, roomData.status]);
 
     const handleClear = useCallback(() => {
-        if (status === "playing" && !hasAnswered && !showGiveUpModal) {
+        if (status === "playing" && !hasAnswered && !showGiveUpModal && roomData.status !== "finished") {
             setGuess("");
             setPressedKey('CLEAR');
             setTimeout(() => setPressedKey(null), 150);
         }
-    }, [status, hasAnswered, showGiveUpModal]);
+    }, [status, hasAnswered, showGiveUpModal, roomData.status]);
 
     const handleDelete = useCallback(() => {
-        if (status === "playing" && !hasAnswered && !showGiveUpModal) {
+        if (status === "playing" && !hasAnswered && !showGiveUpModal && roomData.status !== "finished") {
             setGuess(prev => prev.slice(0, -1));
             setPressedKey('DELETE');
             setTimeout(() => setPressedKey(null), 150);
         }
-    }, [status, hasAnswered, showGiveUpModal]);
+    }, [status, hasAnswered, showGiveUpModal, roomData.status]);
 
     const submitAnswerToFirestore = async (isCorrect, score, finalGuess) => {
         const roomRef = doc(db, "rooms", roomCode);
         const answerData = {
             uid: user.uid,
-            nickname: user.username || "Player",
+            nickname: nickname || user.username || "Player",
             guess: finalGuess,
             isCorrect,
             score,
@@ -104,7 +106,7 @@ export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onO
     };
 
     const handleSubmit = useCallback(async () => {
-        if (status !== "playing" || hasAnswered || guess.length !== numGuessableBoxes || showGiveUpModal) return;
+        if (status !== "playing" || hasAnswered || guess.length !== numGuessableBoxes || showGiveUpModal || roomData.status === "finished") return;
 
         setPressedKey('ENTER');
         setTimeout(() => setPressedKey(null), 150);
@@ -151,22 +153,16 @@ export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onO
     const handleNextRound = async () => {
         if (!isHost) return;
 
-        const category = nextCategory;
-        const qBank = QUESTIONS[category] || QUESTIONS["Number & Algebra"];
-        const question = qBank[Math.floor(Math.random() * qBank.length)];
+        const totalRounds = roomData.rounds || 5;
+        const currentRoundNumber = roomData.roundNumber || 1;
 
         const roomRef = doc(db, "rooms", roomCode);
 
         // --- HOST-SIDE SCORE RECALCULATION ---
-        // We recalculate scores based on strict timestamp ordering to resolve any client-side race conditions.
-        // This ensures that even if two players thought they were #1, the one who hit server first gets the points.
-
-        // 1. Get all correct answers and sort by timestamp
         const correctAnswers = answers
             .filter(a => a.isCorrect)
             .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
 
-        // 2. Create a map of officially verified scores for this round
         const roundScores = {};
         correctAnswers.forEach((answerData, index) => {
             const rank = index + 1;
@@ -175,11 +171,25 @@ export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onO
             roundScores[answerData.uid] = baseScore + rankBonus;
         });
 
-        // 3. Update player totals using the verified round scores
         const updatedPlayers = players.map(p => {
-            const verifiedRoundScore = roundScores[p.uid] || 0; // Default to 0 if not playing/wrong
+            const verifiedRoundScore = roundScores[p.uid] || 0;
             return { ...p, score: p.score + verifiedRoundScore };
         });
+
+        if (currentRoundNumber >= totalRounds) {
+            // FINISH GAME
+            await updateDoc(roomRef, {
+                status: "finished",
+                players: updatedPlayers,
+                answers: [],
+                currentQuestion: null
+            });
+            return;
+        }
+
+        const category = nextCategory;
+        const qBank = QUESTIONS[category] || QUESTIONS["Number & Algebra"];
+        const question = qBank[Math.floor(Math.random() * qBank.length)];
 
         await updateDoc(roomRef, {
             status: "playing",
@@ -188,14 +198,14 @@ export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onO
             answers: [],
             players: updatedPlayers,
             category: category,
-            roundNumber: (roomData.roundNumber || 1) + 1
+            roundNumber: currentRoundNumber + 1
         });
     };
 
     // --- Keyboard Listeners ---
     const handleKeyDown = useCallback(
         (e) => {
-            if (showGiveUpModal) return;
+            if (showGiveUpModal || roomData.status === "finished") return;
             if (status !== 'playing' || hasAnswered) return;
 
             const key = e.key.toUpperCase();
@@ -204,7 +214,7 @@ export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onO
             else if (key === "ESCAPE") handleClear();
             else if (key.length === 1 && key.match(/[A-Z0-9-]/)) handleKey(key);
         },
-        [guess, status, hasAnswered, showGiveUpModal]
+        [guess, status, hasAnswered, showGiveUpModal, roomData.status]
     );
 
     useEffect(() => {
@@ -221,6 +231,22 @@ export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onO
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [handleKeyDown]);
+
+    // Notification for players leaving
+    useEffect(() => {
+        const prevPlayers = prevPlayersRef.current;
+        if (players.length < prevPlayers.length) {
+            const leftPlayer = prevPlayers.find(p => !players.some(curr => curr.uid === p.uid));
+            if (leftPlayer) {
+                const id = Date.now();
+                setLeaveNotifications(prev => [...prev, { id, name: leftPlayer.nickname }]);
+                setTimeout(() => {
+                    setLeaveNotifications(prev => prev.filter(n => n.id !== id));
+                }, 4000);
+            }
+        }
+        prevPlayersRef.current = players;
+    }, [players]);
 
     // --- Derived UI State ---
     const allPlayersAnswered = players.length === answers.length;
@@ -343,7 +369,7 @@ export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onO
 
             {/* Round Over Overlay */}
             <AnimatePresence>
-                {allPlayersAnswered && (
+                {allPlayersAnswered && roomData.status !== "finished" && (
                     <RoundOverOverlay
                         roomData={roomData}
                         user={user}
@@ -352,6 +378,7 @@ export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onO
                         onNextRound={handleNextRound}
                         nextCategory={nextCategory}
                         setNextCategory={setNextCategory}
+                        answers={answers}
                     />
                 )}
             </AnimatePresence>
@@ -373,11 +400,30 @@ export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onO
                 {showLeaveModal && (
                     <LeaveConfirmationModal
                         isOpen={showLeaveModal}
+                        isHost={isHost}
                         onClose={() => setShowLeaveModal(false)}
                         onConfirm={onLeave}
                     />
                 )}
             </AnimatePresence>
+
+            {/* Leave Notifications */}
+            <div className="fixed top-20 right-4 z-[100] space-y-2 pointer-events-none">
+                <AnimatePresence>
+                    {leaveNotifications.map(notification => (
+                        <motion.div
+                            key={notification.id}
+                            initial={{ x: 50, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            exit={{ x: 50, opacity: 0 }}
+                            className="bg-red-500/90 backdrop-blur-md text-white px-4 py-2 rounded-xl shadow-lg border border-red-400/30 flex items-center gap-2"
+                        >
+                            <LogOut className="w-4 h-4" />
+                            <span className="font-bold text-sm tracking-wide">{notification.name} left the room</span>
+                        </motion.div>
+                    ))}
+                </AnimatePresence>
+            </div>
         </div>
     );
 }
@@ -601,9 +647,11 @@ const RankingsModal = React.memo(({ isOpen, onClose, sortedPlayers, userId }) =>
     </motion.div>
 ));
 
-const RoundOverOverlay = React.memo(({ roomData, user, sortedPlayers, isHost, onNextRound, nextCategory, setNextCategory }) => {
+
+const RoundOverOverlay = React.memo(({ roomData, user, sortedPlayers, isHost, onNextRound, nextCategory, setNextCategory, answers }) => {
     const isWinner = sortedPlayers[0]?.uid === user.uid;
     const myPlayer = sortedPlayers.find(p => p.uid === user.uid);
+    const isFinalRound = (roomData.roundNumber || 1) >= (roomData.rounds || 5);
 
     return (
         <motion.div
@@ -623,30 +671,62 @@ const RoundOverOverlay = React.memo(({ roomData, user, sortedPlayers, isHost, on
                     <div className="inline-block p-4 bg-yellow-400/10 rounded-3xl mb-2">
                         <Trophy className={`w-12 h-12 ${isWinner ? 'text-yellow-400 animate-bounce' : 'text-gray-400'}`} />
                     </div>
-                    <h2 className="text-4xl font-black text-white tracking-tight">Round Over!</h2>
+                    <h2 className="text-4xl font-black text-white tracking-tight">
+                        {isFinalRound ? "Match Over!" : "Round Over!"}
+                    </h2>
                     <p className="text-white/60 font-medium">Amazing performance from everyone!</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="md:col-span-3 bg-gradient-to-r from-yellow-400/20 to-orange-500/20 p-4 rounded-3xl border border-yellow-400/30">
                         <p className="text-yellow-400 text-xs font-bold uppercase tracking-widest mb-1">Round Winner</p>
-                        <p className="text-2xl font-black text-white">{sortedPlayers[0]?.nickname || "Calculating..."}</p>
+                        <p className="text-2xl font-black text-white">
+                            {answers.filter(a => a.isCorrect).sort((a, b) => a.timestamp - b.timestamp)[0]?.nickname || "Calculating..."}
+                        </p>
                     </div>
                     <div className="bg-white/5 p-4 rounded-3xl border border-white/10">
-                        <p className="text-white/40 text-[10px] font-bold uppercase mb-1">Your Rank</p>
-                        <p className="text-2xl font-black text-cyan-400">#{sortedPlayers.findIndex(p => p.uid === user.uid) + 1}</p>
+                        <p className="text-white/40 text-[10px] font-bold uppercase mb-1">Items Found</p>
+                        <p className="text-2xl font-black text-cyan-400">{answers.filter(a => a.uid === user.uid && a.isCorrect).length > 0 ? "Correct" : "Missed"}</p>
                     </div>
                     <div className="bg-white/5 p-4 rounded-3xl border border-white/10">
-                        <p className="text-white/40 text-[10px] font-bold uppercase mb-1">Your Score</p>
-                        <p className="text-2xl font-black text-white">{myPlayer?.score || 0}</p>
+                        <p className="text-white/40 text-[10px] font-bold uppercase mb-1">Points Earned</p>
+                        <p className="text-2xl font-black text-white">
+                            {(() => {
+                                const myRoundAnswer = answers.find(a => a.uid === user.uid && a.isCorrect);
+                                if (!myRoundAnswer) return 0;
+                                const correctOnes = answers.filter(a => a.isCorrect).sort((a, b) => a.timestamp - b.timestamp);
+                                const myRank = correctOnes.findIndex(a => a.uid === user.uid) + 1;
+                                return 100 + Math.max(0, 30 - ((myRank - 1) * 10));
+                            })()}
+                        </p>
                     </div>
                     <div className="bg-white/5 p-4 rounded-3xl border border-white/10">
-                        <p className="text-white/40 text-[10px] font-bold uppercase mb-1">Total Answers</p>
-                        <p className="text-2xl font-black text-white">{roomData.answers?.length || 0}</p>
+                        <p className="text-white/40 text-[10px] font-bold uppercase mb-1">Total Score</p>
+                        <p className="text-2xl font-black text-white">
+                            {(() => {
+                                const baseScore = myPlayer?.score || 0;
+                                const myRoundAnswer = answers.find(a => a.uid === user.uid && a.isCorrect);
+                                if (!myRoundAnswer) return baseScore;
+                                const correctOnes = answers.filter(a => a.isCorrect).sort((a, b) => a.timestamp - b.timestamp);
+                                const myRank = correctOnes.findIndex(a => a.uid === user.uid) + 1;
+                                const earned = 100 + Math.max(0, 30 - ((myRank - 1) * 10));
+                                return baseScore + earned;
+                            })()}
+                        </p>
                     </div>
                 </div>
 
-                {isHost ? (
+                {isFinalRound ? (
+                    <div className="pt-4">
+                        <button
+                            onClick={() => isHost && onNextRound(nextCategory)}
+                            className={`w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400 text-white font-black py-5 rounded-2xl shadow-[0_20px_40px_rgba(251,191,36,0.3)] transition-all flex items-center justify-center gap-3 group ${!isHost ? 'opacity-70 cursor-default' : ''}`}
+                        >
+                            <Trophy className="w-6 h-6 fill-white group-hover:scale-110 transition-transform" />
+                            {isHost ? "VIEW MATCH RESULTS" : "VIEW RESULTS (WAITING FOR HOST)"}
+                        </button>
+                    </div>
+                ) : isHost ? (
                     <div className="space-y-4 pt-4">
                         <div className="relative group">
                             <Menu className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
@@ -846,7 +926,7 @@ const CharacterBox = React.memo(({
     );
 });
 
-const LeaveConfirmationModal = React.memo(({ isOpen, onClose, onConfirm }) => (
+const LeaveConfirmationModal = React.memo(({ isOpen, isHost, onClose, onConfirm }) => (
     <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -859,12 +939,14 @@ const LeaveConfirmationModal = React.memo(({ isOpen, onClose, onConfirm }) => (
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             className="bg-[#023e8a] border-2 border-white/20 p-6 rounded-3xl shadow-2xl max-w-sm w-full text-center space-y-4"
         >
-            <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-2">
-                <LogOut className="w-8 h-8 text-red-400" />
+            <div className={`w-16 h-16 ${isHost ? 'bg-red-500/20' : 'bg-red-500/20'} rounded-full flex items-center justify-center mx-auto mb-2`}>
+                <LogOut className={`w-8 h-8 ${isHost ? 'text-red-400' : 'text-red-400'}`} />
             </div>
-            <h2 className="text-2xl font-bold text-white">Leave Game?</h2>
+            <h2 className="text-2xl font-bold text-white">{isHost ? 'End Game for All?' : 'Leave Game?'}</h2>
             <p className="text-white/70">
-                Are you sure you want to leave the game? Your current progress in this room will be lost.
+                {isHost
+                    ? "As the host, leaving will terminate the game immediately for all players. Are you sure you want to end the session?"
+                    : "Are you sure you want to leave the game? Your current progress in this room will be lost."}
             </p>
             <div className="flex gap-3 mt-6">
                 <button
@@ -877,7 +959,7 @@ const LeaveConfirmationModal = React.memo(({ isOpen, onClose, onConfirm }) => (
                     onClick={onConfirm}
                     className="flex-1 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl font-semibold shadow-lg shadow-red-500/30 transition-all font-black uppercase tracking-wider"
                 >
-                    Leave
+                    {isHost ? 'End Game' : 'Leave'}
                 </button>
             </div>
         </motion.div>

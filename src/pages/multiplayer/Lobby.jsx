@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
     doc,
     setDoc,
@@ -11,14 +11,16 @@ import {
     where,
     getDocs,
     deleteDoc,
+    addDoc,
 } from 'firebase/firestore';
 import { db } from '../../firebaseConfig.js';
 import MultiplayerGame from '../../components/MultiplayerGame';
-import { motion } from 'framer-motion';
-import { Menu, Calculator, Sparkles } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Menu, Calculator, Sparkles, LogOut } from 'lucide-react';
 import RoomSelection from './RoomSelection';
 import HostLobby from './HostLobby';
 import PlayerWaiting from './PlayerWaiting';
+import MultiplayerGameFinish from '../../components/MultiplayerGameFinish';
 import { QUESTIONS } from '../../data.js';
 import { useMobile } from '../../hooks/useMobile';
 
@@ -29,7 +31,7 @@ const generateRoomCode = () => {
 
 const mathSymbols = ['+', '−', '×', '÷', '=', 'π', '∑', '√', '∞', 'α', 'β', 'θ'];
 
-export default function Lobby({ user, onOpenSidebar }) {
+export default function Lobby({ user, username, onOpenSidebar }) {
     const isMobile = useMobile();
     const symbolsData = useMemo(() => {
         return mathSymbols.map((symbol, i) => ({
@@ -43,38 +45,84 @@ export default function Lobby({ user, onOpenSidebar }) {
     }, []);
 
     const [view, setView] = useState("select");
-    const [nickname, setNickname] = useState(user?.username || "Player");
+    const [nickname, setNickname] = useState(() => {
+        const saved = localStorage.getItem("lastUsedNickname");
+        return saved || username || user?.displayName || user?.username || "Player";
+    });
+
+    // Update nickname if username becomes available and we don't have a saved one
+    useEffect(() => {
+        if (!localStorage.getItem("lastUsedNickname") && username) {
+            setNickname(username);
+        }
+    }, [username]);
     const [roomCode, setRoomCode] = useState("");
     const [error, setError] = useState("");
 
     const [roomData, setRoomData] = useState(null);
     const [gameStarted, setGameStarted] = useState(false);
+    const [showHostLeftModal, setShowHostLeftModal] = useState(false);
 
     const isHost = roomData?.hostId === user?.uid;
+
+    const hostIdRef = useRef(null);
+    const gameStartedRef = useRef(false);
+    const viewRef = useRef(view); // Ref to keep track of the latest 'view' state
+
+    useEffect(() => {
+        viewRef.current = view; // Update the ref whenever 'view' state changes
+    }, [view]);
 
     useEffect(() => {
         if (!roomCode) return;
 
         const roomRef = doc(db, "rooms", roomCode);
+        console.log("Setting up snapshot listener for room:", roomCode);
+
         const unsubscribe = onSnapshot(roomRef, (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data();
+                console.log("Room data updated:", data.roomCode, "Players:", data.players.length);
+
+                // Track hostId for the 'else' block (room deletion)
+                hostIdRef.current = data.hostId;
+                gameStartedRef.current = data.status === "playing" || data.status === "finished";
+
                 setRoomData(data);
-                if (data.status === "playing") {
+
+                if (data.status === "playing" || data.status === "finished") {
                     setGameStarted(true);
+                } else {
+                    setGameStarted(false);
                 }
             } else {
-                if (view === "host" || view === "waiting") {
-                    setError("Room not found or has been closed.");
-                    setRoomCode("");
-                    setRoomData(null);
-                    setView("select");
+                console.log("Room document deleted or does not exist.");
+                // If room is deleted
+                // Check if we were in a game and were NOT the host
+                if (gameStartedRef.current && hostIdRef.current && hostIdRef.current !== user?.uid) {
+                    setShowHostLeftModal(true);
+                }
+
+                // Clear room state regardless
+                // Use viewRef.current to get the latest view state
+                if (viewRef.current === "host" || viewRef.current === "waiting" || gameStartedRef.current) {
+                    if (!showHostLeftModal) {
+                        setRoomCode("");
+                        setRoomData(null);
+                        setGameStarted(false);
+                        setView("select");
+                    }
                 }
             }
+        }, (err) => {
+            console.error("onSnapshot error:", err);
         });
 
-        return () => unsubscribe();
-    }, [roomCode, view]);
+        return () => {
+            console.log("Unsubscribing from room snapshot:", roomCode);
+            unsubscribe();
+        };
+    }, [roomCode, user?.uid]);
 
     // This effect cleans up the room if the host navigates away
     useEffect(() => {
@@ -125,10 +173,13 @@ export default function Lobby({ user, onOpenSidebar }) {
                 players: [newPlayer],
                 category: "Number & Algebra",
                 status: "waiting",
+                rounds: 5,
                 currentQuestion: null,
                 answers: [],
+                roundNumber: 1,
             });
             console.log("Room created successfully in Firestore.");
+            localStorage.setItem("lastUsedNickname", playerNickname);
         } catch (e) {
             console.error("Error creating room:", e);
             setError("Failed to create room. Please try again.");
@@ -177,6 +228,7 @@ export default function Lobby({ user, onOpenSidebar }) {
 
             setRoomCode(codeToJoin);
             setView("waiting");
+            localStorage.setItem("lastUsedNickname", playerNickname);
         } catch (e) {
             console.error("Error joining room:", e);
             setError("Failed to join room. Please try again.");
@@ -228,6 +280,56 @@ export default function Lobby({ user, onOpenSidebar }) {
             category: newCategory
         });
     };
+
+    const handleRoundsChange = async (newRounds) => {
+        if (!isHost || !roomCode) return;
+        const rounds = parseInt(newRounds);
+        if (isNaN(rounds) || rounds < 1) return;
+
+        const roomRef = doc(db, "rooms", roomCode);
+        await updateDoc(roomRef, {
+            rounds: rounds
+        });
+    };
+
+    const handlePlayAgain = async () => {
+        if (!roomData || !isHost) return;
+
+        const roomRef = doc(db, "rooms", roomCode);
+        const matchesCollection = collection(roomRef, "matches");
+
+        try {
+            // 1. Archive current match results to a subcollection
+            await addDoc(matchesCollection, {
+                players: roomData.players,
+                finishedAt: new Date(),
+                totalRounds: roomData.rounds || 5,
+                category: roomData.category || "General"
+            });
+
+            // 2. Reset room state for the next match
+            // Reset players' scores and clear temporary game data
+            const resetPlayers = roomData.players.map(p => ({ ...p, score: 0 }));
+
+            await updateDoc(roomRef, {
+                status: "waiting",
+                players: resetPlayers,
+                currentQuestion: null,
+                answers: [],
+                roundNumber: 1,
+                playAgainVotes: [], // Clear votes
+                // Ensure nextRoomCode is cleared if it exists from previous logic
+                nextRoomCode: null
+            });
+
+            // Reset local flag
+            setGameStarted(false);
+        } catch (e) {
+            console.error("Error in play again flow:", e);
+            setError("Failed to reset the room. Please try again.");
+        }
+    };
+
     const leaveLobby = async () => {
         if (isHost) {
             // If host leaves, delete the entire room
@@ -243,26 +345,35 @@ export default function Lobby({ user, onOpenSidebar }) {
         setRoomData(null);
         setView("select");
         setError("");
+        setGameStarted(false);
     };
 
 
 
-    if (gameStarted && roomData && roomData.currentQuestion) {
-        return (
-            <MultiplayerGame
-                user={user}
-                roomCode={roomCode}
-                roomData={roomData}
-                onLeave={() => {
-                    setGameStarted(false);
-                    setView("select");
-                    setRoomCode("");
-                    setRoomData(null);
-                }}
-                onOpenSidebar={onOpenSidebar}
-            />
+    if (gameStarted && roomData) {
+        if (roomData.status === "finished") {
+            return (
+                <MultiplayerGameFinish
+                    user={user}
+                    roomData={roomData}
+                    onLeave={leaveLobby}
+                    onHostPlayAgain={handlePlayAgain}
+                />
+            );
+        }
 
-        );
+        if (roomData.currentQuestion) {
+            return (
+                <MultiplayerGame
+                    user={user}
+                    nickname={nickname}
+                    roomCode={roomCode}
+                    roomData={roomData}
+                    onLeave={leaveLobby}
+                    onOpenSidebar={onOpenSidebar}
+                />
+            );
+        }
     }
 
     return (
@@ -386,6 +497,7 @@ export default function Lobby({ user, onOpenSidebar }) {
                                 user={user}
                                 onStartGame={handleStartGame}
                                 onCategoryChange={handleCategoryChange}
+                                onRoundsChange={handleRoundsChange}
                                 leaveLobby={leaveLobby}
                             />
                         )}
@@ -414,6 +526,38 @@ export default function Lobby({ user, onOpenSidebar }) {
                     </motion.div>
                 )}
             </div>
+
+            {/* Final Global Overlays */}
+            <AnimatePresence>
+                {showHostLeftModal && (
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="bg-[#023e8a] border-2 border-white/20 p-8 rounded-[40px] shadow-2xl max-w-sm w-full text-center space-y-6"
+                        >
+                            <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto">
+                                <LogOut className="w-10 h-10 text-red-400" />
+                            </div>
+                            <div className="space-y-2">
+                                <h2 className="text-3xl font-black text-white uppercase tracking-tight">Host Left</h2>
+                                <p className="text-white/70 font-medium">
+                                    The host has ended the session. The game has been terminated for everyone.
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    setShowHostLeftModal(false);
+                                    leaveLobby();
+                                }}
+                                className="w-full py-4 bg-white text-[#023e8a] rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-white/90 transition-all font-bold"
+                            >
+                                Return to Lobby
+                            </button>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
 
             {/* CSS Animations */}
             <style>{`

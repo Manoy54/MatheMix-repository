@@ -1,18 +1,42 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 // FIX 1: Change import from 'motion/react' to 'framer-motion'
 import { motion } from 'framer-motion';
 import { Users, Copy, Check, Play, LogOut } from 'lucide-react';
 
 export default function HostLobby({
-                                      roomCode,
-                                      roomData,
-                                      categories,
-                                      user,
-                                      onStartGame,
-                                      onCategoryChange,
-                                      leaveLobby,
-                                  }) {
+    roomCode,
+    roomData,
+    categories,
+    user,
+    onStartGame,
+    onCategoryChange,
+    onRoundsChange,
+    leaveLobby,
+}) {
     const [copiedCode, setCopiedCode] = useState(false);
+    const [localRounds, setLocalRounds] = useState(roomData?.rounds?.toString() || "5");
+
+    // Keep local state in sync with external updates (if any)
+    useEffect(() => {
+        if (roomData?.rounds) {
+            setLocalRounds(prev => {
+                const currentVal = parseInt(prev);
+                return currentVal === roomData.rounds ? prev : roomData.rounds.toString();
+            });
+        }
+    }, [roomData?.rounds]);
+
+    const handleLocalRoundsChange = (val) => {
+        // Allow numeric typing and empty string for free editing
+        if (val === "" || /^\d+$/.test(val)) {
+            setLocalRounds(val);
+
+            const num = parseInt(val);
+            if (!isNaN(num) && num >= 1 && num <= 20) {
+                onRoundsChange(num);
+            }
+        }
+    };
 
     const copyCode = () => {
         if (roomCode) {
@@ -24,6 +48,18 @@ export default function HostLobby({
 
     return (
         <div className="bg-gradient-to-br from-white/25 via-white/20 to-white/15 backdrop-blur-2xl rounded-3xl border-2 border-white/40 shadow-2xl p-8 animate-scale-in">
+            {/* Hide native number spinners */}
+            <style>{`
+                input::-webkit-outer-spin-button,
+                input::-webkit-inner-spin-button {
+                    -webkit-appearance: none;
+                    margin: 0;
+                }
+                input[type=number] {
+                    -moz-appearance: textfield;
+                }
+            `}</style>
+
             <div className="text-center mb-6">
                 <h2 className="text-white text-3xl mb-2" style={{ fontWeight: 900 }}>
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 via-white to-purple-200">
@@ -73,24 +109,51 @@ export default function HostLobby({
                 </div>
             </div>
 
-            {/* Category Selection */}
-            <div className="mb-6">
-                <label className="block text-white text-sm mb-2" style={{ fontWeight: 700 }}>
-                    SELECT CATEGORY
-                </label>
-                <div className="relative">
-                    <select
-                        // Ensure 'value' reads the current room category state
-                        value={roomData?.category || "Number & Algebra"}
-                        // When changed, call the parent function
-                        onChange={(e) => onCategoryChange(e.target.value)}
-                        className="w-full px-6 py-4 bg-white/90 backdrop-blur-sm border-2 border-white/50 rounded-xl focus:border-cyan-300 focus:ring-4 focus:ring-cyan-400/30 outline-none transition-all text-gray-800 shadow-xl"
-                        style={{ fontWeight: 600 }}
-                    >
-                        {categories.map((cat) => (
-                            <option key={cat} value={cat}>{cat}</option>
-                        ))}
-                    </select>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                {/* Category Selection */}
+                <div>
+                    <label className="block text-white text-sm mb-2" style={{ fontWeight: 700 }}>
+                        SELECT CATEGORY
+                    </label>
+                    <div className="relative">
+                        <select
+                            // Ensure 'value' reads the current room category state
+                            value={roomData?.category || "Number & Algebra"}
+                            // When changed, call the parent function
+                            onChange={(e) => onCategoryChange(e.target.value)}
+                            className="w-full px-6 py-4 bg-white/90 backdrop-blur-sm border-2 border-white/50 rounded-xl focus:border-cyan-300 focus:ring-4 focus:ring-cyan-400/30 outline-none transition-all text-gray-800 shadow-xl"
+                            style={{ fontWeight: 600 }}
+                        >
+                            {categories.map((cat) => (
+                                <option key={cat} value={cat}>{cat}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+
+                {/* Rounds Selection */}
+                <div>
+                    <label className="block text-white text-sm mb-2" style={{ fontWeight: 700 }}>
+                        NUMBER OF ROUNDS
+                    </label>
+                    <div className="relative">
+                        <input
+                            type="number"
+                            inputMode="numeric"
+                            placeholder="1-20"
+                            value={localRounds}
+                            onChange={(e) => handleLocalRoundsChange(e.target.value)}
+                            onBlur={() => {
+                                // If player leaves it empty or out of range, reset to validProp
+                                const num = parseInt(localRounds);
+                                if (isNaN(num) || num < 1 || num > 20) {
+                                    setLocalRounds(roomData?.rounds?.toString() || "5");
+                                }
+                            }}
+                            className="w-full px-6 py-4 bg-white/90 backdrop-blur-sm border-2 border-white/50 rounded-xl focus:border-cyan-300 focus:ring-4 focus:ring-cyan-400/30 outline-none transition-all text-gray-800 shadow-xl"
+                            style={{ fontWeight: 600 }}
+                        />
+                    </div>
                 </div>
             </div>
 
