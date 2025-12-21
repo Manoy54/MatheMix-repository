@@ -182,8 +182,23 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
     }, [input, answer, streak, bestStreak, onGameEnd, nextQuestion, answerStatus, isGameOver]);
 
     const handleSkip = useCallback(() => {
-        if (!answerStatus && !isGameOver) setShowGiveUpModal(true);
-    }, [answerStatus, isGameOver]);
+        if (!answerStatus && !isGameOver) {
+            if (isMobile) {
+                // Blur whatever is currently focused
+                if (document?.activeElement instanceof HTMLElement) {
+                    document.activeElement.blur();
+                }
+
+                // Blur any focusable elements inside the keyboard container
+                keyboardContainerRef.current
+                    ?.querySelectorAll("button, [tabindex]:not([tabindex='-1']), input, select, textarea")
+                    .forEach((el) => {
+                        if (el instanceof HTMLElement) el.blur();
+                    });
+            }
+            setShowGiveUpModal(true);
+        }
+    }, [answerStatus, isGameOver, isMobile]);
 
     const confirmGiveUp = () => {
         setShowGiveUpModal(false);
@@ -262,10 +277,10 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
                 document.activeElement.blur();
             }
 
-            // Also explicitly blur any focused buttons within the keyboard to ensure it doesn't stay highlighted/active
-            const keyboardButtons = keyboardContainerRef.current?.querySelectorAll('button, [role="button"]');
-            keyboardButtons?.forEach(btn => {
-                if (btn instanceof HTMLElement) btn.blur();
+            // Also explicitly blur any focused buttons/inputs within the keyboard to ensure it doesn't stay highlighted/active
+            const keyboardFocusables = keyboardContainerRef.current?.querySelectorAll("button, [tabindex]:not([tabindex='-1']), input, select, textarea");
+            keyboardFocusables?.forEach(el => {
+                if (el instanceof HTMLElement) el.blur();
             });
         }
     }, [showGiveUpModal, isGameOver]);
@@ -385,10 +400,15 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
 
                     <motion.div
                         ref={keyboardContainerRef}
+                        className={isMobile ? "fixed inset-x-0 bottom-0" : ""}
                         initial={{ y: 30, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.4 }}
-                        style={{ pointerEvents: (showGiveUpModal || isGameOver) ? 'none' : 'auto' }}
+                        style={{
+                            pointerEvents: (showGiveUpModal || isGameOver) ? 'none' : 'auto',
+                            zIndex: (showGiveUpModal || isGameOver) ? 40 : 60,
+                            filter: (showGiveUpModal || isGameOver) ? 'blur(2px)' : 'none'
+                        }}
                     >
                         <Keyboard
                             onChar={handleChar}

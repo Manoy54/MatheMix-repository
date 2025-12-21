@@ -51,6 +51,9 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
     }, []);
 
     useEffect(() => {
+        // Only track bounds on Desktop where 3D background needs them for magnetic effects
+        if (isMobile) return;
+
         updateCardBounds();
         window.addEventListener('resize', updateCardBounds);
         window.addEventListener('scroll', updateCardBounds);
@@ -58,7 +61,7 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
             window.removeEventListener('resize', updateCardBounds);
             window.removeEventListener('scroll', updateCardBounds);
         };
-    }, [updateCardBounds, isBackgroundReady]);
+    }, [updateCardBounds, isBackgroundReady, isMobile]);
 
     const handleBackgroundLoaded = React.useCallback(() => {
         // Signal global loading context that 3D is ready

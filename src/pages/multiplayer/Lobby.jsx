@@ -217,6 +217,7 @@ export default function Lobby({ user, onOpenSidebar }) {
             currentQuestion: question,
             roundStartTime: Date.now(),
             answers: [],
+            roundNumber: 1,
         });
     };
 

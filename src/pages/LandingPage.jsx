@@ -34,6 +34,16 @@ const LandingPage = () => {
         setModeDataReady(true);
         setBg3DReady(true);
         markAsFinished();
+
+        // Check for hash and scroll to section
+        if (window.location.hash === '#how-to-play') {
+            setTimeout(() => {
+                const element = document.getElementById('how-to-play');
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth' });
+                }
+            }, 100);
+        }
     }, [setModeDataReady, setBg3DReady, markAsFinished]);
 
     const handlePlayNow = () => {
@@ -151,6 +161,13 @@ const LandingPage = () => {
                             Play Now
                         </button>
 
+                        <button
+                            onClick={() => document.getElementById('how-to-play')?.scrollIntoView({ behavior: 'smooth' })}
+                            className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white border-2 border-white/30 rounded-full font-extrabold text-xl transition-all hover:scale-105 backdrop-blur-md shadow-xl flex items-center gap-2"
+                        >
+                            <Gamepad2 className="w-6 h-6" />
+                            How to Play
+                        </button>
                     </motion.div>
                 </div>
             </section>
@@ -197,7 +214,7 @@ const LandingPage = () => {
             </section>
 
             {/* 3. How to Play */}
-            <section className="py-20 relative z-10">
+            <section id="how-to-play" className="py-20 relative z-10">
                 <div className="container mx-auto px-4">
                     <motion.h2
                         variants={fadeInUp}

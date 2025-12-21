@@ -15,6 +15,7 @@ export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onO
     const [scoreMessage, setScoreMessage] = useState("");
     const [nextCategory, setNextCategory] = useState(roomData.category);
     const [showGiveUpModal, setShowGiveUpModal] = useState(false);
+    const [showLeaveModal, setShowLeaveModal] = useState(false);
     const [showRankingsModal, setShowRankingsModal] = useState(false);
     const [pressedKey, setPressedKey] = useState(null);
     const isMobile = useMobile();
@@ -186,7 +187,8 @@ export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onO
             roundStartTime: Date.now(),
             answers: [],
             players: updatedPlayers,
-            category: category
+            category: category,
+            roundNumber: (roomData.roundNumber || 1) + 1
         });
     };
 
@@ -271,7 +273,7 @@ export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onO
             <TopBar
                 onOpenSidebar={onOpenSidebar}
                 roomCode={roomCode}
-                onLeave={onLeave}
+                onLeave={() => setShowLeaveModal(true)}
             />
 
             <div className={`flex-1 overflow-y-auto ${isMobile ? 'pb-[280px]' : ''}`}>
@@ -288,6 +290,7 @@ export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onO
 
                     <div className="flex-1 flex flex-col items-center max-w-4xl w-full z-10 space-y-4">
                         <QuestionCard
+                            roundNumber={roomData.roundNumber}
                             category={roomData.category}
                             definition={currentQuestion.definition}
                             hasAnswered={hasAnswered}
@@ -364,6 +367,17 @@ export default function MultiplayerGame({ roomCode, roomData, user, onLeave, onO
                     />
                 )}
             </AnimatePresence>
+
+            {/* Leave Confirmation Modal */}
+            <AnimatePresence>
+                {showLeaveModal && (
+                    <LeaveConfirmationModal
+                        isOpen={showLeaveModal}
+                        onClose={() => setShowLeaveModal(false)}
+                        onConfirm={onLeave}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 }
@@ -421,7 +435,7 @@ const RankingsSidebar = React.memo(({ isMobile, myRank, myScore, user, sortedPla
     <motion.div
         initial={isMobile ? { y: -20, x: 0, opacity: 0 } : { x: 50, y: 0, opacity: 0 }}
         animate={{ x: 0, y: 0, opacity: 1 }}
-        className="w-full max-w-md md:max-w-none md:w-80 flex-shrink-0 z-10 flex flex-col gap-4"
+        className="w-full max-w-3xl md:max-w-none md:w-80 flex-shrink-0 z-10 flex flex-col gap-4"
     >
         <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 flex items-center justify-around shadow-lg">
             <div className="flex flex-col items-center">
@@ -444,25 +458,31 @@ const RankingsSidebar = React.memo(({ isMobile, myRank, myScore, user, sortedPla
             <motion.button
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setShowRankingsModal(true)}
-                className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 flex items-center justify-between shadow-lg group hover:bg-white/15 transition-all text-left"
+                className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 flex items-center justify-around shadow-lg group hover:bg-white/15 transition-all w-full"
             >
-                <div className="flex items-center gap-3">
-                    <div className="p-2 bg-cyan-400/10 rounded-xl border border-cyan-400/20">
-                        <Users className="w-4 h-4 text-cyan-300" />
+                <div className="flex flex-col items-center">
+                    <span className="text-white/60 text-xs font-bold uppercase tracking-wider mb-1">Currently Leading</span>
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-cyan-400/10 rounded-xl border border-cyan-400/20">
+                            <Users className="w-4 h-4 text-cyan-300" />
+                        </div>
+                        <div className="flex flex-col items-start text-left">
+                            <span className={`font-black text-xl truncate max-w-[140px] transition-all ${sortedPlayers[0]?.uid === user.uid ? 'text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.5)]' : 'text-white'}`}>
+                                {sortedPlayers[0]?.nickname || 'No players'}
+                            </span>
+                            {sortedPlayers[0]?.uid === user.uid && (
+                                <span className="text-[10px] text-yellow-400/60 font-black uppercase tracking-widest">You</span>
+                            )}
+                        </div>
                     </div>
-                    <span className="text-white/60 text-xs font-bold uppercase tracking-wider">Leading</span>
                 </div>
-                <div className="flex items-center gap-3">
-                    <div className="flex flex-col items-end">
-                        <span className={`font-bold truncate max-w-[120px] transition-all ${sortedPlayers[0]?.uid === user.uid ? 'text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.9)]' : 'text-white'}`}>
-                            {sortedPlayers[0]?.nickname || 'No players'}
-                        </span>
-                        {sortedPlayers[0]?.uid === user.uid && (
-                            <span className="text-[10px] text-yellow-400/60 font-bold uppercase tracking-widest mt-0.5">You</span>
-                        )}
-                    </div>
-                    <div className="p-1.5 bg-white/10 rounded-lg group-hover:bg-white/20 transition-colors">
-                        <Maximize2 className="w-4 h-4 text-white/50" />
+
+                <div className="h-10 w-[1px] bg-white/10"></div>
+
+                <div className="flex flex-col items-center">
+                    <span className="text-white/60 text-xs font-bold uppercase tracking-wider mb-1">Expand</span>
+                    <div className="p-2 bg-white/10 rounded-xl group-hover:bg-white/20 transition-colors">
+                        <Maximize2 className="w-5 h-5 text-white/50" />
                     </div>
                 </div>
             </motion.button>
@@ -498,7 +518,7 @@ const RankingsSidebar = React.memo(({ isMobile, myRank, myScore, user, sortedPla
     </motion.div>
 ));
 
-const QuestionCard = React.memo(({ category, definition, hasAnswered, allPlayersAnswered, scoreMessage }) => (
+const QuestionCard = React.memo(({ roundNumber, category, definition, hasAnswered, allPlayersAnswered, scoreMessage }) => (
     <motion.div
         key={definition}
         initial={{ scale: 0.95, opacity: 0 }}
@@ -509,6 +529,14 @@ const QuestionCard = React.memo(({ category, definition, hasAnswered, allPlayers
         <div className="relative bg-white/10 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-2xl text-center min-h-[130px] flex flex-col justify-center items-center">
             <div className="absolute top-3 left-3 bg-white/10 px-3 py-1 rounded-full text-[10px] font-bold text-white/50 border border-white/10 uppercase tracking-widest">
                 {category || "General"}
+            </div>
+
+            {/* Round Counter in Top Right */}
+            <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-cyan-400/10 px-3 py-1 rounded-full border border-cyan-400/20">
+                <Brain className="w-3.5 h-3.5 text-cyan-300" />
+                <span className="text-[10px] font-black text-cyan-200 uppercase tracking-wider">
+                    Round #{roundNumber || 1}
+                </span>
             </div>
             <p className="text-white text-lg md:text-xl font-medium leading-relaxed mt-2">
                 {definition}
@@ -817,3 +845,41 @@ const CharacterBox = React.memo(({
         </motion.div>
     );
 });
+
+const LeaveConfirmationModal = React.memo(({ isOpen, onClose, onConfirm }) => (
+    <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+    >
+        <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            className="bg-[#023e8a] border-2 border-white/20 p-6 rounded-3xl shadow-2xl max-w-sm w-full text-center space-y-4"
+        >
+            <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-2">
+                <LogOut className="w-8 h-8 text-red-400" />
+            </div>
+            <h2 className="text-2xl font-bold text-white">Leave Game?</h2>
+            <p className="text-white/70">
+                Are you sure you want to leave the game? Your current progress in this room will be lost.
+            </p>
+            <div className="flex gap-3 mt-6">
+                <button
+                    onClick={onClose}
+                    className="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-semibold transition-colors"
+                >
+                    Stay
+                </button>
+                <button
+                    onClick={onConfirm}
+                    className="flex-1 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl font-semibold shadow-lg shadow-red-500/30 transition-all font-black uppercase tracking-wider"
+                >
+                    Leave
+                </button>
+            </div>
+        </motion.div>
+    </motion.div>
+));

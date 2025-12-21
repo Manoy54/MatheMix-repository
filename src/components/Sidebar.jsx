@@ -25,7 +25,7 @@ export function Sidebar({ isOpen, onClose, onOpen, onLogout, username, showBackd
         ],
         utility: [
             { icon: Settings, label: 'Settings', action: () => console.log('Settings') },
-            { icon: HelpCircle, label: 'How to Play', action: () => console.log('Tutorial') },
+            { icon: HelpCircle, label: 'How to Play', action: () => handleNavigation('/welcome#how-to-play') },
             { icon: LogOut, label: 'Logout', action: onLogout },
         ],
     };
