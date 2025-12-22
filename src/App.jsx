@@ -113,7 +113,7 @@ function App() {
                 {showLoading && <LoadingScreen key="global-loading" />}
             </AnimatePresence>
 
-            {!isPublicPage && !showLoading && location.pathname !== "/lobby" && !isMobile && <AnimatedBackground />}
+            {location.pathname !== "/login" && !showLoading && location.pathname !== "/lobby" && !isMobile && <AnimatedBackground />}
 
             {!isPublicPage && currentUser && !location.pathname.startsWith("/admin") && (
                 <Sidebar

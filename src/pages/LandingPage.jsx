@@ -84,36 +84,9 @@ const LandingPage = ({ user }) => {
     };
 
     return (
-        <div className="min-h-screen text-white font-nunito overflow-x-hidden bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]">
+        <div className="min-h-screen text-white font-nunito overflow-x-hidden">
 
-            {/* FLOATING SYMBOLS (Background Animation) */}
-            {!isMobile && (
-                <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-                    {mathSymbols.map((symbol, i) => (
-                        <motion.div
-                            key={`symbol-${i}`}
-                            className="absolute text-white/5 select-none font-black"
-                            style={{
-                                left: `${Math.random() * 100}%`,
-                                top: `${Math.random() * 100}%`,
-                                fontSize: `${Math.random() * 60 + 40}px`,
-                            }}
-                            animate={{
-                                y: [0, -40, 0],
-                                x: [0, Math.random() * 20 - 10, 0],
-                                rotate: [0, 360],
-                            }}
-                            transition={{
-                                duration: Math.random() * 15 + 15,
-                                repeat: Infinity,
-                                ease: "easeInOut",
-                            }}
-                        >
-                            {symbol}
-                        </motion.div>
-                    ))}
-                </div>
-            )}
+
 
             {/* 1. Welcome / Hero Section */}
             <section className="relative min-h-screen flex items-center justify-center overflow-hidden z-10">
@@ -342,7 +315,7 @@ const LandingPage = ({ user }) => {
                     <div className="flex flex-col md:flex-row justify-center gap-8 flex-wrap">
                         {[
                             { name: "Sean Dylan Armenta", role: "Full Stack Developer", icon: Code },
-                            { name: "John Benedict Candelaria", role: "UI/UX Designer", icon: Brain },
+                            { name: "John Benedict Candelaria", role: "Full Stack Developer", icon: Code },
                             { name: "Jeffrey Cruel", role: "Backend Specialist", icon: Cpu },
                             { name: "Nash Mapula", role: "Frontend Developer", icon: Monitor }
                         ].map((dev, index) => (

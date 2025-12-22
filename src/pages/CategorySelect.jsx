@@ -141,7 +141,7 @@ export default function CategorySelect({ username, onOpenSidebar }) {
                         <StandardHeader onOpenSidebar={onOpenSidebar} />
                     </motion.div>
 
-                    {/* Centered Content */}
+                    {/* Centered Content - Adjusted to push content up */}
                     <div className={`flex-1 flex flex-col items-center ${isMobile ? 'justify-start pt-8' : 'justify-center'} min-h-0`}>
                         <div className={`w-full max-w-5xl flex flex-col ${isMobile ? 'justify-start' : 'justify-center'}`}>
 
@@ -150,11 +150,11 @@ export default function CategorySelect({ username, onOpenSidebar }) {
                                 initial={{ scale: 0.9, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 transition={{ delay: 0.2 }}
-                                className="text-center mb-8"
+                                className="text-center mb-5"
                             >
                                 <div className="inline-flex items-center gap-2 bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm px-5 py-2 rounded-full border border-white/30 mb-3 shadow-lg">
                                     <Flame className="w-4 h-4 text-orange-300" />
-                                    <span className="text-white text-base font-bold">Solo Mode</span>
+                                    <span className="text-white text-sm font-bold">Solo Mode</span>
                                 </div>
 
                                 <h2 className="text-white text-4xl md:text-5xl mb-2 leading-tight font-black drop-shadow-lg">
@@ -163,7 +163,7 @@ export default function CategorySelect({ username, onOpenSidebar }) {
                                 <p className="text-white/80 text-lg font-medium">Build your streak by answering questions continuously!</p>
                             </motion.div>
 
-                            {/* Info Card */}
+                            {/* Info Card - Slightly larger */}
                             <motion.div
                                 initial={{ y: -20, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
@@ -185,8 +185,8 @@ export default function CategorySelect({ username, onOpenSidebar }) {
                                 </div>
                             </motion.div>
 
-                            {/* Category Cards */}
-                            <div className="grid md:grid-cols-3 gap-5 pointer-events-auto">
+                            {/* Category Cards - Medium Size */}
+                            <div className="grid md:grid-cols-3 gap-4 pointer-events-auto">
                                 {categories.map((category, index) => (
                                     <motion.div
                                         key={category.id}
@@ -202,17 +202,17 @@ export default function CategorySelect({ username, onOpenSidebar }) {
                                             onClick={() => handleSelect(category.id)}
                                             whileHover={{ scale: 1.05, y: -5 }}
                                             whileTap={{ scale: 0.98 }}
-                                            className={`w-full h-full relative overflow-hidden rounded-3xl p-6 bg-gradient-to-br ${category.color} border-2 border-white/30 shadow-2xl text-left backdrop-blur-sm transition-all ${hoveredCategory === category.id ? category.glowColor : ''
+                                            className={`w-full h-full relative overflow-hidden rounded-3xl p-5 bg-gradient-to-br ${category.color} border-2 border-white/30 shadow-2xl text-left backdrop-blur-sm transition-all ${hoveredCategory === category.id ? category.glowColor : ''
                                                 }`}
                                         >
                                             {/* SHINE EFFECT */}
                                             <div className="absolute inset-0 -translate-x-full group-hover:animate-[shine_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent z-20" />
 
-                                            <div className="relative z-10 flex flex-col h-full min-h-[280px] justify-between">
+                                            <div className="relative z-10 flex flex-col h-full min-h-[240px] justify-between">
                                                 <div>
                                                     <div className="flex justify-between items-start mb-4">
-                                                        <div className={`bg-gradient-to-br ${category.iconBg} w-16 h-16 rounded-2xl flex items-center justify-center shadow-inner border border-white/20 backdrop-blur-sm`}>
-                                                            <category.icon className="w-9 h-9 text-white" />
+                                                        <div className={`bg-gradient-to-br ${category.iconBg} w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner border border-white/20 backdrop-blur-sm`}>
+                                                            <category.icon className="w-8 h-8 text-white" />
                                                         </div>
                                                         <div className={`w-3 h-3 rounded-full transition-all ${hoveredCategory === category.id
                                                             ? 'bg-yellow-300 shadow-[0_0_10px_#fde047]'
@@ -220,7 +220,7 @@ export default function CategorySelect({ username, onOpenSidebar }) {
                                                             }`} />
                                                     </div>
 
-                                                    <h3 className="text-white text-2xl font-black mb-2 leading-tight">
+                                                    <h3 className="text-white text-xl font-black mb-2 leading-tight">
                                                         {category.name}
                                                     </h3>
                                                     <p className="text-white/80 text-sm font-medium leading-relaxed">
@@ -244,7 +244,7 @@ export default function CategorySelect({ username, onOpenSidebar }) {
                                 ))}
                             </div>
 
-                            {/* Streak Info - ADDED HERE */}
+                            {/* Streak Info */}
                             <motion.div
                                 initial={{ y: 30, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
@@ -273,14 +273,14 @@ export default function CategorySelect({ username, onOpenSidebar }) {
                         </div>
                     </div>
 
-                    {/* Footer */}
+                    {/* Footer - Pushed to bottom */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.9 }}
                         onMouseEnter={() => !isMobile && setHoveredCategory('ui')}
                         onMouseLeave={() => !isMobile && setHoveredCategory(null)}
-                        className="text-center text-white/40 text-xs font-semibold py-3"
+                        className="text-center text-white/40 text-xs font-semibold py-4 mt-auto"
                     >
                         <p>Select a category to start building your streak! 🔥</p>
                     </motion.div>

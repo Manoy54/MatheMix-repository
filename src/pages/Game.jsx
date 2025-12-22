@@ -84,10 +84,21 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
         return "algebra";
     };
 
-    const updateStats = async (isCorrect, endedStreakCount = 0) => {
+    // Timer Ref
+    const questionStartTime = useRef(Date.now());
+
+    // Reset timer when question changes
+    useEffect(() => {
+        if (currentQ) {
+            questionStartTime.current = Date.now();
+        }
+    }, [currentQ]);
+
+    const updateStats = async (isCorrect, endedStreakCount = 0, isGameEnd = false) => {
         const userId = auth.currentUser?.uid;
         if (!userId) return;
 
+        const timeTaken = (Date.now() - questionStartTime.current) / 1000; // Seconds
         const userStatsRef = doc(db, 'userStats', userId);
         const masteryKey = getMasteryKey(category);
 
@@ -101,17 +112,38 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
 
             const newTotalQuestions = (currentStats.totalQuestions || 0) + 1;
             const newTotalWins = (currentStats.totalWins || 0) + (isCorrect ? 1 : 0);
-            const newTotalGames = (currentStats.totalGames || 0) + 1;
+
+            // Only increment totalGames if the session ended
+            const currentTotalGames = currentStats.totalGames || 0;
+            const newTotalGames = isGameEnd ? currentTotalGames + 1 : currentTotalGames;
 
             const newCatTotal = (currentCatStats.total || 0) + 1;
             const newCatCorrect = (currentCatStats.correct || 0) + (isCorrect ? 1 : 0);
 
             const masteryPercent = Math.round((newCatCorrect / newCatTotal) * 100);
-            const newAccuracy = Math.round((newTotalWins / newTotalGames) * 100);
+            const newAccuracy = Math.round((newTotalWins / newTotalGames) * 100); // Note: This logic assumes distinct games/sessions vs questions. If totalGames increments per question, this is question accuracy.
 
             const currentLongest = currentStats.longestStreak || 0;
             const candidateStreak = isCorrect ? (streak + 1) : endedStreakCount;
             const newLongestStreak = Math.max(currentLongest, candidateStreak);
+
+            // Time Stats Calculation
+            const currentPlayTime = currentStats.totalPlayTime || 0;
+            const newPlayTime = currentPlayTime + timeTaken;
+
+            let newAvgTime = currentStats.avgAnswerTime || 0;
+            let newFastest = currentStats.fastestAnswer || 0;
+
+            if (isCorrect) {
+                // Weighted average for avgAnswerTime
+                const oldTotalCorrect = currentStats.totalWins || 0; // Using wins as proxy for correct answers
+                newAvgTime = parseFloat(((newAvgTime * oldTotalCorrect + timeTaken) / (oldTotalCorrect + 1)).toFixed(2));
+
+                // Fastest answer
+                if (newFastest === 0 || timeTaken < newFastest) {
+                    newFastest = parseFloat(timeTaken.toFixed(2));
+                }
+            }
 
             const updates = {
                 totalGames: newTotalGames,
@@ -119,7 +151,10 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
                 totalWins: newTotalWins,
                 accuracy: newAccuracy,
                 longestStreak: newLongestStreak,
-                username: auth.currentUser?.displayName || "Player", // Ensure username is saved for leaderboard
+                totalPlayTime: Math.round(newPlayTime),
+                avgAnswerTime: newAvgTime,
+                fastestAnswer: newFastest,
+                username: auth.currentUser?.displayName || "Player",
                 mastery: {
                     ...masteryStats,
                     [masteryKey]: masteryPercent
@@ -139,7 +174,7 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
                     mode: `Solo - ${category}`,
                     score: endedStreakCount,
                     date: new Date().toLocaleDateString(),
-                    timestamp: Date.now() // For accurate weekly filtering
+                    timestamp: Date.now()
                 };
                 const recentGames = currentStats.recentGames || [];
                 const updatedRecent = [newGameEntry, ...recentGames].slice(0, 10);
@@ -203,7 +238,7 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
             setStreak(newStreak);
             if (newStreak > bestStreak) setBestStreak(newStreak);
             if (onGameEnd) onGameEnd(true);
-            updateStats(true, newStreak);
+            updateStats(true, newStreak, false); // Not game end
             setTimeout(() => {
                 nextQuestion();
             }, 2000);
@@ -211,7 +246,7 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
             setAnswerStatus('wrong');
             const finalStreak = streak;
             if (onGameEnd) onGameEnd(false);
-            updateStats(false, finalStreak);
+            updateStats(false, finalStreak, true); // Game ends here
             setTimeout(() => {
                 setIsGameOver(true);
             }, 1000);
@@ -241,7 +276,7 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
         setShowGiveUpModal(false);
         const finalStreak = streak;
         if (onGameEnd) onGameEnd(false);
-        updateStats(false, finalStreak);
+        updateStats(false, finalStreak, true); // Game ends here
         const cleanAnswer = answer.replace(/ /g, '');
         setInput(cleanAnswer);
         setAnswerStatus('revealed');

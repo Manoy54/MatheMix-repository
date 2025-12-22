@@ -378,7 +378,7 @@ export default function Lobby({ user, username, onOpenSidebar }) {
     }
 
     return (
-        <div className="h-full w-full relative overflow-hidden bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]">
+        <div className="min-h-screen w-full relative overflow-hidden bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]">
             {/* Animated background elements - Disabled on mobile for performance */}
             {!isMobile && (
                 <>
@@ -425,7 +425,7 @@ export default function Lobby({ user, username, onOpenSidebar }) {
             )}
 
             {/* Content */}
-            <div className="relative z-10 px-4 h-full flex flex-col">
+            <div className="relative z-10 px-4 min-h-screen flex flex-col">
                 <StandardHeader onOpenSidebar={onOpenSidebar} />
 
                 {/* Main Content - Non-scrollable */}

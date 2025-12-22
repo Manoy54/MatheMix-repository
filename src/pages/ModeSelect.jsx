@@ -90,7 +90,7 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
     }, [isMobile, handleBackgroundLoaded]);
 
     return (
-        <div className={`w-full relative ${isMobile ? 'min-h-screen' : 'h-full overflow-hidden'} bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]`}>
+        <div className={`w-full relative ${isMobile ? 'min-h-screen' : 'min-h-screen overflow-hidden'} bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]`}>
 
             {/* 1. 3D Background Layer */}
             {!isMobile && (
@@ -106,7 +106,7 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
 
             {/* 2. Main Content Layer - RESTRUCTURED */}
             {isBackgroundReady && (
-                <div className={`relative z-10 px-4 flex flex-col ${isMobile ? 'min-h-screen pt-[env(safe-area-inset-top)] pb-8' : 'h-full'}`}>
+                <div className={`relative z-10 px-4 flex flex-col ${isMobile ? 'min-h-screen pt-[env(safe-area-inset-top)] pb-8' : 'min-h-screen'}`}>
 
                     {/* Header */}
                     <div

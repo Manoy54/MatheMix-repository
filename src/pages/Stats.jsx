@@ -153,6 +153,12 @@ export default function Stats({ user, onOpenSidebar }) {
     const displayTotalWins = showWeekly ? weeklyWins : currentStats.totalWins;
     const displayWinRate = showWeekly ? weeklyWinRate : (currentStats.totalGames > 0 ? ((currentStats.totalWins / currentStats.totalGames) * 100).toFixed(1) : 0);
 
+    // Filtered Accuracy Calculation (Global vs Weekly could be implemented, but prompt asks for global formula override)
+    // Formula: Correct Answers (Total Questions) / (Total Correct + 1 Wrong per Game)
+    const trueAccuracy = currentStats.totalGames > 0
+        ? ((currentStats.totalQuestions / (currentStats.totalQuestions + currentStats.totalGames)) * 100).toFixed(1)
+        : 0; // If 0 games, accuracy logic is undefined/0
+
     const mpWinRate = currentStats.multiplayer.gamesPlayed > 0
         ? ((currentStats.multiplayer.wins / currentStats.multiplayer.gamesPlayed) * 100).toFixed(1)
         : 0;
@@ -229,7 +235,7 @@ export default function Stats({ user, onOpenSidebar }) {
                     </div>
 
                     {/* Core Engagement Stats - Solo */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                         {/* Total Games */}
                         <div className="bg-gradient-to-br from-blue-600/80 to-blue-700/80 backdrop-blur-sm rounded-xl p-3 border-2 border-white/20 shadow-xl">
                             <div className="flex items-center gap-2 mb-1">
@@ -241,26 +247,15 @@ export default function Stats({ user, onOpenSidebar }) {
                             <div className="text-white text-2xl" style={{ fontWeight: 900 }}>{displayTotalGames}</div>
                         </div>
 
-                        {/* Total Wins */}
+                        {/* Average Correct Answers (Accuracy) */}
                         <div className="bg-gradient-to-br from-green-600/80 to-green-700/80 backdrop-blur-sm rounded-xl p-3 border-2 border-white/20 shadow-xl">
                             <div className="flex items-center gap-2 mb-1">
                                 <div className="bg-white/20 rounded-lg p-1.5">
-                                    <Award className="w-4 h-4 text-white" />
+                                    <Target className="w-4 h-4 text-white" />
                                 </div>
-                                <span className="text-white/80 text-xs" style={{ fontWeight: 600 }}>{showWeekly ? "Weekly Wins" : "Total Wins"}</span>
+                                <span className="text-white/80 text-xs" style={{ fontWeight: 600 }}>Avg. Correct Answers</span>
                             </div>
-                            <div className="text-white text-2xl" style={{ fontWeight: 900 }}>{displayTotalWins}</div>
-                        </div>
-
-                        {/* Win Rate */}
-                        <div className="bg-gradient-to-br from-purple-600/80 to-purple-700/80 backdrop-blur-sm rounded-xl p-3 border-2 border-white/20 shadow-xl">
-                            <div className="flex items-center gap-2 mb-1">
-                                <div className="bg-white/20 rounded-lg p-1.5">
-                                    <TrendingUp className="w-4 h-4 text-white" />
-                                </div>
-                                <span className="text-white/80 text-xs" style={{ fontWeight: 600 }}>Win Rate</span>
-                            </div>
-                            <div className="text-white text-2xl" style={{ fontWeight: 900 }}>{displayWinRate}%</div>
+                            <div className="text-white text-2xl" style={{ fontWeight: 900 }}>{trueAccuracy}%</div>
                         </div>
 
                         {/* Play Time */}
@@ -287,29 +282,26 @@ export default function Stats({ user, onOpenSidebar }) {
                             </div>
 
                             <div className="space-y-3">
-                                {/* Global Accuracy */}
+                                {/* Longest Streak */}
                                 <div>
                                     <div className="flex justify-between items-center mb-1">
-                                        <span className="text-white/90 text-sm" style={{ fontWeight: 600 }}>Global Accuracy</span>
-                                        <span className="text-white text-sm" style={{ fontWeight: 900 }}>{currentStats.accuracy}%</span>
+                                        <span className="text-white/90 text-sm" style={{ fontWeight: 600 }}>Longest Streak</span>
+                                        <div className="flex items-center gap-1 text-yellow-300 font-bold">
+                                            <span>{currentStats.longestStreak} 🔥</span>
+                                        </div>
                                     </div>
-                                    <div className="w-full bg-white/20 rounded-full h-2 overflow-hidden">
-                                        <div
-                                            className="bg-gradient-to-r from-green-400 to-emerald-400 h-full rounded-full transition-all"
-                                            style={{ width: `${currentStats.accuracy}%` }}
-                                        />
+                                    {/* Visual representation of streak */}
+                                    <div className="flex gap-1">
+                                        {[...Array(Math.min(10, currentStats.longestStreak))].map((_, i) => (
+                                            <div key={i} className="h-1 flex-1 rounded-full bg-yellow-400" />
+                                        ))}
+                                        {currentStats.longestStreak > 10 && (
+                                            <div className="h-1 flex-1 rounded-full bg-white/20" />
+                                        )}
                                     </div>
                                 </div>
 
                                 {/* Longest Streak */}
-                                <div className="flex items-center justify-between bg-white/10 rounded-lg p-2 border border-white/20">
-                                    <div className="flex items-center gap-2">
-                                        <Flame className="w-4 h-4 text-orange-400" />
-                                        <span className="text-white/90 text-sm" style={{ fontWeight: 600 }}>Longest Streak</span>
-                                    </div>
-                                    <span className="text-white text-sm" style={{ fontWeight: 900 }}>{currentStats.longestStreak}</span>
-                                </div>
-
                                 {/* Total Questions */}
                                 <div className="flex items-center justify-between bg-white/10 rounded-lg p-2 border border-white/20">
                                     <div className="flex items-center gap-2">
@@ -519,13 +511,15 @@ export default function Stats({ user, onOpenSidebar }) {
                                     className="bg-white/5 hover:bg-white/10 rounded-lg p-3 border border-white/10 transition-all flex items-center justify-between"
                                 >
                                     <div className="flex items-center gap-3">
-                                        {/* Result Badge */}
-                                        <div className={`px-2 py-1 rounded-lg text-xs ${game.result === 'Victory'
-                                            ? 'bg-green-500/30 text-green-300 border border-green-400/30'
-                                            : 'bg-red-500/30 text-red-300 border border-red-400/30'
-                                            }`} style={{ fontWeight: 700 }}>
-                                            {game.result}
-                                        </div>
+                                        {/* Result Badge - Only show for Non-Solo games or if explicitly needed */}
+                                        {!game.mode.startsWith('Solo') && (
+                                            <div className={`px-2 py-1 rounded-lg text-xs ${game.result === 'Victory'
+                                                ? 'bg-green-500/30 text-green-300 border border-green-400/30'
+                                                : 'bg-red-500/30 text-red-300 border border-red-400/30'
+                                                }`} style={{ fontWeight: 700 }}>
+                                                {game.result}
+                                            </div>
+                                        )}
 
                                         {/* Mode Badge */}
                                         <div className="px-2 py-1 rounded-lg bg-blue-500/20 text-blue-300 border border-blue-400/30 text-xs" style={{ fontWeight: 600 }}>
