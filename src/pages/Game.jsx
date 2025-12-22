@@ -1,8 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Calculator, Sparkles, Flame, Trophy, Brain, AlertCircle, Menu, RotateCcw, Home } from 'lucide-react';
+import { Calculator, Sparkles, Flame, Trophy, Brain, AlertCircle, Menu, RotateCcw, Home, Loader2, Layout } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { QUESTIONS } from '../data.js';
 import Keyboard from '../components/Keyboard.jsx';
 import { auth, db } from '../firebaseConfig.js';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
@@ -14,20 +13,56 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
     const navigate = useNavigate();
 
     // --- 1. Get Category & Questions ---
-    const category = location.state?.category || "Number & Algebra";
-    const categoryQuestions = useMemo(() => QUESTIONS[category] || [], [category]);
+    const CATEGORY_MAP = {
+        "Number & Algebra": "number-algebra",
+        "Measurement & Geometry": "measurement-geometry",
+        "Data & probability": "data-probability"
+    };
 
-    const getRandomQuestion = useCallback(() => {
-        if (categoryQuestions.length === 0) return { definition: "No questions found.", answer: "ERROR" };
-        return categoryQuestions[Math.floor(Math.random() * categoryQuestions.length)];
+    const category = location.state?.category || "Number & Algebra";
+    const [categoryQuestions, setCategoryQuestions] = useState([]);
+    const [loadingQuestions, setLoadingQuestions] = useState(true);
+
+    const getRandomQuestion = useCallback((questions = categoryQuestions) => {
+        if (!questions || questions.length === 0) return { definition: "No questions found.", answer: "ERROR" };
+        return questions[Math.floor(Math.random() * questions.length)];
     }, [categoryQuestions]);
 
     // --- 2. State Management ---
-    const [currentQ, setCurrentQ] = useState(() => getRandomQuestion());
+    const [currentQ, setCurrentQ] = useState(null);
     const [input, setInput] = useState('');
     const [streak, setStreak] = useState(0);
     const [bestStreak, setBestStreak] = useState(0);
     const [questionNumber, setQuestionNumber] = useState(1);
+
+    useEffect(() => {
+        const fetchQuestions = async () => {
+            setLoadingQuestions(true);
+            const slug = CATEGORY_MAP[category] || "number-algebra";
+            try {
+                const docRef = doc(db, 'question-data', slug);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    const qArray = data.questions || [];
+                    if (qArray.length > 0) {
+                        setCategoryQuestions(qArray);
+                        setCurrentQ(qArray[Math.floor(Math.random() * qArray.length)]);
+                    } else if (data.definition && data.answer) {
+                        // Fallback to legacy fields if 'questions' array is missing
+                        const legacyQ = { definition: data.definition, answer: data.answer };
+                        setCategoryQuestions([legacyQ]);
+                        setCurrentQ(legacyQ);
+                    }
+                }
+            } catch (err) {
+                console.error("Error fetching questions:", err);
+            } finally {
+                setLoadingQuestions(false);
+            }
+        };
+        fetchQuestions();
+    }, [category]);
 
     // UI States
     const [showGiveUpModal, setShowGiveUpModal] = useState(false);
@@ -37,7 +72,7 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
     const [answerStatus, setAnswerStatus] = useState(null);
     const [pressedKey, setPressedKey] = useState(null);
 
-    const answer = useMemo(() => currentQ.answer.toUpperCase(), [currentQ.answer]);
+    const answer = useMemo(() => currentQ?.answer?.toUpperCase() || '', [currentQ]);
     const answerWithSpaces = useMemo(() => answer.replace(/ /g, ''), [answer]);
 
     const getMasteryKey = (cat) => {
@@ -285,6 +320,37 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
         }
     }, [showGiveUpModal, isGameOver]);
 
+    if (loadingQuestions) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7] flex flex-col items-center justify-center p-4">
+                <div className="relative">
+                    <div className="absolute inset-0 bg-cyan-400 blur-2xl opacity-20 animate-pulse" />
+                    <Loader2 className="w-16 h-16 text-white animate-spin relative z-10" />
+                </div>
+                <motion.p
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-white font-bold italic mt-6 tracking-widest uppercase text-sm"
+                >
+                    Fetching challenges...
+                </motion.p>
+            </div>
+        );
+    }
+
+    if (!currentQ) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7] flex flex-col items-center justify-center p-4">
+                <AlertCircle className="w-16 h-16 text-white/40 mb-4" />
+                <h1 className="text-white text-2xl font-black mb-2">Oops! No questions found</h1>
+                <p className="text-white/60 mb-6">We couldn't find any questions for this category.</p>
+                <button onClick={() => navigate('/category-select')} className="px-8 py-3 bg-white/10 hover:bg-white/20 text-white rounded-2xl font-bold transition-all border border-white/20">
+                    Go Back
+                </button>
+            </div>
+        );
+    }
+
     return (
         <div className={`px-4 py-3 min-h-screen preserve-3d flex flex-col ${isMobile ? 'pb-[280px]' : ''}`}>
             <AnimatePresence>
@@ -354,11 +420,11 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
 
                             <div className="flex gap-4 pt-4">
                                 <button
-                                    onClick={() => navigate('/')}
+                                    onClick={() => navigate('/category-select')}
                                     className="flex-1 flex items-center justify-center gap-2 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold transition-all"
                                 >
-                                    <Home className="w-5 h-5" />
-                                    <span>Home</span>
+                                    <Layout className="w-5 h-5" />
+                                    <span>Categories</span>
                                 </button>
                                 <button
                                     onClick={resetGame}

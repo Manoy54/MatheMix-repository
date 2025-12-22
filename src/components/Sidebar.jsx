@@ -1,9 +1,9 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutGrid, Gamepad2, Trophy, BarChart3, Award, Settings, HelpCircle, LogOut, X, Menu } from 'lucide-react';
+import { LayoutGrid, Gamepad2, Trophy, BarChart3, Award, Settings, HelpCircle, LogOut, X, Menu, Layout, Users, Shield, Activity } from 'lucide-react';
 
-export function Sidebar({ isOpen, onClose, onOpen, onLogout, username, showBackdrop = true }) {
+export function Sidebar({ isOpen, onClose, onOpen, onLogout, username, showBackdrop = true, isAdmin = false, activeView = 'overview', onAdminViewChange }) {
     const navigate = useNavigate();
     const location = useLocation();
     const isAdminRoute = location.pathname.startsWith('/admin');
@@ -29,6 +29,35 @@ export function Sidebar({ isOpen, onClose, onOpen, onLogout, username, showBackd
             { icon: LogOut, label: 'Logout', action: onLogout },
         ],
     };
+
+    const adminItems = {
+        core: [
+            { id: 'overview', icon: Layout, label: 'Overview', action: () => onAdminViewChange ? onAdminViewChange('overview') : handleNavigation('/admin') },
+            { id: 'users', icon: Users, label: 'User Records', action: () => onAdminViewChange ? onAdminViewChange('users') : null },
+            { id: 'game-content', icon: Gamepad2, label: 'Game Content', action: () => onAdminViewChange ? onAdminViewChange('game-content') : handleNavigation('/admin/game-content') },
+        ],
+        progression: [
+            { id: 'analytics', icon: BarChart3, label: 'System Analytics', action: () => onAdminViewChange ? onAdminViewChange('analytics') : null },
+            { id: 'logs', icon: Activity, label: 'System Logs', action: () => onAdminViewChange ? onAdminViewChange('logs') : null },
+        ],
+        utility: [
+            { id: 'security', icon: Shield, label: 'Security', action: () => onAdminViewChange ? onAdminViewChange('security') : null },
+            { id: 'config', icon: Settings, label: 'System Config', action: () => onAdminViewChange ? onAdminViewChange('config') : null },
+            { icon: LogOut, label: 'Logout', action: onLogout },
+        ],
+    };
+
+    const labels = isAdmin ? {
+        core: 'Admin Control',
+        progression: 'Data Insights',
+        utility: 'Maintenance'
+    } : {
+        core: 'Navigation',
+        progression: 'Progression',
+        utility: 'System'
+    };
+
+    const activeItems = isAdmin ? adminItems : menuItems;
 
     return (
         <AnimatePresence mode="wait">
@@ -96,9 +125,9 @@ export function Sidebar({ isOpen, onClose, onOpen, onLogout, username, showBackd
                             <div className="flex-1 p-4 space-y-6">
                                 {/* Core Navigation */}
                                 <div>
-                                    <h3 className="text-cyan-200 text-xs uppercase tracking-wider px-3 mb-3 font-semibold">Navigation</h3>
+                                    <h3 className="text-cyan-200 text-xs uppercase tracking-wider px-3 mb-3 font-semibold">{labels.core}</h3>
                                     <div className="space-y-1">
-                                        {menuItems.core.map((item, index) => (
+                                        {activeItems.core.map((item, index) => (
                                             <motion.button
                                                 key={index}
                                                 whileHover={{ x: 4, scale: 1.02 }}
@@ -106,13 +135,15 @@ export function Sidebar({ isOpen, onClose, onOpen, onLogout, username, showBackd
                                                 onClick={item.action}
                                                 className="relative w-full group"
                                             >
-                                                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 to-blue-400/20 rounded-xl blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                <div className="relative flex items-center gap-3 p-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 hover:border-cyan-300/50 transition-all">
+                                                <div className={`absolute inset-0 bg-gradient-to-r from-cyan-400/20 to-blue-400/20 rounded-xl blur-md transition-opacity ${isAdmin && activeView === item.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} />
+                                                <div className={`relative flex items-center gap-3 p-3 rounded-xl border transition-all ${isAdmin && activeView === item.id
+                                                    ? 'bg-white/25 border-cyan-300 shadow-[0_0_15px_rgba(103,232,249,0.3)]'
+                                                    : 'bg-white/10 hover:bg-white/20 border-white/20 hover:border-cyan-300/50'}`}>
                                                     <div className="relative">
-                                                        <div className="absolute inset-0 bg-cyan-400 rounded-lg blur-md opacity-0 group-hover:opacity-50 transition-opacity" />
-                                                        <item.icon className="relative w-5 h-5 text-cyan-200" />
+                                                        <div className={`absolute inset-0 bg-cyan-400 rounded-lg blur-md transition-opacity ${isAdmin && activeView === item.id ? 'opacity-50' : 'opacity-0 group-hover:opacity-50'}`} />
+                                                        <item.icon className={`relative w-5 h-5 ${isAdmin && activeView === item.id ? 'text-white' : 'text-cyan-200'}`} />
                                                     </div>
-                                                    <span className="text-white font-medium">{item.label}</span>
+                                                    <span className={`font-medium ${isAdmin && activeView === item.id ? 'text-white' : 'text-white/90'}`}>{item.label}</span>
                                                 </div>
                                             </motion.button>
                                         ))}
@@ -121,9 +152,9 @@ export function Sidebar({ isOpen, onClose, onOpen, onLogout, username, showBackd
 
                                 {/* Player Progression */}
                                 <div>
-                                    <h3 className="text-purple-200 text-xs uppercase tracking-wider px-3 mb-3 font-semibold">Progression</h3>
+                                    <h3 className="text-purple-200 text-xs uppercase tracking-wider px-3 mb-3 font-semibold">{labels.progression}</h3>
                                     <div className="space-y-1">
-                                        {menuItems.progression.map((item, index) => (
+                                        {activeItems.progression.map((item, index) => (
                                             <motion.button
                                                 key={index}
                                                 whileHover={{ x: 4, scale: 1.02 }}
@@ -146,9 +177,9 @@ export function Sidebar({ isOpen, onClose, onOpen, onLogout, username, showBackd
 
                                 {/* Utility */}
                                 <div>
-                                    <h3 className="text-white/60 text-xs uppercase tracking-wider px-3 mb-3 font-semibold">System</h3>
+                                    <h3 className="text-white/60 text-xs uppercase tracking-wider px-3 mb-3 font-semibold">{labels.utility}</h3>
                                     <div className="space-y-1">
-                                        {menuItems.utility.map((item, index) => (
+                                        {activeItems.utility.map((item, index) => (
                                             <motion.button
                                                 key={index}
                                                 whileHover={{ x: 4, scale: 1.02 }}

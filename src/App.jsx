@@ -18,7 +18,7 @@ import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
 import TermsOfService from "./pages/legal/TermsOfService";
 import CookiePolicy from "./pages/legal/CookiePolicy";
 const Stats = lazy(() => import("./pages/Stats.jsx"));
-const Admin = lazy(() => import("./pages/Admin.jsx"));
+const Admin = lazy(() => import("./pages/admin/Admin.jsx"));
 
 // Components
 import { Sidebar } from "./components/Sidebar.jsx";
@@ -74,7 +74,8 @@ function App() {
 
     // Redirect unauthenticated users to /welcome
     useEffect(() => {
-        if (!loading && !currentUser && location.pathname !== "/welcome") {
+        const publicPaths = ["/welcome", "/login", "/privacy-policy", "/terms-of-service", "/cookie-policy"];
+        if (!loading && !currentUser && !publicPaths.includes(location.pathname)) {
             navigate("/welcome", { replace: true });
         }
     }, [currentUser, loading, location.pathname, navigate]);
@@ -113,7 +114,7 @@ function App() {
 
             {!isPublicPage && !showLoading && location.pathname !== "/lobby" && !isMobile && <AnimatedBackground />}
 
-            {!isPublicPage && currentUser && location.pathname !== "/admin" && (
+            {!isPublicPage && currentUser && !location.pathname.startsWith("/admin") && (
                 <>
                     <Sidebar
                         isOpen={isSidebarOpen}
@@ -137,14 +138,12 @@ function App() {
             <div className={`relative z-10 w-full h-full`}>
                 <Routes>
                     <Route path="/welcome" element={
-                        <div className="flex flex-col">
-                            <LandingPage user={currentUser} />
-                            {!currentUser && (
-                                <div id="login-section">
-                                    <LoginPage />
-                                </div>
-                            )}
-                        </div>
+                        <LandingPage user={currentUser} />
+                    } />
+                    <Route path="/login" element={
+                        <PublicRoute user={currentUser} loading={loading}>
+                            <LoginPage />
+                        </PublicRoute>
                     } />
                     <Route path="/mode-select" element={<ProtectedRoute user={currentUser} loading={loading}><ModeSelect username={username} onLogout={handleLogout} onOpenSidebar={() => setSidebarOpen(true)} /></ProtectedRoute>} />
                     <Route path="/category-select" element={<ProtectedRoute user={currentUser} loading={loading}><CategorySelect username={username} onLogout={handleLogout} onOpenSidebar={() => setSidebarOpen(true)} /></ProtectedRoute>} />
@@ -155,7 +154,7 @@ function App() {
                     <Route path="/privacy-policy" element={<ProtectedRoute user={currentUser} loading={loading}><PrivacyPolicy /></ProtectedRoute>} />
                     <Route path="/terms-of-service" element={<ProtectedRoute user={currentUser} loading={loading}><TermsOfService /></ProtectedRoute>} />
                     <Route path="/cookie-policy" element={<ProtectedRoute user={currentUser} loading={loading}><CookiePolicy /></ProtectedRoute>} />
-                    <Route path="/admin" element={<ProtectedRoute user={currentUser} loading={loading}><Suspense fallback={<div className="text-white text-center">Loading Admin...</div>}><Admin username={username} onLogout={handleLogout} /></Suspense></ProtectedRoute>} />
+                    <Route path="/admin/*" element={<ProtectedRoute user={currentUser} loading={loading}><Suspense fallback={<div className="text-white text-center">Loading Admin...</div>}><Admin username={username} onLogout={handleLogout} /></Suspense></ProtectedRoute>} />
 
                     {/* Fallback */}
                     <Route path="*" element={<Navigate to={currentUser ? "/mode-select" : "/welcome"} replace />} />

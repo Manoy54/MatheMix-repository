@@ -1,12 +1,17 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { db } from "../firebaseConfig.js";
-import { QUESTIONS } from "../data.js";
-import { doc, updateDoc, arrayUnion } from "firebase/firestore";
+import { doc, updateDoc, arrayUnion, getDoc } from "firebase/firestore";
 import Keyboard from "./Keyboard.jsx";
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calculator, Sparkles, Trophy, Brain, Users, Zap, Menu, Crown, LogOut, CheckCircle, XCircle, Clock, AlertCircle, Maximize2, X } from 'lucide-react';
 import { useMobile } from "../hooks/useMobile.jsx";
 import AnimatedBackground from "./AnimatedBackground.jsx";
+
+const CATEGORY_MAP = {
+    "Number & Algebra": "number-algebra",
+    "Measurement & Geometry": "measurement-geometry",
+    "Data & probability": "data-probability"
+};
 
 export default function MultiplayerGame({ roomCode, roomData, user, nickname, onLeave, onOpenSidebar }) {
     // --- Logic State ---
@@ -188,8 +193,24 @@ export default function MultiplayerGame({ roomCode, roomData, user, nickname, on
         }
 
         const category = nextCategory;
-        const qBank = QUESTIONS[category] || QUESTIONS["Number & Algebra"];
-        const question = qBank[Math.floor(Math.random() * qBank.length)];
+        const slug = CATEGORY_MAP[category] || "number-algebra";
+        const qDocRef = doc(db, 'question-data', slug);
+        const qDocSnap = await getDoc(qDocRef);
+
+        let question = null;
+        if (qDocSnap.exists()) {
+            const data = qDocSnap.data();
+            const questions = data.questions || [];
+            if (questions.length > 0) {
+                question = questions[Math.floor(Math.random() * questions.length)];
+            } else if (data.definition && data.answer) {
+                question = { definition: data.definition, answer: data.answer };
+            }
+        }
+
+        if (!question) {
+            question = { definition: "Wait, no questions found in this category!", answer: "ERROR" };
+        }
 
         await updateDoc(roomRef, {
             status: "playing",
@@ -686,7 +707,9 @@ const RoundOverOverlay = React.memo(({ roomData, user, sortedPlayers, isHost, on
                     </div>
                     <div className="bg-white/5 p-4 rounded-3xl border border-white/10">
                         <p className="text-white/40 text-[10px] font-bold uppercase mb-1">Items Found</p>
-                        <p className="text-2xl font-black text-cyan-400">{answers.filter(a => a.uid === user.uid && a.isCorrect).length > 0 ? "Correct" : "Missed"}</p>
+                        <p className={`text-2xl font-black ${answers.filter(a => a.uid === user.uid && a.isCorrect).length > 0 ? "text-green-500" : "text-red-500"}`}>
+                            {answers.filter(a => a.uid === user.uid && a.isCorrect).length > 0 ? "Correct" : "Missed"}
+                        </p>
                     </div>
                     <div className="bg-white/5 p-4 rounded-3xl border border-white/10">
                         <p className="text-white/40 text-[10px] font-bold uppercase mb-1">Points Earned</p>
@@ -735,7 +758,7 @@ const RoundOverOverlay = React.memo(({ roomData, user, sortedPlayers, isHost, on
                                 onChange={(e) => setNextCategory(e.target.value)}
                                 className="w-full bg-white/5 border-2 border-white/10 text-white rounded-2xl py-4 pl-12 pr-4 font-bold appearance-none hover:bg-white/10 transition-all focus:outline-none focus:border-cyan-500/50"
                             >
-                                {Object.keys(QUESTIONS).map(cat => (
+                                {Object.keys(CATEGORY_MAP).map(cat => (
                                     <option key={cat} value={cat} className="bg-[#0f172a] text-white font-bold">{cat}</option>
                                 ))}
                             </select>

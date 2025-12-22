@@ -53,10 +53,7 @@ const LandingPage = ({ user }) => {
         if (user) {
             navigate('/mode-select');
         } else {
-            const loginSection = document.getElementById('login-section');
-            if (loginSection) {
-                loginSection.scrollIntoView({ behavior: 'smooth' });
-            }
+            navigate('/login');
         }
     };
 
