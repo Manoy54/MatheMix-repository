@@ -4,12 +4,19 @@ import { db } from '../firebaseConfig';
 import { collection, query, orderBy, limit, getDocs, doc, getDoc } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Medal, Crown, TrendingUp, Target, Flame, Medal as MedalIcon } from 'lucide-react';
+import { useLoading } from '../context/LoadingContext';
 
 export default function Leaderboard() {
     const [leaders, setLeaders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('totalWins'); // totalWins, accuracy, longestStreak
     const [error, setError] = useState(null);
+    const { setModeDataReady, setBg3DReady } = useLoading();
+
+    useEffect(() => {
+        setModeDataReady(true);
+        setBg3DReady(true);
+    }, [setModeDataReady, setBg3DReady]);
 
     useEffect(() => {
         const fetchLeaderboard = async () => {

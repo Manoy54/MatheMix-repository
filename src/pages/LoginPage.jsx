@@ -97,6 +97,29 @@ function App() {
         initAuth();
     }, []);
 
+    const getFriendlyErrorMessage = (code) => {
+        switch (code) {
+            case 'auth/email-already-in-use':
+                return "This email is already registered. Try logging in instead.";
+            case 'auth/invalid-email':
+                return "Please enter a valid email address.";
+            case 'auth/weak-password':
+                return "Password is too weak. Please use at least 6 characters.";
+            case 'auth/user-not-found':
+            case 'auth/wrong-password':
+            case 'auth/invalid-credential':
+                return "Invalid email or password. Please try again.";
+            case 'auth/user-disabled':
+                return "This account has been disabled. Please contact support.";
+            case 'auth/network-request-failed':
+                return "Network error. Please check your internet connection.";
+            case 'auth/too-many-requests':
+                return "Too many failed attempts. Please try again later.";
+            default:
+                return "An unexpected error occurred. Please try again.";
+        }
+    };
+
     const handleAuth = async (e) => {
         e.preventDefault();
         setError("");
@@ -124,7 +147,7 @@ function App() {
                 });
                 setMessage("Account created! Logging you in...");
             } catch (firebaseError) {
-                setError(firebaseError.message);
+                setError(getFriendlyErrorMessage(firebaseError.code));
             }
         } else {
             try {
@@ -132,7 +155,7 @@ function App() {
                 setMessage("Logged in successfully!");
             } catch (firebaseError) {
                 console.error(firebaseError);
-                setError("Invalid email or password.");
+                setError(getFriendlyErrorMessage(firebaseError.code));
             }
         }
     };

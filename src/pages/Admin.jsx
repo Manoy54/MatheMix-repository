@@ -3,10 +3,18 @@ import { Sidebar } from '../components/Sidebar';
 import AnimatedBackground from '../components/AnimatedBackground';
 import { Menu, X, Layout, Users, Shield, Settings, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLoading } from '../context/LoadingContext';
 
 const Admin = ({ username, onLogout }) => {
     // Requirement: The sidebar must be visible by default (open state = true on initial render).
     const [isSidebarOpen, setSidebarOpen] = useState(true);
+    const { setModeDataReady, setBg3DReady } = useLoading();
+
+    useEffect(() => {
+        // Signal readiness as soon as the component mounts
+        setModeDataReady(true);
+        setBg3DReady(true);
+    }, [setModeDataReady, setBg3DReady]);
 
     // Sidebar items specifically for Admin page if needed, 
     // but the requirement says to use Sidebar.jsx as is.

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useLoading } from '../context/LoadingContext';
 import { doc, onSnapshot, getDoc, setDoc, deleteField, updateDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig'; // Ensure this path matches your project structure
 import { Trophy, Target, Zap, Brain, TrendingUp, Clock, Award, Flame, Users, Gamepad2, Swords, Info } from 'lucide-react';
@@ -33,6 +34,12 @@ export default function Stats({ user }) {
 
     // 2. State to hold the live data
     const [currentStats, setCurrentStats] = useState(defaultStats);
+    const { setModeDataReady, setBg3DReady } = useLoading();
+
+    useEffect(() => {
+        setModeDataReady(true);
+        setBg3DReady(true);
+    }, [setModeDataReady, setBg3DReady]);
 
     // --- MIGRATION LOGIC: One-time check to move stats from users -> userStats ---
     useEffect(() => {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
     Play,
     Gamepad2,
@@ -23,34 +23,41 @@ import {
 import { useLoading } from '../context/LoadingContext';
 import { useMobile } from '../hooks/useMobile';
 
-const LandingPage = () => {
+const LandingPage = ({ user }) => {
     const isMobile = useMobile();
+    const location = useLocation();
     const navigate = useNavigate();
-    const { resetLoading, markAsFinished, setModeDataReady, setBg3DReady } = useLoading();
+    const { markAsFinished, setModeDataReady, setBg3DReady } = useLoading();
 
-    // On mount, if we are on the landing page, we want to clear any existing loading screen
-    // so the visitor sees the landing page immediately.
+    // On mount or hash change, handle scrolling to sections
     React.useEffect(() => {
         setModeDataReady(true);
         setBg3DReady(true);
         markAsFinished();
 
-        // Check for hash and scroll to section
-        if (window.location.hash === '#how-to-play') {
-            setTimeout(() => {
+        if (location.hash === '#how-to-play') {
+            const scrollTarget = () => {
                 const element = document.getElementById('how-to-play');
                 if (element) {
                     element.scrollIntoView({ behavior: 'smooth' });
                 }
-            }, 100);
+            };
+
+            // Small delay to ensure render is complete
+            const timeoutId = setTimeout(scrollTarget, 100);
+            return () => clearTimeout(timeoutId);
         }
-    }, [setModeDataReady, setBg3DReady, markAsFinished]);
+    }, [location.hash, setModeDataReady, setBg3DReady, markAsFinished]);
 
     const handlePlayNow = () => {
-        // Start the loading sequence
-        resetLoading();
-        // Move to the root which will then redirect to mode-select or login
-        navigate('/');
+        if (user) {
+            navigate('/mode-select');
+        } else {
+            const loginSection = document.getElementById('login-section');
+            if (loginSection) {
+                loginSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
     };
 
     // Math Symbols for Background Animation (from LoginPage)

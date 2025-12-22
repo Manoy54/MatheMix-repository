@@ -1,6 +1,6 @@
 // src/App.jsx
 import React, { useState, useEffect, lazy, Suspense } from "react";
-import { Routes, Route, Navigate, useLocation, useNavigationType } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation, useNavigationType, useNavigate } from "react-router-dom";
 import { Menu } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLoading } from "./context/LoadingContext";
@@ -18,6 +18,7 @@ import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
 import TermsOfService from "./pages/legal/TermsOfService";
 import CookiePolicy from "./pages/legal/CookiePolicy";
 const Stats = lazy(() => import("./pages/Stats.jsx"));
+const Admin = lazy(() => import("./pages/Admin.jsx"));
 
 // Components
 import { Sidebar } from "./components/Sidebar.jsx";
@@ -28,8 +29,15 @@ import { auth, db } from "./firebaseConfig.js";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, onSnapshot } from "firebase/firestore";
 
-const ProtectedRoute = ({ user, children }) => {
-    if (!user) return <Navigate to="/" replace />;
+const ProtectedRoute = ({ user, loading, children }) => {
+    if (loading) return null;
+    if (!user) return <Navigate to="/welcome" replace />;
+    return children;
+};
+
+const PublicRoute = ({ user, loading, children }) => {
+    if (loading) return null;
+    if (user) return <Navigate to="/mode-select" replace />;
     return children;
 };
 
@@ -40,6 +48,7 @@ function App() {
     const [loading, setLoading] = useState(true);
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     const location = useLocation();
+    const navigate = useNavigate();
     const navigationType = useNavigationType();
     const lastNavRef = React.useRef("");
     const { isLoading, startLoading } = useLoading();
@@ -62,6 +71,13 @@ function App() {
         });
         return () => unsubscribe();
     }, []);
+
+    // Redirect unauthenticated users to /welcome
+    useEffect(() => {
+        if (!loading && !currentUser && location.pathname !== "/welcome") {
+            navigate("/welcome", { replace: true });
+        }
+    }, [currentUser, loading, location.pathname, navigate]);
 
     // Centralized route-entry loading trigger
     useEffect(() => {
@@ -86,9 +102,7 @@ function App() {
     // The loading screen will handle both auth loading and game initialization
     const showLoading = loading || isLoading;
 
-    const fullScreenRoutes = ["/", "/mode-select", "/category-select", "/lobby", "/game", "/stats", "/leaderboard", "/welcome", "/privacy-policy", "/terms-of-service", "/cookie-policy"];
-    const isFullScreen = fullScreenRoutes.includes(location.pathname);
-    const isPublicPage = ["/", "/welcome"].includes(location.pathname);
+    const isPublicPage = location.pathname === "/welcome";
     const hasOwnSidebarButton = ["/lobby", "/mode-select", "/category-select", "/game"].includes(location.pathname);
 
     return (
@@ -99,7 +113,7 @@ function App() {
 
             {!isPublicPage && !showLoading && location.pathname !== "/lobby" && !isMobile && <AnimatedBackground />}
 
-            {!isPublicPage && currentUser && (
+            {!isPublicPage && currentUser && location.pathname !== "/admin" && (
                 <>
                     <Sidebar
                         isOpen={isSidebarOpen}
@@ -120,19 +134,31 @@ function App() {
                 </>
             )}
 
-            <div className={`relative z-10 ${isFullScreen ? "w-full h-full" : "max-w-6xl mx-auto p-4"}`}>
+            <div className={`relative z-10 w-full h-full`}>
                 <Routes>
-                    <Route path="/" element={currentUser ? <Navigate to="/mode-select" /> : <LoginPage />} />
-                    <Route path="/welcome" element={<LandingPage />} />
-                    <Route path="/mode-select" element={<ProtectedRoute user={currentUser}><ModeSelect username={username} onLogout={handleLogout} onOpenSidebar={() => setSidebarOpen(true)} /></ProtectedRoute>} />
-                    <Route path="/category-select" element={<ProtectedRoute user={currentUser}><CategorySelect username={username} onLogout={handleLogout} onOpenSidebar={() => setSidebarOpen(true)} /></ProtectedRoute>} />
-                    <Route path="/game" element={<ProtectedRoute user={currentUser}><Game onGameEnd={() => { }} onOpenSidebar={() => setSidebarOpen(true)} /></ProtectedRoute>} />
-                    <Route path="/lobby" element={<ProtectedRoute user={currentUser}><Lobby user={currentUser} username={username} onOpenSidebar={() => setSidebarOpen(true)} onLogout={handleLogout} /></ProtectedRoute>} />
-                    <Route path="/stats" element={<ProtectedRoute user={currentUser}><Suspense fallback={<div className="text-white text-center">Loading Stats...</div>}><Stats user={currentUser} /></Suspense></ProtectedRoute>} />
-                    <Route path="/leaderboard" element={<ProtectedRoute user={currentUser}><Leaderboard /></ProtectedRoute>} />
-                    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                    <Route path="/terms-of-service" element={<TermsOfService />} />
-                    <Route path="/cookie-policy" element={<CookiePolicy />} />
+                    <Route path="/welcome" element={
+                        <div className="flex flex-col">
+                            <LandingPage user={currentUser} />
+                            {!currentUser && (
+                                <div id="login-section">
+                                    <LoginPage />
+                                </div>
+                            )}
+                        </div>
+                    } />
+                    <Route path="/mode-select" element={<ProtectedRoute user={currentUser} loading={loading}><ModeSelect username={username} onLogout={handleLogout} onOpenSidebar={() => setSidebarOpen(true)} /></ProtectedRoute>} />
+                    <Route path="/category-select" element={<ProtectedRoute user={currentUser} loading={loading}><CategorySelect username={username} onLogout={handleLogout} onOpenSidebar={() => setSidebarOpen(true)} /></ProtectedRoute>} />
+                    <Route path="/game" element={<ProtectedRoute user={currentUser} loading={loading}><Game onGameEnd={() => { }} onOpenSidebar={() => setSidebarOpen(true)} /></ProtectedRoute>} />
+                    <Route path="/lobby" element={<ProtectedRoute user={currentUser} loading={loading}><Lobby user={currentUser} username={username} onOpenSidebar={() => setSidebarOpen(true)} onLogout={handleLogout} /></ProtectedRoute>} />
+                    <Route path="/stats" element={<ProtectedRoute user={currentUser} loading={loading}><Suspense fallback={<div className="text-white text-center">Loading Stats...</div>}><Stats user={currentUser} /></Suspense></ProtectedRoute>} />
+                    <Route path="/leaderboard" element={<ProtectedRoute user={currentUser} loading={loading}><Leaderboard /></ProtectedRoute>} />
+                    <Route path="/privacy-policy" element={<ProtectedRoute user={currentUser} loading={loading}><PrivacyPolicy /></ProtectedRoute>} />
+                    <Route path="/terms-of-service" element={<ProtectedRoute user={currentUser} loading={loading}><TermsOfService /></ProtectedRoute>} />
+                    <Route path="/cookie-policy" element={<ProtectedRoute user={currentUser} loading={loading}><CookiePolicy /></ProtectedRoute>} />
+                    <Route path="/admin" element={<ProtectedRoute user={currentUser} loading={loading}><Suspense fallback={<div className="text-white text-center">Loading Admin...</div>}><Admin username={username} onLogout={handleLogout} /></Suspense></ProtectedRoute>} />
+
+                    {/* Fallback */}
+                    <Route path="*" element={<Navigate to={currentUser ? "/mode-select" : "/welcome"} replace />} />
                 </Routes>
             </div>
         </div>
