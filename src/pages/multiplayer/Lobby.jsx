@@ -22,6 +22,7 @@ import HostLobby from './HostLobby';
 import PlayerWaiting from './PlayerWaiting';
 import MultiplayerGameFinish from '../../components/MultiplayerGameFinish';
 import { QUESTIONS } from '../../data.js';
+import StandardHeader from '../../components/StandardHeader';
 import { useMobile } from '../../hooks/useMobile';
 
 
@@ -377,7 +378,7 @@ export default function Lobby({ user, username, onOpenSidebar }) {
     }
 
     return (
-        <div className="h-screen w-full relative overflow-hidden bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]">
+        <div className="h-full w-full relative overflow-hidden bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]">
             {/* Animated background elements - Disabled on mobile for performance */}
             {!isMobile && (
                 <>
@@ -424,55 +425,8 @@ export default function Lobby({ user, username, onOpenSidebar }) {
             )}
 
             {/* Content */}
-            <div className="relative z-10 px-4 h-screen flex flex-col">
-                {/* Header - Left-aligned Logo */}
-                <motion.div
-                    initial={{ y: -20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    className="flex items-center justify-between pt-4 pb-2 shrink-0"
-                >
-                    {/* Logo & Sidebar Toggle */}
-                    <div className="flex items-center gap-3">
-                        {/* Hamburger Menu Button */}
-                        {onOpenSidebar && (
-                            <motion.button
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                                onClick={onOpenSidebar}
-                                className="bg-white/10 backdrop-blur-md p-2 rounded-xl border border-white/20 text-white shadow-lg hover:bg-white/20 transition-all"
-                            >
-                                <Menu className="w-6 h-6" />
-                            </motion.button>
-                        )}
-
-                        {/* Rotating Calculator Icon */}
-                        <motion.div
-                            animate={{ rotate: [0, 360] }}
-                            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                            className="relative"
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl blur-md opacity-50" />
-                            <div className="relative bg-gradient-to-br from-white/20 to-white/10 p-2 rounded-xl border border-white/30 backdrop-blur-sm">
-                                <Calculator className="w-6 h-6 text-white" />
-                            </div>
-                        </motion.div>
-
-                        {/* Mathemix Logo */}
-                        <div>
-                            <h1 className="text-white flex items-center gap-2 font-black text-3xl drop-shadow-md">
-                                Mathemix
-                                <motion.div
-                                    animate={{ rotate: [0, 15, -15, 0] }}
-                                    transition={{ duration: 2, repeat: Infinity }}
-                                >
-                                    <Sparkles className="w-5 h-5 text-yellow-300" />
-                                </motion.div>
-                            </h1>
-                        </div>
-                    </div>
-
-
-                </motion.div>
+            <div className="relative z-10 px-4 h-full flex flex-col">
+                <StandardHeader onOpenSidebar={onOpenSidebar} />
 
                 {/* Main Content - Non-scrollable */}
                 <div className="flex-1 flex items-center justify-center p-4">

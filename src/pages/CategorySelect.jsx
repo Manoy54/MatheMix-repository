@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Background3D from '../components/Background3D.jsx';
+import StandardHeader from '../components/StandardHeader';
 import { useMobile } from '../hooks/useMobile.jsx';
 import { useLoading } from '../context/LoadingContext';
 import {
@@ -135,43 +136,9 @@ export default function CategorySelect({ username, onOpenSidebar }) {
                         animate={{ y: 0, opacity: 1 }}
                         onMouseEnter={() => !isMobile && setHoveredCategory('ui')}
                         onMouseLeave={() => !isMobile && setHoveredCategory(null)}
-                        className="flex items-center justify-between pt-4 pb-2 shrink-0 pointer-events-auto"
+                        className="pointer-events-auto"
                     >
-                        <div className="flex items-center gap-3">
-                            {/* Hamburger Menu Button */}
-                            {onOpenSidebar && (
-                                <motion.button
-                                    whileHover={{ scale: 1.1 }}
-                                    whileTap={{ scale: 0.9 }}
-                                    onClick={onOpenSidebar}
-                                    className="bg-white/10 backdrop-blur-md p-2 rounded-xl border border-white/20 text-white shadow-lg hover:bg-white/20 transition-all"
-                                >
-                                    <Menu className="w-6 h-6" />
-                                </motion.button>
-                            )}
-                            <motion.div
-                                animate={{ rotate: [0, 360] }}
-                                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                                className="relative"
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl blur-md opacity-50" />
-                                <div className="relative bg-gradient-to-br from-white/20 to-white/10 p-2 rounded-xl border border-white/30 backdrop-blur-sm">
-                                    <Calculator className="w-6 h-6 text-white" />
-                                </div>
-                            </motion.div>
-                            <div>
-                                <h1 className="text-white flex items-center gap-2 font-black text-3xl drop-shadow-md">
-                                    Mathemix
-                                    <motion.div
-                                        animate={{ rotate: [0, 15, -15, 0] }}
-                                        transition={{ duration: 2, repeat: Infinity }}
-                                    >
-                                        <Sparkles className="w-5 h-5 text-yellow-300" />
-                                    </motion.div>
-                                </h1>
-                            </div>
-                        </div>
-
+                        <StandardHeader onOpenSidebar={onOpenSidebar} />
                     </motion.div>
 
                     {/* Centered Content */}

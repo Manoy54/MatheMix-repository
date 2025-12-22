@@ -5,7 +5,9 @@ import { db } from '../firebaseConfig'; // Ensure this path matches your project
 import { Trophy, Target, Zap, Brain, TrendingUp, Clock, Award, Flame, Users, Gamepad2, Swords, Info } from 'lucide-react';
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer } from 'recharts';
 
-export default function Stats({ user }) {
+import StandardHeader from '../components/StandardHeader';
+
+export default function Stats({ user, onOpenSidebar }) {
     // 1. Define the skeleton structure for safe defaults
     const defaultStats = {
         totalGames: 0, // Treated as Solo
@@ -171,377 +173,381 @@ export default function Stats({ user }) {
     const ranks = ["Bronze", "Silver", "Gold", "Platinum", "Diamond", "Master", "Grandmaster"];
 
     return (
-        <div className="w-full max-w-6xl mx-auto p-4 space-y-8 pb-20">
-            {/* Header */}
-            <div className="text-center mb-6">
-                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-500/20 to-blue-500/20 backdrop-blur-sm px-4 py-1.5 rounded-full border border-purple-400/30 mb-2">
-                    <Trophy className="w-4 h-4 text-yellow-400" />
-                    <span className="text-white text-sm" style={{ fontWeight: 700 }}>Your Statistics</span>
-                </div>
-                <h1 className="text-white text-3xl mb-1" style={{ fontWeight: 900 }}>
-                    Performance <span className="text-purple-400">Dashboard</span>
-                </h1>
+        <div className="w-full min-h-full">
+            <StandardHeader onOpenSidebar={onOpenSidebar} className="px-4" />
 
-                {/* --- TOGGLE FILTER --- */}
-                <div className="flex justify-center mt-4">
-                    <div className="bg-white/10 backdrop-blur-md p-1 rounded-lg flex gap-1 border border-white/20">
-                        <button
-                            onClick={() => setShowWeekly(true)}
-                            className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${showWeekly
-                                ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg'
-                                : 'text-white/60 hover:text-white hover:bg-white/5'
-                                }`}
-                        >
-                            This Week
-                        </button>
-                        <button
-                            onClick={() => setShowWeekly(false)}
-                            className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${!showWeekly
-                                ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg'
-                                : 'text-white/60 hover:text-white hover:bg-white/5'
-                                }`}
-                        >
-                            All Time
-                        </button>
+            <div className="w-full max-w-6xl mx-auto p-4 space-y-8 pb-20">
+                {/* Header */}
+                <div className="text-center mb-6">
+                    <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-500/20 to-blue-500/20 backdrop-blur-sm px-4 py-1.5 rounded-full border border-purple-400/30 mb-2">
+                        <Trophy className="w-4 h-4 text-yellow-400" />
+                        <span className="text-white text-sm" style={{ fontWeight: 700 }}>Your Statistics</span>
                     </div>
-                </div>
+                    <h1 className="text-white text-3xl mb-1" style={{ fontWeight: 900 }}>
+                        Performance <span className="text-purple-400">Dashboard</span>
+                    </h1>
 
-                <p className="text-white/80 text-sm mt-3" style={{ fontWeight: 500 }}>
-                    {showWeekly ? "Tracking progress from the last 7 days" : "Tracking all history"}
-                </p>
-            </div>
+                    {/* --- TOGGLE FILTER --- */}
+                    <div className="flex justify-center mt-4">
+                        <div className="bg-white/10 backdrop-blur-md p-1 rounded-lg flex gap-1 border border-white/20">
+                            <button
+                                onClick={() => setShowWeekly(true)}
+                                className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${showWeekly
+                                    ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg'
+                                    : 'text-white/60 hover:text-white hover:bg-white/5'
+                                    }`}
+                            >
+                                This Week
+                            </button>
+                            <button
+                                onClick={() => setShowWeekly(false)}
+                                className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${!showWeekly
+                                    ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg'
+                                    : 'text-white/60 hover:text-white hover:bg-white/5'
+                                    }`}
+                            >
+                                All Time
+                            </button>
+                        </div>
+                    </div>
 
-            {/* --- SECTION 1: SOLO MODE --- */}
-            <div className="space-y-4">
-                <div className="flex items-center gap-3 border-b border-white/10 pb-2">
-                    <div className="bg-gradient-to-br from-[#023e8a] to-[#0077b6] p-2 rounded-xl shadow-lg border border-white/20">
-                        <Brain className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                        <h2 className="text-2xl text-white font-black tracking-tight">Solo Mode</h2>
-                        <p className="text-white/50 text-sm">Individual practice and mastery</p>
-                    </div>
+                    <p className="text-white/80 text-sm mt-3" style={{ fontWeight: 500 }}>
+                        {showWeekly ? "Tracking progress from the last 7 days" : "Tracking all history"}
+                    </p>
                 </div>
 
-                {/* Core Engagement Stats - Solo */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {/* Total Games */}
-                    <div className="bg-gradient-to-br from-blue-600/80 to-blue-700/80 backdrop-blur-sm rounded-xl p-3 border-2 border-white/20 shadow-xl">
-                        <div className="flex items-center gap-2 mb-1">
-                            <div className="bg-white/20 rounded-lg p-1.5">
-                                <Trophy className="w-4 h-4 text-white" />
-                            </div>
-                            <span className="text-white/80 text-xs" style={{ fontWeight: 600 }}>{showWeekly ? "Weekly Games" : "Total Games"}</span>
+                {/* --- SECTION 1: SOLO MODE --- */}
+                <div className="space-y-4">
+                    <div className="flex items-center gap-3 border-b border-white/10 pb-2">
+                        <div className="bg-gradient-to-br from-[#023e8a] to-[#0077b6] p-2 rounded-xl shadow-lg border border-white/20">
+                            <Brain className="w-6 h-6 text-white" />
                         </div>
-                        <div className="text-white text-2xl" style={{ fontWeight: 900 }}>{displayTotalGames}</div>
+                        <div>
+                            <h2 className="text-2xl text-white font-black tracking-tight">Solo Mode</h2>
+                            <p className="text-white/50 text-sm">Individual practice and mastery</p>
+                        </div>
                     </div>
 
-                    {/* Total Wins */}
-                    <div className="bg-gradient-to-br from-green-600/80 to-green-700/80 backdrop-blur-sm rounded-xl p-3 border-2 border-white/20 shadow-xl">
-                        <div className="flex items-center gap-2 mb-1">
-                            <div className="bg-white/20 rounded-lg p-1.5">
-                                <Award className="w-4 h-4 text-white" />
+                    {/* Core Engagement Stats - Solo */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        {/* Total Games */}
+                        <div className="bg-gradient-to-br from-blue-600/80 to-blue-700/80 backdrop-blur-sm rounded-xl p-3 border-2 border-white/20 shadow-xl">
+                            <div className="flex items-center gap-2 mb-1">
+                                <div className="bg-white/20 rounded-lg p-1.5">
+                                    <Trophy className="w-4 h-4 text-white" />
+                                </div>
+                                <span className="text-white/80 text-xs" style={{ fontWeight: 600 }}>{showWeekly ? "Weekly Games" : "Total Games"}</span>
                             </div>
-                            <span className="text-white/80 text-xs" style={{ fontWeight: 600 }}>{showWeekly ? "Weekly Wins" : "Total Wins"}</span>
+                            <div className="text-white text-2xl" style={{ fontWeight: 900 }}>{displayTotalGames}</div>
                         </div>
-                        <div className="text-white text-2xl" style={{ fontWeight: 900 }}>{displayTotalWins}</div>
+
+                        {/* Total Wins */}
+                        <div className="bg-gradient-to-br from-green-600/80 to-green-700/80 backdrop-blur-sm rounded-xl p-3 border-2 border-white/20 shadow-xl">
+                            <div className="flex items-center gap-2 mb-1">
+                                <div className="bg-white/20 rounded-lg p-1.5">
+                                    <Award className="w-4 h-4 text-white" />
+                                </div>
+                                <span className="text-white/80 text-xs" style={{ fontWeight: 600 }}>{showWeekly ? "Weekly Wins" : "Total Wins"}</span>
+                            </div>
+                            <div className="text-white text-2xl" style={{ fontWeight: 900 }}>{displayTotalWins}</div>
+                        </div>
+
+                        {/* Win Rate */}
+                        <div className="bg-gradient-to-br from-purple-600/80 to-purple-700/80 backdrop-blur-sm rounded-xl p-3 border-2 border-white/20 shadow-xl">
+                            <div className="flex items-center gap-2 mb-1">
+                                <div className="bg-white/20 rounded-lg p-1.5">
+                                    <TrendingUp className="w-4 h-4 text-white" />
+                                </div>
+                                <span className="text-white/80 text-xs" style={{ fontWeight: 600 }}>Win Rate</span>
+                            </div>
+                            <div className="text-white text-2xl" style={{ fontWeight: 900 }}>{displayWinRate}%</div>
+                        </div>
+
+                        {/* Play Time */}
+                        <div className="bg-gradient-to-br from-orange-600/80 to-orange-700/80 backdrop-blur-sm rounded-xl p-3 border-2 border-white/20 shadow-xl">
+                            <div className="flex items-center gap-2 mb-1">
+                                <div className="bg-white/20 rounded-lg p-1.5">
+                                    <Clock className="w-4 h-4 text-white" />
+                                </div>
+                                <span className="text-white/80 text-xs" style={{ fontWeight: 600 }}>Play Time</span>
+                            </div>
+                            <div className="text-white text-xl" style={{ fontWeight: 900 }}>{formatPlayTime(currentStats.totalPlayTime)}</div>
+                        </div>
                     </div>
 
-                    {/* Win Rate */}
-                    <div className="bg-gradient-to-br from-purple-600/80 to-purple-700/80 backdrop-blur-sm rounded-xl p-3 border-2 border-white/20 shadow-xl">
-                        <div className="flex items-center gap-2 mb-1">
-                            <div className="bg-white/20 rounded-lg p-1.5">
-                                <TrendingUp className="w-4 h-4 text-white" />
+                    {/* Skill & Accuracy + Speed & Reflexes */}
+                    <div className="grid md:grid-cols-2 gap-3">
+                        {/* Skill & Accuracy */}
+                        <div className="bg-gradient-to-br from-cyan-600/60 to-blue-600/60 backdrop-blur-sm rounded-xl p-4 border-2 border-white/20 shadow-xl">
+                            <div className="flex items-center gap-2 mb-3">
+                                <div className="bg-white/20 rounded-lg p-2">
+                                    <Target className="w-5 h-5 text-white" />
+                                </div>
+                                <h2 className="text-white" style={{ fontWeight: 900 }}>Skill & Accuracy</h2>
                             </div>
-                            <span className="text-white/80 text-xs" style={{ fontWeight: 600 }}>Win Rate</span>
+
+                            <div className="space-y-3">
+                                {/* Global Accuracy */}
+                                <div>
+                                    <div className="flex justify-between items-center mb-1">
+                                        <span className="text-white/90 text-sm" style={{ fontWeight: 600 }}>Global Accuracy</span>
+                                        <span className="text-white text-sm" style={{ fontWeight: 900 }}>{currentStats.accuracy}%</span>
+                                    </div>
+                                    <div className="w-full bg-white/20 rounded-full h-2 overflow-hidden">
+                                        <div
+                                            className="bg-gradient-to-r from-green-400 to-emerald-400 h-full rounded-full transition-all"
+                                            style={{ width: `${currentStats.accuracy}%` }}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Longest Streak */}
+                                <div className="flex items-center justify-between bg-white/10 rounded-lg p-2 border border-white/20">
+                                    <div className="flex items-center gap-2">
+                                        <Flame className="w-4 h-4 text-orange-400" />
+                                        <span className="text-white/90 text-sm" style={{ fontWeight: 600 }}>Longest Streak</span>
+                                    </div>
+                                    <span className="text-white text-sm" style={{ fontWeight: 900 }}>{currentStats.longestStreak}</span>
+                                </div>
+
+                                {/* Total Questions */}
+                                <div className="flex items-center justify-between bg-white/10 rounded-lg p-2 border border-white/20">
+                                    <div className="flex items-center gap-2">
+                                        <Brain className="w-4 h-4 text-purple-400" />
+                                        <span className="text-white/90 text-sm" style={{ fontWeight: 600 }}>Total Questions</span>
+                                    </div>
+                                    <span className="text-white text-sm" style={{ fontWeight: 900 }}>{currentStats.totalQuestions}</span>
+                                </div>
+                            </div>
                         </div>
-                        <div className="text-white text-2xl" style={{ fontWeight: 900 }}>{displayWinRate}%</div>
+
+                        {/* Speed & Reflexes */}
+                        <div className="bg-gradient-to-br from-yellow-600/60 to-orange-600/60 backdrop-blur-sm rounded-xl p-4 border-2 border-white/20 shadow-xl">
+                            <div className="flex items-center gap-2 mb-3">
+                                <div className="bg-white/20 rounded-lg p-2">
+                                    <Zap className="w-5 h-5 text-white" />
+                                </div>
+                                <h2 className="text-white" style={{ fontWeight: 900 }}>Speed & Reflexes</h2>
+                            </div>
+
+                            <div className="space-y-3">
+                                {/* Average Speed */}
+                                <div className="bg-white/10 rounded-lg p-3 border border-white/20">
+                                    <div className="text-white/80 text-xs mb-1" style={{ fontWeight: 600 }}>Average Speed</div>
+                                    <div className="flex items-baseline gap-1">
+                                        <span className="text-white text-3xl" style={{ fontWeight: 900 }}>{currentStats.avgAnswerTime}</span>
+                                        <span className="text-white/70 text-sm" style={{ fontWeight: 600 }}>seconds</span>
+                                    </div>
+                                    <div className="text-white/60 text-xs mt-1" style={{ fontWeight: 500 }}>per correct answer</div>
+                                </div>
+
+                                {/* Fastest Reflex */}
+                                <div className="bg-gradient-to-r from-yellow-500/30 to-orange-500/30 rounded-lg p-3 border-2 border-yellow-400/40">
+                                    <div className="flex items-center gap-1.5 mb-1">
+                                        <Zap className="w-3.5 h-3.5 text-yellow-300" />
+                                        <span className="text-white/80 text-xs" style={{ fontWeight: 600 }}>Fastest Reflex</span>
+                                    </div>
+                                    <div className="flex items-baseline gap-1">
+                                        <span className="text-white text-3xl" style={{ fontWeight: 900 }}>{currentStats.fastestAnswer}</span>
+                                        <span className="text-white/70 text-sm" style={{ fontWeight: 600 }}>seconds</span>
+                                    </div>
+                                    <div className="text-yellow-300 text-xs mt-1" style={{ fontWeight: 600 }}>🏆 Personal Best</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Play Time */}
-                    <div className="bg-gradient-to-br from-orange-600/80 to-orange-700/80 backdrop-blur-sm rounded-xl p-3 border-2 border-white/20 shadow-xl">
-                        <div className="flex items-center gap-2 mb-1">
-                            <div className="bg-white/20 rounded-lg p-1.5">
-                                <Clock className="w-4 h-4 text-white" />
-                            </div>
-                            <span className="text-white/80 text-xs" style={{ fontWeight: 600 }}>Play Time</span>
-                        </div>
-                        <div className="text-white text-xl" style={{ fontWeight: 900 }}>{formatPlayTime(currentStats.totalPlayTime)}</div>
-                    </div>
-                </div>
-
-                {/* Skill & Accuracy + Speed & Reflexes */}
-                <div className="grid md:grid-cols-2 gap-3">
-                    {/* Skill & Accuracy */}
-                    <div className="bg-gradient-to-br from-cyan-600/60 to-blue-600/60 backdrop-blur-sm rounded-xl p-4 border-2 border-white/20 shadow-xl">
+                    {/* Subject Mastery - Solo only usually */}
+                    <div className="bg-gradient-to-br from-indigo-600/60 to-purple-600/60 backdrop-blur-sm rounded-xl p-4 border-2 border-white/20 shadow-xl">
                         <div className="flex items-center gap-2 mb-3">
                             <div className="bg-white/20 rounded-lg p-2">
-                                <Target className="w-5 h-5 text-white" />
+                                <Brain className="w-5 h-5 text-white" />
                             </div>
-                            <h2 className="text-white" style={{ fontWeight: 900 }}>Skill & Accuracy</h2>
+                            <h2 className="text-white" style={{ fontWeight: 900 }}>Subject Mastery</h2>
                         </div>
 
-                        <div className="space-y-3">
-                            {/* Global Accuracy */}
-                            <div>
-                                <div className="flex justify-between items-center mb-1">
-                                    <span className="text-white/90 text-sm" style={{ fontWeight: 600 }}>Global Accuracy</span>
-                                    <span className="text-white text-sm" style={{ fontWeight: 900 }}>{currentStats.accuracy}%</span>
-                                </div>
-                                <div className="w-full bg-white/20 rounded-full h-2 overflow-hidden">
-                                    <div
-                                        className="bg-gradient-to-r from-green-400 to-emerald-400 h-full rounded-full transition-all"
-                                        style={{ width: `${currentStats.accuracy}%` }}
-                                    />
-                                </div>
+                        <div className="grid md:grid-cols-2 gap-4">
+                            {/* Radar Chart */}
+                            <div className="flex items-center justify-center">
+                                <ResponsiveContainer width="100%" height={200}>
+                                    <RadarChart data={masteryData}>
+                                        <PolarGrid stroke="#ffffff40" />
+                                        <PolarAngleAxis
+                                            dataKey="subject"
+                                            tick={{ fill: '#ffffff', fontSize: 12, fontWeight: 600 }}
+                                        />
+                                        <PolarRadiusAxis
+                                            angle={90}
+                                            domain={[0, 100]}
+                                            tick={{ fill: '#ffffff80', fontSize: 10 }}
+                                        />
+                                        <Radar
+                                            name="Mastery"
+                                            dataKey="value"
+                                            stroke="#a78bfa"
+                                            fill="#a78bfa"
+                                            fillOpacity={0.6}
+                                            strokeWidth={2}
+                                        />
+                                    </RadarChart>
+                                </ResponsiveContainer>
                             </div>
 
-                            {/* Longest Streak */}
-                            <div className="flex items-center justify-between bg-white/10 rounded-lg p-2 border border-white/20">
-                                <div className="flex items-center gap-2">
-                                    <Flame className="w-4 h-4 text-orange-400" />
-                                    <span className="text-white/90 text-sm" style={{ fontWeight: 600 }}>Longest Streak</span>
+                            {/* Mastery Breakdown */}
+                            <div className="space-y-3">
+                                <div>
+                                    <div className="flex justify-between items-center mb-1">
+                                        <span className="text-white/90 text-sm" style={{ fontWeight: 600 }}>Algebra</span>
+                                        <span className="text-white text-sm" style={{ fontWeight: 900 }}>{currentStats.mastery.algebra}%</span>
+                                    </div>
+                                    <div className="w-full bg-white/20 rounded-full h-2 overflow-hidden">
+                                        <div className="bg-gradient-to-r from-purple-400 to-pink-400 h-full rounded-full transition-all" style={{ width: `${currentStats.mastery.algebra}%` }} />
+                                    </div>
                                 </div>
-                                <span className="text-white text-sm" style={{ fontWeight: 900 }}>{currentStats.longestStreak}</span>
-                            </div>
-
-                            {/* Total Questions */}
-                            <div className="flex items-center justify-between bg-white/10 rounded-lg p-2 border border-white/20">
-                                <div className="flex items-center gap-2">
-                                    <Brain className="w-4 h-4 text-purple-400" />
-                                    <span className="text-white/90 text-sm" style={{ fontWeight: 600 }}>Total Questions</span>
+                                <div>
+                                    <div className="flex justify-between items-center mb-1">
+                                        <span className="text-white/90 text-sm" style={{ fontWeight: 600 }}>Geometry</span>
+                                        <span className="text-white text-sm" style={{ fontWeight: 900 }}>{currentStats.mastery.geometry}%</span>
+                                    </div>
+                                    <div className="w-full bg-white/20 rounded-full h-2 overflow-hidden">
+                                        <div className="bg-gradient-to-r from-blue-400 to-cyan-400 h-full rounded-full transition-all" style={{ width: `${currentStats.mastery.geometry}%` }} />
+                                    </div>
                                 </div>
-                                <span className="text-white text-sm" style={{ fontWeight: 900 }}>{currentStats.totalQuestions}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Speed & Reflexes */}
-                    <div className="bg-gradient-to-br from-yellow-600/60 to-orange-600/60 backdrop-blur-sm rounded-xl p-4 border-2 border-white/20 shadow-xl">
-                        <div className="flex items-center gap-2 mb-3">
-                            <div className="bg-white/20 rounded-lg p-2">
-                                <Zap className="w-5 h-5 text-white" />
-                            </div>
-                            <h2 className="text-white" style={{ fontWeight: 900 }}>Speed & Reflexes</h2>
-                        </div>
-
-                        <div className="space-y-3">
-                            {/* Average Speed */}
-                            <div className="bg-white/10 rounded-lg p-3 border border-white/20">
-                                <div className="text-white/80 text-xs mb-1" style={{ fontWeight: 600 }}>Average Speed</div>
-                                <div className="flex items-baseline gap-1">
-                                    <span className="text-white text-3xl" style={{ fontWeight: 900 }}>{currentStats.avgAnswerTime}</span>
-                                    <span className="text-white/70 text-sm" style={{ fontWeight: 600 }}>seconds</span>
+                                <div>
+                                    <div className="flex justify-between items-center mb-1">
+                                        <span className="text-white/90 text-sm" style={{ fontWeight: 600 }}>Statistics</span>
+                                        <span className="text-white text-sm" style={{ fontWeight: 900 }}>{currentStats.mastery.statistics}%</span>
+                                    </div>
+                                    <div className="w-full bg-white/20 rounded-full h-2 overflow-hidden">
+                                        <div className="bg-gradient-to-r from-green-400 to-emerald-400 h-full rounded-full transition-all" style={{ width: `${currentStats.mastery.statistics}%` }} />
+                                    </div>
                                 </div>
-                                <div className="text-white/60 text-xs mt-1" style={{ fontWeight: 500 }}>per correct answer</div>
-                            </div>
-
-                            {/* Fastest Reflex */}
-                            <div className="bg-gradient-to-r from-yellow-500/30 to-orange-500/30 rounded-lg p-3 border-2 border-yellow-400/40">
-                                <div className="flex items-center gap-1.5 mb-1">
-                                    <Zap className="w-3.5 h-3.5 text-yellow-300" />
-                                    <span className="text-white/80 text-xs" style={{ fontWeight: 600 }}>Fastest Reflex</span>
-                                </div>
-                                <div className="flex items-baseline gap-1">
-                                    <span className="text-white text-3xl" style={{ fontWeight: 900 }}>{currentStats.fastestAnswer}</span>
-                                    <span className="text-white/70 text-sm" style={{ fontWeight: 600 }}>seconds</span>
-                                </div>
-                                <div className="text-yellow-300 text-xs mt-1" style={{ fontWeight: 600 }}>🏆 Personal Best</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Subject Mastery - Solo only usually */}
-                <div className="bg-gradient-to-br from-indigo-600/60 to-purple-600/60 backdrop-blur-sm rounded-xl p-4 border-2 border-white/20 shadow-xl">
+                {/* --- SECTION 2: MULTIPLAYER MODE --- */}
+                <div className="space-y-4 pt-4">
+                    <div className="flex items-center gap-3 border-b border-white/10 pb-2">
+                        <div className="bg-gradient-to-br from-green-600 to-emerald-600 p-2 rounded-xl shadow-lg border border-white/20">
+                            <Users className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                            <h2 className="text-2xl text-white font-black tracking-tight">Multiplayer Mode</h2>
+                            <p className="text-white/50 text-sm">Competitive battles and rankings</p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        {/* MP Games */}
+                        <div className="bg-gradient-to-br from-red-600/80 to-red-700/80 backdrop-blur-sm rounded-xl p-3 border-2 border-white/20 shadow-xl">
+                            <div className="flex items-center gap-2 mb-1">
+                                <div className="bg-white/20 rounded-lg p-1.5">
+                                    <Swords className="w-4 h-4 text-white" />
+                                </div>
+                                <span className="text-white/80 text-xs" style={{ fontWeight: 600 }}>Battles</span>
+                            </div>
+                            <div className="text-white text-2xl" style={{ fontWeight: 900 }}>{currentStats.multiplayer.gamesPlayed}</div>
+                        </div>
+
+                        {/* MP Wins */}
+                        <div className="bg-gradient-to-br from-orange-600/80 to-orange-700/80 backdrop-blur-sm rounded-xl p-3 border-2 border-white/20 shadow-xl">
+                            <div className="flex items-center gap-2 mb-1">
+                                <div className="bg-white/20 rounded-lg p-1.5">
+                                    <Trophy className="w-4 h-4 text-white" />
+                                </div>
+                                <span className="text-white/80 text-xs" style={{ fontWeight: 600 }}>Victories</span>
+                            </div>
+                            <div className="text-white text-2xl" style={{ fontWeight: 900 }}>{currentStats.multiplayer.wins}</div>
+                        </div>
+
+                        {/* MP Win Rate */}
+                        <div className="bg-gradient-to-br from-pink-600/80 to-pink-700/80 backdrop-blur-sm rounded-xl p-3 border-2 border-white/20 shadow-xl">
+                            <div className="flex items-center gap-2 mb-1">
+                                <div className="bg-white/20 rounded-lg p-1.5">
+                                    <TrendingUp className="w-4 h-4 text-white" />
+                                </div>
+                                <span className="text-white/80 text-xs" style={{ fontWeight: 600 }}>Win Rate</span>
+                            </div>
+                            <div className="text-white text-2xl" style={{ fontWeight: 900 }}>{mpWinRate}%</div>
+                        </div>
+
+                        {/* Rank with Tooltip */}
+                        <div className="group relative bg-gradient-to-br from-purple-800/80 to-slate-800/80 backdrop-blur-sm rounded-xl p-3 border-2 border-purple-400/30 shadow-xl">
+                            <div className="flex items-center justify-between mb-1">
+                                <div className="flex items-center gap-2">
+                                    <div className="bg-white/20 rounded-lg p-1.5">
+                                        <Users className="w-4 h-4 text-white" />
+                                    </div>
+                                    <span className="text-white/80 text-xs" style={{ fontWeight: 600 }}>Current Rank</span>
+                                </div>
+                                <Info className="w-4 h-4 text-white/50 hover:text-white cursor-help" />
+                            </div>
+                            <div className="text-white text-xl" style={{ fontWeight: 900 }}>{currentStats.multiplayer.rankName}</div>
+
+                            {/* Rank Tooltip / Mini Panel */}
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-[#0f172a] border border-white/20 rounded-xl p-3 shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                <h4 className="text-white text-xs font-bold mb-2 border-b border-white/10 pb-1">Ranking System</h4>
+                                <div className="space-y-1">
+                                    {ranks.map((rank) => (
+                                        <div key={rank} className={`text-[10px] flex justify-between ${rank === currentStats.multiplayer.rankName ? 'text-yellow-400 font-bold' : 'text-white/70'}`}>
+                                            <span>{rank}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-3 h-3 bg-[#0f172a] border-b border-r border-white/20 rotate-45"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Recent History */}
+                <div className="bg-gradient-to-br from-slate-700/60 to-slate-800/60 backdrop-blur-sm rounded-xl p-4 border-2 border-white/20 shadow-xl mt-6">
                     <div className="flex items-center gap-2 mb-3">
                         <div className="bg-white/20 rounded-lg p-2">
-                            <Brain className="w-5 h-5 text-white" />
+                            <Clock className="w-5 h-5 text-white" />
                         </div>
-                        <h2 className="text-white" style={{ fontWeight: 900 }}>Subject Mastery</h2>
+                        <h2 className="text-white" style={{ fontWeight: 900 }}>Recent History</h2>
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-4">
-                        {/* Radar Chart */}
-                        <div className="flex items-center justify-center">
-                            <ResponsiveContainer width="100%" height={200}>
-                                <RadarChart data={masteryData}>
-                                    <PolarGrid stroke="#ffffff40" />
-                                    <PolarAngleAxis
-                                        dataKey="subject"
-                                        tick={{ fill: '#ffffff', fontSize: 12, fontWeight: 600 }}
-                                    />
-                                    <PolarRadiusAxis
-                                        angle={90}
-                                        domain={[0, 100]}
-                                        tick={{ fill: '#ffffff80', fontSize: 10 }}
-                                    />
-                                    <Radar
-                                        name="Mastery"
-                                        dataKey="value"
-                                        stroke="#a78bfa"
-                                        fill="#a78bfa"
-                                        fillOpacity={0.6}
-                                        strokeWidth={2}
-                                    />
-                                </RadarChart>
-                            </ResponsiveContainer>
-                        </div>
+                    <div className="space-y-2">
+                        {currentStats.recentGames.length > 0 ? (
+                            currentStats.recentGames.map((game, index) => (
+                                <div
+                                    key={game.id || index}
+                                    className="bg-white/5 hover:bg-white/10 rounded-lg p-3 border border-white/10 transition-all flex items-center justify-between"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        {/* Result Badge */}
+                                        <div className={`px-2 py-1 rounded-lg text-xs ${game.result === 'Victory'
+                                            ? 'bg-green-500/30 text-green-300 border border-green-400/30'
+                                            : 'bg-red-500/30 text-red-300 border border-red-400/30'
+                                            }`} style={{ fontWeight: 700 }}>
+                                            {game.result}
+                                        </div>
 
-                        {/* Mastery Breakdown */}
-                        <div className="space-y-3">
-                            <div>
-                                <div className="flex justify-between items-center mb-1">
-                                    <span className="text-white/90 text-sm" style={{ fontWeight: 600 }}>Algebra</span>
-                                    <span className="text-white text-sm" style={{ fontWeight: 900 }}>{currentStats.mastery.algebra}%</span>
-                                </div>
-                                <div className="w-full bg-white/20 rounded-full h-2 overflow-hidden">
-                                    <div className="bg-gradient-to-r from-purple-400 to-pink-400 h-full rounded-full transition-all" style={{ width: `${currentStats.mastery.algebra}%` }} />
-                                </div>
-                            </div>
-                            <div>
-                                <div className="flex justify-between items-center mb-1">
-                                    <span className="text-white/90 text-sm" style={{ fontWeight: 600 }}>Geometry</span>
-                                    <span className="text-white text-sm" style={{ fontWeight: 900 }}>{currentStats.mastery.geometry}%</span>
-                                </div>
-                                <div className="w-full bg-white/20 rounded-full h-2 overflow-hidden">
-                                    <div className="bg-gradient-to-r from-blue-400 to-cyan-400 h-full rounded-full transition-all" style={{ width: `${currentStats.mastery.geometry}%` }} />
-                                </div>
-                            </div>
-                            <div>
-                                <div className="flex justify-between items-center mb-1">
-                                    <span className="text-white/90 text-sm" style={{ fontWeight: 600 }}>Statistics</span>
-                                    <span className="text-white text-sm" style={{ fontWeight: 900 }}>{currentStats.mastery.statistics}%</span>
-                                </div>
-                                <div className="w-full bg-white/20 rounded-full h-2 overflow-hidden">
-                                    <div className="bg-gradient-to-r from-green-400 to-emerald-400 h-full rounded-full transition-all" style={{ width: `${currentStats.mastery.statistics}%` }} />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                                        {/* Mode Badge */}
+                                        <div className="px-2 py-1 rounded-lg bg-blue-500/20 text-blue-300 border border-blue-400/30 text-xs" style={{ fontWeight: 600 }}>
+                                            {game.mode}
+                                        </div>
 
-            {/* --- SECTION 2: MULTIPLAYER MODE --- */}
-            <div className="space-y-4 pt-4">
-                <div className="flex items-center gap-3 border-b border-white/10 pb-2">
-                    <div className="bg-gradient-to-br from-green-600 to-emerald-600 p-2 rounded-xl shadow-lg border border-white/20">
-                        <Users className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                        <h2 className="text-2xl text-white font-black tracking-tight">Multiplayer Mode</h2>
-                        <p className="text-white/50 text-sm">Competitive battles and rankings</p>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {/* MP Games */}
-                    <div className="bg-gradient-to-br from-red-600/80 to-red-700/80 backdrop-blur-sm rounded-xl p-3 border-2 border-white/20 shadow-xl">
-                        <div className="flex items-center gap-2 mb-1">
-                            <div className="bg-white/20 rounded-lg p-1.5">
-                                <Swords className="w-4 h-4 text-white" />
-                            </div>
-                            <span className="text-white/80 text-xs" style={{ fontWeight: 600 }}>Battles</span>
-                        </div>
-                        <div className="text-white text-2xl" style={{ fontWeight: 900 }}>{currentStats.multiplayer.gamesPlayed}</div>
-                    </div>
-
-                    {/* MP Wins */}
-                    <div className="bg-gradient-to-br from-orange-600/80 to-orange-700/80 backdrop-blur-sm rounded-xl p-3 border-2 border-white/20 shadow-xl">
-                        <div className="flex items-center gap-2 mb-1">
-                            <div className="bg-white/20 rounded-lg p-1.5">
-                                <Trophy className="w-4 h-4 text-white" />
-                            </div>
-                            <span className="text-white/80 text-xs" style={{ fontWeight: 600 }}>Victories</span>
-                        </div>
-                        <div className="text-white text-2xl" style={{ fontWeight: 900 }}>{currentStats.multiplayer.wins}</div>
-                    </div>
-
-                    {/* MP Win Rate */}
-                    <div className="bg-gradient-to-br from-pink-600/80 to-pink-700/80 backdrop-blur-sm rounded-xl p-3 border-2 border-white/20 shadow-xl">
-                        <div className="flex items-center gap-2 mb-1">
-                            <div className="bg-white/20 rounded-lg p-1.5">
-                                <TrendingUp className="w-4 h-4 text-white" />
-                            </div>
-                            <span className="text-white/80 text-xs" style={{ fontWeight: 600 }}>Win Rate</span>
-                        </div>
-                        <div className="text-white text-2xl" style={{ fontWeight: 900 }}>{mpWinRate}%</div>
-                    </div>
-
-                    {/* Rank with Tooltip */}
-                    <div className="group relative bg-gradient-to-br from-purple-800/80 to-slate-800/80 backdrop-blur-sm rounded-xl p-3 border-2 border-purple-400/30 shadow-xl">
-                        <div className="flex items-center justify-between mb-1">
-                            <div className="flex items-center gap-2">
-                                <div className="bg-white/20 rounded-lg p-1.5">
-                                    <Users className="w-4 h-4 text-white" />
-                                </div>
-                                <span className="text-white/80 text-xs" style={{ fontWeight: 600 }}>Current Rank</span>
-                            </div>
-                            <Info className="w-4 h-4 text-white/50 hover:text-white cursor-help" />
-                        </div>
-                        <div className="text-white text-xl" style={{ fontWeight: 900 }}>{currentStats.multiplayer.rankName}</div>
-
-                        {/* Rank Tooltip / Mini Panel */}
-                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-[#0f172a] border border-white/20 rounded-xl p-3 shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                            <h4 className="text-white text-xs font-bold mb-2 border-b border-white/10 pb-1">Ranking System</h4>
-                            <div className="space-y-1">
-                                {ranks.map((rank) => (
-                                    <div key={rank} className={`text-[10px] flex justify-between ${rank === currentStats.multiplayer.rankName ? 'text-yellow-400 font-bold' : 'text-white/70'}`}>
-                                        <span>{rank}</span>
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-3 h-3 bg-[#0f172a] border-b border-r border-white/20 rotate-45"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Recent History */}
-            <div className="bg-gradient-to-br from-slate-700/60 to-slate-800/60 backdrop-blur-sm rounded-xl p-4 border-2 border-white/20 shadow-xl mt-6">
-                <div className="flex items-center gap-2 mb-3">
-                    <div className="bg-white/20 rounded-lg p-2">
-                        <Clock className="w-5 h-5 text-white" />
-                    </div>
-                    <h2 className="text-white" style={{ fontWeight: 900 }}>Recent History</h2>
-                </div>
-
-                <div className="space-y-2">
-                    {currentStats.recentGames.length > 0 ? (
-                        currentStats.recentGames.map((game, index) => (
-                            <div
-                                key={game.id || index}
-                                className="bg-white/5 hover:bg-white/10 rounded-lg p-3 border border-white/10 transition-all flex items-center justify-between"
-                            >
-                                <div className="flex items-center gap-3">
-                                    {/* Result Badge */}
-                                    <div className={`px-2 py-1 rounded-lg text-xs ${game.result === 'Victory'
-                                        ? 'bg-green-500/30 text-green-300 border border-green-400/30'
-                                        : 'bg-red-500/30 text-red-300 border border-red-400/30'
-                                        }`} style={{ fontWeight: 700 }}>
-                                        {game.result}
+                                        {/* Score */}
+                                        <div className="text-white/90 text-sm" style={{ fontWeight: 600 }}>
+                                            Streak: <span className="text-white" style={{ fontWeight: 900 }}>{game.score}</span>
+                                        </div>
                                     </div>
 
-                                    {/* Mode Badge */}
-                                    <div className="px-2 py-1 rounded-lg bg-blue-500/20 text-blue-300 border border-blue-400/30 text-xs" style={{ fontWeight: 600 }}>
-                                        {game.mode}
-                                    </div>
-
-                                    {/* Score */}
-                                    <div className="text-white/90 text-sm" style={{ fontWeight: 600 }}>
-                                        Streak: <span className="text-white" style={{ fontWeight: 900 }}>{game.score}</span>
+                                    {/* Date */}
+                                    <div className="text-white/60 text-xs" style={{ fontWeight: 500 }}>
+                                        {game.date}
                                     </div>
                                 </div>
-
-                                {/* Date */}
-                                <div className="text-white/60 text-xs" style={{ fontWeight: 500 }}>
-                                    {game.date}
-                                </div>
-                            </div>
-                        ))
-                    ) : (
-                        <div className="text-white/60 text-sm text-center py-4">No recent games played yet.</div>
-                    )}
+                            ))
+                        ) : (
+                            <div className="text-white/60 text-sm text-center py-4">No recent games played yet.</div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

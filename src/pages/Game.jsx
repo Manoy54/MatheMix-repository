@@ -7,6 +7,8 @@ import { auth, db } from '../firebaseConfig.js';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useMobile } from '../hooks/useMobile.jsx';
 
+import StandardHeader from '../components/StandardHeader';
+
 export default function Game({ onGameEnd, onOpenSidebar }) {
     const isMobile = useMobile();
     const location = useLocation();
@@ -352,7 +354,7 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
     }
 
     return (
-        <div className={`px-4 py-3 min-h-screen preserve-3d flex flex-col ${isMobile ? 'pb-[280px]' : ''}`}>
+        <div className={`px-4 py-3 h-full preserve-3d flex flex-col ${isMobile ? 'pb-[280px]' : ''}`}>
             <AnimatePresence>
                 {showGiveUpModal && (
                     <motion.div
@@ -439,7 +441,7 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
                 )}
             </AnimatePresence>
 
-            <GameHeader onOpenSidebar={onOpenSidebar} category={category} />
+            <StandardHeader onOpenSidebar={onOpenSidebar} subtitle={`Solo Mode - ${category}`} />
 
             <div className="flex-1 flex items-center justify-center overflow-hidden py-2">
                 <div className="w-full max-w-5xl space-y-4">
@@ -494,44 +496,7 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
 
 // --- HOT PATH SUBCOMPONENTS (Optimized for latency) ---
 
-const GameHeader = React.memo(({ onOpenSidebar, category }) => (
-    <motion.div initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="flex items-center justify-between mb-3 flex-shrink-0">
-        <div className="flex items-center gap-3">
-            {onOpenSidebar && (
-                <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={onOpenSidebar}
-                    className="bg-white/10 backdrop-blur-md p-2 rounded-xl border border-white/20 text-white shadow-lg hover:bg-white/20 transition-all"
-                >
-                    <Menu className="w-6 h-6" />
-                </motion.button>
-            )}
-            <motion.div
-                animate={{ rotate: [0, 360] }}
-                transition={{ duration: 20, repeat: Infinity, ease: "linear", repeatType: "loop" }}
-                className="relative"
-            >
-                <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl blur-lg opacity-50" />
-                <div className="relative bg-gradient-to-br from-white/20 to-white/10 p-2 rounded-xl border-2 border-white/30 backdrop-blur-sm">
-                    <Calculator className="w-6 h-6 text-white" />
-                </div>
-            </motion.div>
-            <div>
-                <h1 className="text-white flex items-center gap-2 text-xl">
-                    Mathemix
-                    <motion.div
-                        animate={{ rotate: [0, 15, -15, 0] }}
-                        transition={{ duration: 2, repeat: Infinity, repeatType: "loop" }}
-                    >
-                        <Sparkles className="w-5 h-5 text-yellow-300" />
-                    </motion.div>
-                </h1>
-                <p className="text-white/60 text-xs">Solo Mode - {category}</p>
-            </div>
-        </div>
-    </motion.div>
-));
+
 
 const QuestionStats = React.memo(({ questionNumber, streak, bestStreak }) => (
     <motion.div

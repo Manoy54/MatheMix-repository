@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { useLoading } from '../context/LoadingContext';
 import { useMobile } from '../hooks/useMobile';
+import StandardHeader from '../components/StandardHeader';
 
 const LandingPage = ({ user }) => {
     const isMobile = useMobile();
@@ -125,26 +126,7 @@ const LandingPage = ({ user }) => {
                     >
                         {/* Game-Style Large Logo */}
                         <div className="flex flex-col items-center justify-center gap-6 mb-8">
-                            <motion.div
-                                animate={{ rotate: [0, 360] }}
-                                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                                className="relative"
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-3xl blur-2xl opacity-60" />
-                                <div className="relative bg-gradient-to-br from-white/20 to-white/10 p-6 rounded-3xl border-2 border-white/30 backdrop-blur-md shadow-2xl">
-                                    <Calculator className="w-24 h-24 text-white drop-shadow-lg" />
-                                </div>
-                            </motion.div>
-
-                            <h1 className="text-6xl md:text-9xl font-black tracking-tight drop-shadow-xl text-white flex items-center gap-4">
-                                MATHEMIX
-                                <motion.div
-                                    animate={{ rotate: [0, 15, -15, 0], scale: [1, 1.2, 1] }}
-                                    transition={{ duration: 2, repeat: Infinity, repeatType: "mirror" }}
-                                >
-                                    <Sparkles className="w-16 h-16 md:w-24 md:h-24 text-yellow-300 drop-shadow-lg" />
-                                </motion.div>
-                            </h1>
+                            <StandardHeader size="large" />
                         </div>
                         <p className="text-xl md:text-3xl text-blue-100 font-light max-w-3xl mx-auto drop-shadow-md">
                             A fast-paced math challenge where your speed and accuracy build the ultimate streak

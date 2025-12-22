@@ -22,6 +22,7 @@ const Admin = lazy(() => import("./pages/admin/Admin.jsx"));
 
 // Components
 import { Sidebar } from "./components/Sidebar.jsx";
+
 import AnimatedBackground from "./components/AnimatedBackground.jsx";
 import LoadingScreen from "./components/LoadingScreen.jsx";
 
@@ -103,8 +104,8 @@ function App() {
     // The loading screen will handle both auth loading and game initialization
     const showLoading = loading || isLoading;
 
-    const isPublicPage = location.pathname === "/welcome";
-    const hasOwnSidebarButton = ["/lobby", "/mode-select", "/category-select", "/game"].includes(location.pathname);
+    // We define isPublicPage to rely on path or if user is not logged in
+    const isPublicPage = location.pathname === "/welcome" || location.pathname === "/login";
 
     return (
         <div className="font-nunito min-h-screen w-full relative bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]">
@@ -115,24 +116,12 @@ function App() {
             {!isPublicPage && !showLoading && location.pathname !== "/lobby" && !isMobile && <AnimatedBackground />}
 
             {!isPublicPage && currentUser && !location.pathname.startsWith("/admin") && (
-                <>
-                    <Sidebar
-                        isOpen={isSidebarOpen}
-                        onClose={() => setSidebarOpen(false)}
-                        onLogout={handleLogout}
-                        username={username}
-                    />
-                    {!hasOwnSidebarButton && (
-                        <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => setSidebarOpen(true)}
-                            className="fixed top-4 left-4 z-40 bg-white/10 backdrop-blur-md p-2 rounded-xl border border-white/20 text-white shadow-lg hover:bg-white/20 transition-all"
-                        >
-                            <Menu className="w-6 h-6" />
-                        </motion.button>
-                    )}
-                </>
+                <Sidebar
+                    isOpen={isSidebarOpen}
+                    onClose={() => setSidebarOpen(false)}
+                    onLogout={handleLogout}
+                    username={username}
+                />
             )}
 
             <div className={`relative z-10 w-full h-full`}>
@@ -149,8 +138,8 @@ function App() {
                     <Route path="/category-select" element={<ProtectedRoute user={currentUser} loading={loading}><CategorySelect username={username} onLogout={handleLogout} onOpenSidebar={() => setSidebarOpen(true)} /></ProtectedRoute>} />
                     <Route path="/game" element={<ProtectedRoute user={currentUser} loading={loading}><Game onGameEnd={() => { }} onOpenSidebar={() => setSidebarOpen(true)} /></ProtectedRoute>} />
                     <Route path="/lobby" element={<ProtectedRoute user={currentUser} loading={loading}><Lobby user={currentUser} username={username} onOpenSidebar={() => setSidebarOpen(true)} onLogout={handleLogout} /></ProtectedRoute>} />
-                    <Route path="/stats" element={<ProtectedRoute user={currentUser} loading={loading}><Suspense fallback={<div className="text-white text-center">Loading Stats...</div>}><Stats user={currentUser} /></Suspense></ProtectedRoute>} />
-                    <Route path="/leaderboard" element={<ProtectedRoute user={currentUser} loading={loading}><Leaderboard /></ProtectedRoute>} />
+                    <Route path="/stats" element={<ProtectedRoute user={currentUser} loading={loading}><Suspense fallback={<div className="text-white text-center">Loading Stats...</div>}><Stats user={currentUser} onOpenSidebar={() => setSidebarOpen(true)} /></Suspense></ProtectedRoute>} />
+                    <Route path="/leaderboard" element={<ProtectedRoute user={currentUser} loading={loading}><Leaderboard onOpenSidebar={() => setSidebarOpen(true)} /></ProtectedRoute>} />
                     <Route path="/privacy-policy" element={<ProtectedRoute user={currentUser} loading={loading}><PrivacyPolicy /></ProtectedRoute>} />
                     <Route path="/terms-of-service" element={<ProtectedRoute user={currentUser} loading={loading}><TermsOfService /></ProtectedRoute>} />
                     <Route path="/cookie-policy" element={<ProtectedRoute user={currentUser} loading={loading}><CookiePolicy /></ProtectedRoute>} />
