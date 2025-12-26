@@ -5,10 +5,12 @@ import { collection, query, orderBy, limit, getDocs, doc, getDoc } from 'firebas
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Medal, Crown, TrendingUp, Target, Flame, Medal as MedalIcon } from 'lucide-react';
 import { useLoading } from '../context/LoadingContext';
+import { useMobile } from '../hooks/useMobile';
 
 import StandardHeader from '../components/StandardHeader';
 
 export default function Leaderboard({ onOpenSidebar }) {
+    const isMobile = useMobile();
     const [leaders, setLeaders] = useState([]);
 
     const [loading, setLoading] = useState(true);
@@ -115,8 +117,8 @@ export default function Leaderboard({ onOpenSidebar }) {
             <div className="p-4 md:p-8">
                 {/* Header Section */}
                 <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    initial={isMobile ? {} : { opacity: 0, y: -20 }}
+                    animate={isMobile ? {} : { opacity: 1, y: 0 }}
                     className="max-w-5xl mx-auto mb-8 text-center"
                 >
                     <div className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 px-4 py-1.5 rounded-full border border-orange-400/30 mb-4">
@@ -131,9 +133,9 @@ export default function Leaderboard({ onOpenSidebar }) {
 
                 {/* Filter Tabs */}
                 <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
+                    initial={isMobile ? {} : { opacity: 0, y: 10 }}
+                    animate={isMobile ? {} : { opacity: 1, y: 0 }}
+                    transition={isMobile ? { duration: 0 } : { delay: 0.1 }}
                     className="max-w-5xl mx-auto mb-8 flex justify-center"
                 >
                     <div className="bg-white/5 backdrop-blur-md p-1.5 rounded-xl border border-white/10 flex gap-1 shadow-2xl">
@@ -166,9 +168,9 @@ export default function Leaderboard({ onOpenSidebar }) {
                         {loading ? (
                             <motion.div
                                 key="loading"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
+                                initial={isMobile ? {} : { opacity: 0 }}
+                                animate={isMobile ? {} : { opacity: 1 }}
+                                exit={isMobile ? {} : { opacity: 0 }}
                                 className="flex flex-col items-center justify-center py-20"
                             >
                                 <div className="w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mb-4" />
@@ -177,8 +179,8 @@ export default function Leaderboard({ onOpenSidebar }) {
                         ) : error ? (
                             <motion.div
                                 key="error"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
+                                initial={isMobile ? {} : { opacity: 0 }}
+                                animate={isMobile ? {} : { opacity: 1 }}
                                 className="text-center py-20 bg-red-500/10 border border-red-500/20 rounded-2xl"
                             >
                                 <p className="text-red-400 font-bold mb-2">Unable to load leaderboard</p>
@@ -187,8 +189,8 @@ export default function Leaderboard({ onOpenSidebar }) {
                         ) : (
                             <motion.div
                                 key="content"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
+                                initial={isMobile ? {} : { opacity: 0 }}
+                                animate={isMobile ? {} : { opacity: 1 }}
                                 className="space-y-4"
                             >
                                 {/* Top 3 Podium (If enough players) */}
@@ -256,9 +258,9 @@ export default function Leaderboard({ onOpenSidebar }) {
                                         {leaders.map((player, index) => (
                                             <motion.div
                                                 key={player.id}
-                                                initial={{ opacity: 0, x: -20 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                transition={{ delay: index * 0.05 }}
+                                                initial={isMobile ? {} : { opacity: 0, x: -20 }}
+                                                animate={isMobile ? {} : { opacity: 1, x: 0 }}
+                                                transition={isMobile ? { duration: 0 } : { delay: index * 0.05 }}
                                                 className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-white/5 transition-colors group"
                                             >
                                                 <div className="col-span-2 md:col-span-1 flex justify-center">

@@ -1,10 +1,10 @@
 // src/pages/ModeSelect.jsx
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Users, Trophy, Zap, Target, Sparkles, Brain, Calculator, Star, Award, Crown, Menu } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Background3D from '../components/Background3D.jsx';
+const Background3D = React.lazy(() => import('../components/Background3D.jsx'));
 import StandardHeader from '../components/StandardHeader';
 import { useMobile } from '../hooks/useMobile';
 import { useLoading } from '../context/LoadingContext';
@@ -94,12 +94,14 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
 
             {/* 1. 3D Background Layer */}
             {!isMobile && (
-                <Background3D
-                    onLoaded={handleBackgroundLoaded}
-                    interactive={!isMobile && (!hoveredMode || (hoveredMode !== 'ui'))}
-                    activeCardId={!isMobile && (hoveredMode === 'solo' || hoveredMode === 'multi') ? hoveredMode : null}
-                    cardBounds={isMobile ? null : cardBounds}
-                />
+                <Suspense fallback={null}>
+                    <Background3D
+                        onLoaded={handleBackgroundLoaded}
+                        interactive={!isMobile && (!hoveredMode || (hoveredMode !== 'ui'))}
+                        activeCardId={!isMobile && (hoveredMode === 'solo' || hoveredMode === 'multi') ? hoveredMode : null}
+                        cardBounds={isMobile ? null : cardBounds}
+                    />
+                </Suspense>
             )}
 
             {/* Local Loading Overlay removed - now handled globally in App.jsx */}
@@ -127,32 +129,32 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
 
                                 {/* Welcome Section - Reduced margins and text size */}
                                 <motion.div
-                                    initial={{ scale: 0.9, opacity: 0 }}
-                                    animate={{ scale: 1, opacity: 1 }}
-                                    transition={{ delay: 0.2 }}
+                                    initial={isMobile ? {} : { scale: 0.9, opacity: 0 }}
+                                    animate={isMobile ? {} : { scale: 1, opacity: 1 }}
+                                    transition={isMobile ? { duration: 0 } : { delay: 0.2 }}
                                     onMouseEnter={() => setHoveredMode('ui')}
                                     onMouseLeave={() => setHoveredMode(null)}
-                                    className="text-center mb-6"
+                                    className="text-center mb-6 w-[85%] md:w-full mx-auto"
                                 >
                                     <div className="inline-flex items-center gap-2 bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm px-5 py-2 rounded-full border border-white/30 mb-3 shadow-lg">
-                                        <User className="w-4 h-4 text-white" />
-                                        <span className="text-white text-base font-bold">Welcome back, {username || "Player"}!</span>
+                                        <User className="w-3 h-3 md:w-4 md:h-4 text-white" />
+                                        <span className="text-white text-sm md:text-base font-bold">Welcome back, {username || "Player"}!</span>
                                     </div>
 
-                                    <h2 className="text-white text-4xl md:text-5xl mb-2 leading-tight font-black drop-shadow-lg">
+                                    <h2 className="text-white text-3xl md:text-5xl mb-2 leading-tight font-black drop-shadow-lg">
                                         Ready to Challenge Your <span className="text-yellow-300">Math Skills?</span>
                                     </h2>
-                                    <p className="text-white/80 text-lg font-medium">Choose your battle mode and prove you're a math champion!</p>
+                                    <p className="text-white/80 text-sm md:text-lg font-medium">Choose your battle mode and prove you're a math champion!</p>
                                 </motion.div>
 
-                                {/* Game Mode Cards - Reduced padding and gap */}
-                                <div className="grid md:grid-cols-2 gap-6 mb-8">
+                                {/* Game Mode Cards - Reduced padding and gap - Width constrained on mobile */}
+                                <div className="grid md:grid-cols-2 gap-6 mb-8 w-[85%] md:w-full mx-auto">
 
                                     {/* Solo Mode */}
                                     <motion.div
-                                        initial={{ x: -50, opacity: 0 }}
-                                        animate={{ x: 0, opacity: 1 }}
-                                        transition={{ delay: 0.4 }}
+                                        initial={isMobile ? {} : { x: -50, opacity: 0 }}
+                                        animate={isMobile ? {} : { x: 0, opacity: 1 }}
+                                        transition={isMobile ? { duration: 0 } : { delay: 0.4 }}
                                         onMouseEnter={() => !isMobile && setHoveredMode('solo')}
                                         onMouseLeave={() => !isMobile && setHoveredMode(null)}
                                         className="relative group h-full"
@@ -163,22 +165,22 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
                                             whileHover={{ scale: 1.02 }}
                                             whileTap={{ scale: 0.98 }}
                                             // Reduced padding from p-10 to p-6
-                                            className="w-full h-full relative overflow-hidden rounded-3xl p-6 bg-gradient-to-br from-[#023e8a]/80 to-[#0077b6]/80 border-2 border-white/30 shadow-2xl text-left backdrop-blur-sm"
+                                            className="w-full h-full relative overflow-hidden rounded-3xl p-5 md:p-6 bg-gradient-to-br from-[#023e8a]/80 to-[#0077b6]/80 border-2 border-white/30 shadow-2xl text-left backdrop-blur-sm"
                                         >
                                             {/* SHINE EFFECT */}
                                             <div className="absolute inset-0 -translate-x-full group-hover:animate-[shine_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent z-20" />
 
                                             <div className="relative z-10 flex flex-col h-full justify-between">
                                                 <div className="flex justify-between items-start mb-4">
-                                                    <div className="bg-white/20 w-16 h-16 rounded-2xl flex items-center justify-center shadow-inner border border-white/20">
-                                                        <Brain className="w-9 h-9 text-white" />
+                                                    <div className="bg-white/20 w-12 h-12 md:w-16 md:h-16 rounded-2xl flex items-center justify-center shadow-inner border border-white/20">
+                                                        <Brain className="w-6 h-6 md:w-9 md:h-9 text-white" />
                                                     </div>
                                                     <div className={`w-3 h-3 rounded-full ${hoveredMode === 'solo' ? 'bg-green-400 shadow-[0_0_10px_#4ade80]' : 'bg-white/20'}`} />
                                                 </div>
 
                                                 <div>
-                                                    <h3 className="text-white text-3xl font-black mb-2">Solo Mode</h3>
-                                                    <p className="text-white/80 text-base font-medium leading-relaxed">
+                                                    <h3 className="text-white text-2xl md:text-3xl font-black mb-2">Solo Mode</h3>
+                                                    <p className="text-white/80 text-sm md:text-base font-medium leading-relaxed">
                                                         Challenge yourself and improve your skills at your own pace.
                                                     </p>
                                                 </div>
@@ -188,9 +190,9 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
 
                                     {/* Multiplayer Mode */}
                                     <motion.div
-                                        initial={{ x: 50, opacity: 0 }}
-                                        animate={{ x: 0, opacity: 1 }}
-                                        transition={{ delay: 0.4 }}
+                                        initial={isMobile ? {} : { x: 50, opacity: 0 }}
+                                        animate={isMobile ? {} : { x: 0, opacity: 1 }}
+                                        transition={isMobile ? { duration: 0 } : { delay: 0.4 }}
                                         onMouseEnter={() => !isMobile && setHoveredMode('multi')}
                                         onMouseLeave={() => !isMobile && setHoveredMode(null)}
                                         className="relative group h-full"
@@ -201,22 +203,22 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
                                             whileHover={{ scale: 1.02 }}
                                             whileTap={{ scale: 0.98 }}
                                             // Reduced padding from p-10 to p-6
-                                            className="w-full h-full relative overflow-hidden rounded-3xl p-6 bg-gradient-to-br from-green-600/80 to-emerald-600/80 border-2 border-white/30 shadow-2xl text-left backdrop-blur-sm"
+                                            className="w-full h-full relative overflow-hidden rounded-3xl p-5 md:p-6 bg-gradient-to-br from-green-600/80 to-emerald-600/80 border-2 border-white/30 shadow-2xl text-left backdrop-blur-sm"
                                         >
                                             {/* SHINE EFFECT */}
                                             <div className="absolute inset-0 -translate-x-full group-hover:animate-[shine_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent z-20" />
 
                                             <div className="relative z-10 flex flex-col h-full justify-between">
                                                 <div className="flex justify-between items-start mb-4">
-                                                    <div className="bg-white/20 w-16 h-16 rounded-2xl flex items-center justify-center shadow-inner border border-white/20">
-                                                        <Users className="w-9 h-9 text-white" />
+                                                    <div className="bg-white/20 w-12 h-12 md:w-16 md:h-16 rounded-2xl flex items-center justify-center shadow-inner border border-white/20">
+                                                        <Users className="w-6 h-6 md:w-9 md:h-9 text-white" />
                                                     </div>
                                                     <div className={`w-3 h-3 rounded-full ${hoveredMode === 'multi' ? 'bg-yellow-300 shadow-[0_0_10px_#fde047]' : 'bg-white/20'}`} />
                                                 </div>
 
                                                 <div>
-                                                    <h3 className="text-white text-3xl font-black mb-2">Multiplayer Mode</h3>
-                                                    <p className="text-white/80 text-base font-medium leading-relaxed">
+                                                    <h3 className="text-white text-2xl md:text-3xl font-black mb-2">Multiplayer Mode</h3>
+                                                    <p className="text-white/80 text-sm md:text-base font-medium leading-relaxed">
                                                         Compete with friends in real-time and climb the leaderboard.
                                                     </p>
                                                 </div>
@@ -225,13 +227,13 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
                                     </motion.div>
                                 </div>
 
-                                {/* Stats and Achievements Grid - Reduced padding and gap */}
-                                <div className="grid md:grid-cols-2 gap-5">
+                                {/* Stats and Achievements Grid - Reduced padding and gap - Width constrained on mobile */}
+                                <div className="grid md:grid-cols-2 gap-5 w-[85%] md:w-full mx-auto">
                                     {/* Stats Section */}
                                     <motion.div
-                                        initial={{ y: 30, opacity: 0 }}
-                                        animate={{ y: 0, opacity: 1 }}
-                                        transition={{ delay: 0.6 }}
+                                        initial={isMobile ? {} : { y: 30, opacity: 0 }}
+                                        animate={isMobile ? {} : { y: 0, opacity: 1 }}
+                                        transition={isMobile ? { duration: 0 } : { delay: 0.6 }}
                                         onMouseEnter={() => setHoveredMode('ui')}
                                         onMouseLeave={() => setHoveredMode(null)}
                                         className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/10"
@@ -254,9 +256,9 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
 
                                     {/* Achievements Section */}
                                     <motion.div
-                                        initial={{ y: 30, opacity: 0 }}
-                                        animate={{ y: 0, opacity: 1 }}
-                                        transition={{ delay: 0.7 }}
+                                        initial={isMobile ? {} : { y: 30, opacity: 0 }}
+                                        animate={isMobile ? {} : { y: 0, opacity: 1 }}
+                                        transition={isMobile ? { duration: 0 } : { delay: 0.7 }}
                                         onMouseEnter={() => setHoveredMode('ui')}
                                         onMouseLeave={() => setHoveredMode(null)}
                                         className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/10"

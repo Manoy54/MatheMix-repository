@@ -85,7 +85,7 @@ export function Sidebar({ isOpen, onClose, onOpen, onLogout, username, showBackd
                             duration: 0.24
                         }}
                         style={{ willChange: 'transform' }}
-                        className="fixed left-0 top-0 h-full w-80 z-50 flex flex-col"
+                        className="fixed left-0 top-0 h-full w-[50%] md:w-80 z-50 flex flex-col"
                     >
                         {/* Glowing background effects */}
                         <div className="absolute inset-0 bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7] opacity-95" />
@@ -95,15 +95,15 @@ export function Sidebar({ isOpen, onClose, onOpen, onLogout, username, showBackd
                         {/* Main sidebar content */}
                         <div className="relative h-full bg-white/10 backdrop-blur-2xl border-r-2 border-white/20 flex flex-col">
                             {/* Header */}
-                            <div className="p-6 border-b border-white/20">
+                            <div className="p-3 md:p-6 border-b border-white/20">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <h2 className="text-white text-2xl font-black tracking-wider">
+                                        <h2 className="text-white text-lg md:text-2xl font-black tracking-wider">
                                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 via-white to-purple-200">
                                                 Mathemix
                                             </span>
                                         </h2>
-                                        <p className="text-white/60 text-sm mt-1">Control Center</p>
+                                        <p className="text-white/60 text-[10px] md:text-sm mt-1">Control Center</p>
                                     </div>
                                     {!isAdminRoute && (
                                         <motion.button
@@ -113,8 +113,8 @@ export function Sidebar({ isOpen, onClose, onOpen, onLogout, username, showBackd
                                             className="relative group"
                                         >
                                             <div className="absolute inset-0 bg-white/20 rounded-xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
-                                            <div className="relative bg-white/20 p-2 rounded-xl border-2 border-white/30 hover:bg-white/30 transition-all">
-                                                <X className="w-5 h-5 text-white" />
+                                            <div className="relative bg-white/20 p-1.5 md:p-2 rounded-xl border-2 border-white/30 hover:bg-white/30 transition-all">
+                                                <X className="w-4 h-4 md:w-5 md:h-5 text-white" />
                                             </div>
                                         </motion.button>
                                     )}
@@ -125,7 +125,7 @@ export function Sidebar({ isOpen, onClose, onOpen, onLogout, username, showBackd
                             <div className="flex-1 p-4 space-y-6">
                                 {/* Core Navigation */}
                                 <div>
-                                    <h3 className="text-cyan-200 text-xs uppercase tracking-wider px-3 mb-3 font-semibold">{labels.core}</h3>
+                                    <h3 className="text-cyan-200 text-[10px] md:text-xs uppercase tracking-wider px-2 mb-2 md:px-3 md:mb-3 font-semibold">{labels.core}</h3>
                                     <div className="space-y-1">
                                         {activeItems.core.map((item, index) => (
                                             <motion.button
@@ -136,14 +136,14 @@ export function Sidebar({ isOpen, onClose, onOpen, onLogout, username, showBackd
                                                 className="relative w-full group"
                                             >
                                                 <div className={`absolute inset-0 bg-gradient-to-r from-cyan-400/20 to-blue-400/20 rounded-xl blur-md transition-opacity ${isAdmin && activeView === item.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} />
-                                                <div className={`relative flex items-center gap-3 p-3 rounded-xl border transition-all ${isAdmin && activeView === item.id
+                                                <div className={`relative flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-xl border transition-all ${isAdmin && activeView === item.id
                                                     ? 'bg-white/25 border-cyan-300 shadow-[0_0_15px_rgba(103,232,249,0.3)]'
                                                     : 'bg-white/10 hover:bg-white/20 border-white/20 hover:border-cyan-300/50'}`}>
                                                     <div className="relative">
                                                         <div className={`absolute inset-0 bg-cyan-400 rounded-lg blur-md transition-opacity ${isAdmin && activeView === item.id ? 'opacity-50' : 'opacity-0 group-hover:opacity-50'}`} />
-                                                        <item.icon className={`relative w-5 h-5 ${isAdmin && activeView === item.id ? 'text-white' : 'text-cyan-200'}`} />
+                                                        <item.icon className={`relative w-4 h-4 md:w-5 md:h-5 ${isAdmin && activeView === item.id ? 'text-white' : 'text-cyan-200'}`} />
                                                     </div>
-                                                    <span className={`font-medium ${isAdmin && activeView === item.id ? 'text-white' : 'text-white/90'}`}>{item.label}</span>
+                                                    <span className={`font-medium text-xs md:text-base ${isAdmin && activeView === item.id ? 'text-white' : 'text-white/90'}`}>{item.label}</span>
                                                 </div>
                                             </motion.button>
                                         ))}
@@ -152,7 +152,7 @@ export function Sidebar({ isOpen, onClose, onOpen, onLogout, username, showBackd
 
                                 {/* Player Progression */}
                                 <div>
-                                    <h3 className="text-purple-200 text-xs uppercase tracking-wider px-3 mb-3 font-semibold">{labels.progression}</h3>
+                                    <h3 className="text-purple-200 text-[10px] md:text-xs uppercase tracking-wider px-2 mb-2 md:px-3 md:mb-3 font-semibold">{labels.progression}</h3>
                                     <div className="space-y-1">
                                         {activeItems.progression.map((item, index) => (
                                             <motion.button
@@ -163,12 +163,12 @@ export function Sidebar({ isOpen, onClose, onOpen, onLogout, username, showBackd
                                                 className="relative w-full group"
                                             >
                                                 <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-400/20 rounded-xl blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                <div className="relative flex items-center gap-3 p-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 hover:border-purple-300/50 transition-all">
+                                                <div className="relative flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 hover:border-purple-300/50 transition-all">
                                                     <div className="relative">
                                                         <div className="absolute inset-0 bg-purple-400 rounded-lg blur-md opacity-0 group-hover:opacity-50 transition-opacity" />
-                                                        <item.icon className="relative w-5 h-5 text-purple-200" />
+                                                        <item.icon className="relative w-4 h-4 md:w-5 md:h-5 text-purple-200" />
                                                     </div>
-                                                    <span className="text-white font-medium">{item.label}</span>
+                                                    <span className="text-white font-medium text-xs md:text-base">{item.label}</span>
                                                 </div>
                                             </motion.button>
                                         ))}
@@ -177,7 +177,7 @@ export function Sidebar({ isOpen, onClose, onOpen, onLogout, username, showBackd
 
                                 {/* Utility */}
                                 <div>
-                                    <h3 className="text-white/60 text-xs uppercase tracking-wider px-3 mb-3 font-semibold">{labels.utility}</h3>
+                                    <h3 className="text-white/60 text-[10px] md:text-xs uppercase tracking-wider px-2 mb-2 md:px-3 md:mb-3 font-semibold">{labels.utility}</h3>
                                     <div className="space-y-1">
                                         {activeItems.utility.map((item, index) => (
                                             <motion.button
@@ -188,12 +188,12 @@ export function Sidebar({ isOpen, onClose, onOpen, onLogout, username, showBackd
                                                 className="relative w-full group"
                                             >
                                                 <div className="absolute inset-0 bg-white/10 rounded-xl blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                <div className="relative flex items-center gap-3 p-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/40 transition-all">
+                                                <div className="relative flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/40 transition-all">
                                                     <div className="relative">
                                                         <div className="absolute inset-0 bg-white rounded-lg blur-md opacity-0 group-hover:opacity-30 transition-opacity" />
-                                                        <item.icon className="relative w-5 h-5 text-white/80" />
+                                                        <item.icon className="relative w-4 h-4 md:w-5 md:h-5 text-white/80" />
                                                     </div>
-                                                    <span className="text-white font-medium">{item.label}</span>
+                                                    <span className="text-white font-medium text-xs md:text-base">{item.label}</span>
                                                 </div>
                                             </motion.button>
                                         ))}
@@ -202,10 +202,10 @@ export function Sidebar({ isOpen, onClose, onOpen, onLogout, username, showBackd
                             </div>
 
                             {/* Footer */}
-                            <div className="p-4 border-t border-white/20">
-                                <div className="bg-white/10 rounded-xl p-3 border border-white/20">
-                                    <p className="text-white/80 text-sm">Logged in as:</p>
-                                    <p className="text-white font-bold truncate">{username || "Player"}</p>
+                            <div className="p-2 md:p-4 border-t border-white/20">
+                                <div className="bg-white/10 rounded-xl p-2 md:p-3 border border-white/20">
+                                    <p className="text-white/80 text-[10px] md:text-sm">Logged in as:</p>
+                                    <p className="text-white font-bold truncate text-xs md:text-base">{username || "Player"}</p>
                                 </div>
                             </div>
                         </div>

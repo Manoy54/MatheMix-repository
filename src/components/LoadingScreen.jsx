@@ -2,9 +2,17 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Calculator, Zap } from 'lucide-react';
 import { useLoading } from '../context/LoadingContext';
+import { useMobile } from '../hooks/useMobile';
+import MobileLoadingFallback from './MobileLoadingFallback';
 
 const LoadingScreen = () => {
+    const isMobile = useMobile();
     const { isModeDataReady, isBg3DReady, markAsFinished } = useLoading();
+
+    if (isMobile) {
+        return <MobileLoadingFallback />;
+    }
+
     const [progress, setProgress] = useState(0);
     const progressRef = useRef(0);
 

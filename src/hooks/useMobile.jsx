@@ -9,7 +9,12 @@ import { useState, useEffect } from "react";
  * @returns {boolean} True if the device is considered mobile, false otherwise.
  */
 export function useMobile() {
-    const [isMobile, setIsMobile] = useState(false);
+    const [isMobile, setIsMobile] = useState(() => {
+        if (typeof window !== 'undefined') {
+            return window.innerWidth <= 768 || window.matchMedia("(pointer: coarse)").matches;
+        }
+        return false;
+    });
 
     useEffect(() => {
         const checkMobile = () => {

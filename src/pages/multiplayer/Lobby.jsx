@@ -430,7 +430,7 @@ export default function Lobby({ user, username, onOpenSidebar }) {
 
                 {/* Main Content - Non-scrollable */}
                 <div className="flex-1 flex items-center justify-center p-4">
-                    <div className="w-full max-w-5xl">
+                    <div className="w-[85%] md:w-full max-w-5xl mx-auto">
                         {/* SELECT VIEW */}
                         {view === "select" && (
                             <RoomSelection

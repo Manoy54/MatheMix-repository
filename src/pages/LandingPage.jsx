@@ -90,41 +90,41 @@ const LandingPage = ({ user }) => {
 
             {/* 1. Welcome / Hero Section */}
             <section className="relative min-h-screen flex items-center justify-center overflow-hidden z-10">
-                <div className="container mx-auto px-4 text-center">
+                <div className="w-[85%] md:container mx-auto text-center">
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.8, ease: "easeOut" }}
+                        initial={isMobile ? {} : { opacity: 0, scale: 0.8 }}
+                        animate={isMobile ? {} : { opacity: 1, scale: 1 }}
+                        transition={isMobile ? { duration: 0 } : { duration: 0.8, ease: "easeOut" }}
                         className="mb-8"
                     >
                         {/* Game-Style Large Logo */}
-                        <div className="flex flex-col items-center justify-center gap-6 mb-8">
+                        <div className="flex flex-col items-center justify-center gap-3 md:gap-6 mb-4 md:mb-8">
                             <StandardHeader size="large" />
                         </div>
-                        <p className="text-xl md:text-3xl text-blue-100 font-light max-w-3xl mx-auto drop-shadow-md">
+                        <p className="text-sm md:text-3xl text-blue-100 font-light max-w-3xl mx-auto drop-shadow-md">
                             A fast-paced math challenge where your speed and accuracy build the ultimate streak
                         </p>
                     </motion.div>
 
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.5, duration: 0.6 }}
-                        className="flex flex-col md:flex-row gap-4 justify-center items-center"
+                        initial={isMobile ? {} : { opacity: 0, y: 20 }}
+                        animate={isMobile ? {} : { opacity: 1, y: 0 }}
+                        transition={isMobile ? { duration: 0 } : { delay: 0.5, duration: 0.6 }}
+                        className="flex flex-col md:flex-row gap-3 md:gap-4 justify-center items-center"
                     >
                         <button
                             onClick={handlePlayNow}
-                            className="group relative px-8 py-4 bg-white text-blue-600 hover:bg-blue-50 rounded-full font-extrabold text-xl transition-all hover:scale-105 shadow-xl flex items-center gap-2"
+                            className="group relative px-5 py-2.5 md:px-8 md:py-4 bg-white text-blue-600 hover:bg-blue-50 rounded-full font-extrabold text-base md:text-xl transition-all hover:scale-105 shadow-xl flex items-center gap-2"
                         >
-                            <Play className="fill-blue-600" />
+                            <Play className="fill-blue-600 w-4 h-4 md:w-6 md:h-6" />
                             Play Now
                         </button>
 
                         <button
                             onClick={() => document.getElementById('how-to-play')?.scrollIntoView({ behavior: 'smooth' })}
-                            className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white border-2 border-white/30 rounded-full font-extrabold text-xl transition-all hover:scale-105 backdrop-blur-md shadow-xl flex items-center gap-2"
+                            className="px-5 py-2.5 md:px-8 md:py-4 bg-white/10 hover:bg-white/20 text-white border-2 border-white/30 rounded-full font-extrabold text-base md:text-xl transition-all hover:scale-105 backdrop-blur-md shadow-xl flex items-center gap-2"
                         >
-                            <Gamepad2 className="w-6 h-6" />
+                            <Gamepad2 className="w-4 h-4 md:w-6 md:h-6" />
                             How to Play
                         </button>
                     </motion.div>
@@ -132,16 +132,16 @@ const LandingPage = ({ user }) => {
             </section>
 
             {/* 2. About the Game */}
-            <section className="py-20 bg-white/5 backdrop-blur-sm relative z-10">
-                <div className="container mx-auto px-4">
+            <section className="py-10 md:py-20 bg-white/5 backdrop-blur-sm relative z-10">
+                <div className="w-[85%] md:container mx-auto">
                     <motion.div
-                        variants={fadeInUp}
+                        variants={isMobile ? {} : fadeInUp}
                         initial="initial"
                         whileInView="whileInView"
-                        className="text-center mb-16"
+                        className="text-center mb-8 md:mb-16"
                     >
-                        <h2 className="text-4xl md:text-5xl font-black mb-6">About The Game</h2>
-                        <p className="text-lg md:text-xl text-blue-100 max-w-3xl mx-auto leading-relaxed">
+                        <h2 className="text-2xl md:text-5xl font-black mb-4 md:mb-6">About The Game</h2>
+                        <p className="text-xs md:text-xl text-blue-100 max-w-3xl mx-auto leading-relaxed">
                             Mathemix is an interactive educational platform developed by BSIT students from the <span className="text-yellow-300 font-bold">Bicol University College of Science</span>. Designed to bridge the gap between learning and entertainment, it defies traditional problem-solving by blending a sleek, modern interface with gamified mechanics. Challenge your mental math, sharpen your accuracy, and master various disciplines in an experience that is as exciting as it is educational.
                         </p>
                     </motion.div>
@@ -154,18 +154,18 @@ const LandingPage = ({ user }) => {
                         ].map((feature, index) => (
                             <motion.div
                                 key={index}
-                                variants={fadeInUp}
+                                variants={isMobile ? {} : fadeInUp}
                                 initial="initial"
                                 whileInView="whileInView"
                                 viewport={{ once: true }}
-                                transition={{ delay: index * 0.2 }}
-                                className="p-8 rounded-2xl bg-white/10 border border-white/20 hover:bg-white/20 transition-all group backdrop-blur-md shadow-lg"
+                                transition={isMobile ? { duration: 0 } : { delay: index * 0.2 }}
+                                className="p-4 md:p-8 rounded-2xl bg-white/10 border border-white/20 hover:bg-white/20 transition-all group backdrop-blur-md shadow-lg"
                             >
-                                <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                                    <feature.icon className="w-8 h-8 text-white" />
+                                <div className="w-10 h-10 md:w-16 md:h-16 bg-white/20 rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform">
+                                    <feature.icon className="w-5 h-5 md:w-8 md:h-8 text-white" />
                                 </div>
-                                <h3 className="text-2xl font-bold mb-3">{feature.title}</h3>
-                                <p className="text-blue-100">{feature.desc}</p>
+                                <h3 className="text-lg md:text-2xl font-bold mb-2 md:mb-3">{feature.title}</h3>
+                                <p className="text-blue-100 text-xs md:text-base">{feature.desc}</p>
                             </motion.div>
                         ))}
                     </div>
@@ -173,13 +173,13 @@ const LandingPage = ({ user }) => {
             </section>
 
             {/* 3. How to Play */}
-            <section id="how-to-play" className="py-20 relative z-10">
-                <div className="container mx-auto px-4">
+            <section id="how-to-play" className="py-10 md:py-20 relative z-10">
+                <div className="w-[85%] md:container mx-auto">
                     <motion.h2
-                        variants={fadeInUp}
+                        variants={isMobile ? {} : fadeInUp}
                         initial="initial"
                         whileInView="whileInView"
-                        className="text-4xl md:text-5xl font-black text-center mb-16"
+                        className="text-2xl md:text-5xl font-black text-center mb-8 md:mb-16"
                     >
                         How to Play
                     </motion.h2>
@@ -205,14 +205,14 @@ const LandingPage = ({ user }) => {
                                 variants={itemVariants}
                                 className="relative z-10 flex flex-col items-center text-center"
                             >
-                                <div className="w-24 h-24 bg-[#0077b6] border-4 border-white rounded-full flex items-center justify-center mb-6 shadow-xl relative">
-                                    <item.icon className="w-10 h-10 text-white" />
-                                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-white text-blue-600 rounded-full flex items-center justify-center font-black shadow-md">
+                                <div className="w-16 h-16 md:w-24 md:h-24 bg-[#0077b6] border-4 border-white rounded-full flex items-center justify-center mb-4 md:mb-6 shadow-xl relative">
+                                    <item.icon className="w-6 h-6 md:w-10 md:h-10 text-white" />
+                                    <div className="absolute -top-1 -right-1 md:-top-2 md:-right-2 w-6 h-6 md:w-8 md:h-8 bg-white text-blue-600 rounded-full flex items-center justify-center font-black shadow-md text-xs md:text-base">
                                         {item.step}
                                     </div>
                                 </div>
-                                <h3 className="text-xl font-bold mb-2">{item.title}</h3>
-                                <p className="text-blue-100 text-sm">{item.desc}</p>
+                                <h3 className="text-base md:text-xl font-bold mb-1 md:mb-2">{item.title}</h3>
+                                <p className="text-blue-100 text-xs md:text-sm">{item.desc}</p>
                             </motion.div>
                         ))}
                     </motion.div>
@@ -220,21 +220,21 @@ const LandingPage = ({ user }) => {
             </section>
 
             {/* 4. Gameplay Preview */}
-            <section className="py-20 bg-black/20 backdrop-blur-sm z-10 relative">
-                <div className="container mx-auto px-4">
+            <section className="py-10 md:py-20 bg-black/20 backdrop-blur-sm z-10 relative">
+                <div className="w-[85%] md:container mx-auto">
                     <motion.div
-                        variants={fadeInUp}
+                        variants={isMobile ? {} : fadeInUp}
                         initial="initial"
                         whileInView="whileInView"
-                        className="text-center mb-12"
+                        className="text-center mb-6 md:mb-12"
                     >
-                        <h2 className="text-4xl md:text-5xl font-black mb-4">Gameplay Preview</h2>
-                        <p className="text-blue-100">See the action unfold.</p>
+                        <h2 className="text-2xl md:text-5xl font-black mb-2 md:mb-4">Gameplay Preview</h2>
+                        <p className="text-blue-100 text-sm md:text-base">See the action unfold.</p>
                     </motion.div>
 
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
+                        initial={isMobile ? {} : { opacity: 0, scale: 0.95 }}
+                        whileInView={isMobile ? {} : { opacity: 1, scale: 1 }}
                         viewport={{ once: true }}
                         className="relative aspect-video max-w-5xl mx-auto bg-black rounded-3xl overflow-hidden border border-white/10 shadow-2xl"
                     >
@@ -250,10 +250,10 @@ const LandingPage = ({ user }) => {
                         </video>
 
                         {/* Overlay Content */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-8 pointer-events-none">
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-4 md:p-8 pointer-events-none">
                             <div>
-                                <h3 className="text-2xl font-bold">Epic Battles</h3>
-                                <p className="text-gray-300">Experience dynamic visual effects and smooth animations.</p>
+                                <h3 className="text-sm md:text-2xl font-bold mb-1 leading-tight">Epic Battles</h3>
+                                <p className="text-gray-300 text-[10px] md:text-base leading-tight">Experience dynamic visual effects and smooth animations.</p>
                             </div>
                         </div>
                     </motion.div>
@@ -261,41 +261,41 @@ const LandingPage = ({ user }) => {
             </section>
 
             {/* 5. Features / Modes */}
-            <section className="py-20 relative z-10">
-                <div className="container mx-auto px-4">
-                    <div className="text-center mb-16">
-                        <h2 className="text-4xl md:text-5xl font-black mb-4">Features & Modes</h2>
+            <section className="py-10 md:py-20 relative z-10">
+                <div className="w-[85%] md:container mx-auto">
+                    <div className="text-center mb-8 md:mb-16">
+                        <h2 className="text-2xl md:text-5xl font-black mb-2 md:mb-4">Features & Modes</h2>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
                         <motion.div
                             whileHover={{ scale: 1.02 }}
-                            className="p-8 rounded-3xl bg-white/10 border border-white/20 backdrop-blur-md"
+                            className="p-4 md:p-8 rounded-3xl bg-white/10 border border-white/20 backdrop-blur-md"
                         >
-                            <div className="flex items-center gap-4 mb-6">
-                                <Trophy className="w-10 h-10 text-yellow-300 drop-shadow-md" />
+                            <div className="flex items-center gap-3 md:gap-4 mb-3 md:mb-6">
+                                <Trophy className="w-6 h-6 md:w-10 md:h-10 text-yellow-300 drop-shadow-md" />
                                 <div>
-                                    <h3 className="text-2xl font-bold">High-Score Mastery</h3>
-                                    <p className="text-yellow-300 font-semibold">Streak-Based Progression</p>
+                                    <h3 className="text-lg md:text-2xl font-bold">High-Score Mastery</h3>
+                                    <p className="text-yellow-300 font-semibold text-sm md:text-base">Streak-Based Progression</p>
                                 </div>
                             </div>
-                            <p className="text-blue-100 leading-relaxed">
+                            <p className="text-blue-100 leading-relaxed text-xs md:text-base">
                                 Push your mental limits by answering questions continuously to build your highest streak. There is no question limit—keep going until you stop or can no longer answer to beat your personal best.
                             </p>
                         </motion.div>
 
                         <motion.div
                             whileHover={{ scale: 1.02 }}
-                            className="p-8 rounded-3xl bg-white/10 border border-white/20 backdrop-blur-md"
+                            className="p-4 md:p-8 rounded-3xl bg-white/10 border border-white/20 backdrop-blur-md"
                         >
-                            <div className="flex items-center gap-4 mb-6">
-                                <Calculator className="w-10 h-10 text-purple-300 drop-shadow-md" />
+                            <div className="flex items-center gap-3 md:gap-4 mb-3 md:mb-6">
+                                <Calculator className="w-6 h-6 md:w-10 md:h-10 text-purple-300 drop-shadow-md" />
                                 <div>
-                                    <h3 className="text-2xl font-bold">Diverse Categories</h3>
-                                    <p className="text-purple-300 font-semibold">Tailored Learning</p>
+                                    <h3 className="text-lg md:text-2xl font-bold">Diverse Categories</h3>
+                                    <p className="text-purple-300 font-semibold text-sm md:text-base">Tailored Learning</p>
                                 </div>
                             </div>
-                            <p className="text-blue-100 leading-relaxed">
+                            <p className="text-blue-100 leading-relaxed text-xs md:text-base">
                                 Choose from specialized mathematical disciplines including Number and Algebra, Measurement and Geometry, or Data and Probability. Each category is designed to sharpen specific analytical and problem-solving skills.
                             </p>
                         </motion.div>
@@ -306,13 +306,13 @@ const LandingPage = ({ user }) => {
 
 
             {/* Meet the Developers (NEW) */}
-            <section className="py-20 relative z-10">
-                <div className="container mx-auto px-4">
-                    <h2 className="text-4xl font-black text-center mb-6">Meet The Developers</h2>
-                    <p className="text-center text-blue-100 max-w-3xl mx-auto mb-16 text-lg leading-relaxed drop-shadow-md">
+            <section className="py-10 md:py-20 relative z-10">
+                <div className="w-[85%] md:container mx-auto">
+                    <h2 className="text-2xl md:text-4xl font-black text-center mb-4 md:mb-6">Meet The Developers</h2>
+                    <p className="text-center text-blue-100 max-w-3xl mx-auto mb-8 md:mb-16 text-xs md:text-lg leading-relaxed drop-shadow-md">
                         "We are BSIT students from the Bicol University College of Science, pushing the boundaries of technology by building a high-performance website that bridges the gap between innovation and user experience."
                     </p>
-                    <div className="flex flex-col md:flex-row justify-center gap-8 flex-wrap">
+                    <div className="flex flex-col md:flex-row justify-center gap-6 md:gap-8 flex-wrap">
                         {[
                             { name: "Sean Dylan Armenta", role: "Full Stack Developer", icon: Code },
                             { name: "John Benedict Candelaria", role: "Full Stack Developer", icon: Code },
@@ -322,13 +322,13 @@ const LandingPage = ({ user }) => {
                             <motion.div
                                 key={index}
                                 whileHover={{ y: -10 }}
-                                className="flex flex-col items-center p-6"
+                                className="flex flex-col items-center p-3 md:p-6"
                             >
-                                <div className="w-32 h-32 rounded-full bg-white/20 border-4 border-white/30 flex items-center justify-center mb-6 shadow-xl backdrop-blur-md overflow-hidden">
-                                    <dev.icon className="w-16 h-16 text-white" />
+                                <div className="w-20 h-20 md:w-32 md:h-32 rounded-full bg-white/20 border-4 border-white/30 flex items-center justify-center mb-4 md:mb-6 shadow-xl backdrop-blur-md overflow-hidden">
+                                    <dev.icon className="w-10 h-10 md:w-16 md:h-16 text-white" />
                                 </div>
-                                <h3 className="text-xl font-bold text-center">{dev.name}</h3>
-                                <p className="text-blue-200 font-medium text-sm">{dev.role}</p>
+                                <h3 className="text-lg md:text-xl font-bold text-center">{dev.name}</h3>
+                                <p className="text-blue-200 font-medium text-xs md:text-sm">{dev.role}</p>
                             </motion.div>
                         ))}
                     </div>
@@ -337,9 +337,9 @@ const LandingPage = ({ user }) => {
 
 
             {/* 8. FAQ */}
-            <section className="py-20 bg-black/20 backdrop-blur-sm relative z-10">
-                <div className="container mx-auto px-4 max-w-3xl">
-                    <h2 className="text-4xl font-black text-center mb-12">FAQ</h2>
+            <section className="py-10 md:py-20 bg-black/20 backdrop-blur-sm relative z-10">
+                <div className="w-[85%] md:container mx-auto max-w-3xl">
+                    <h2 className="text-2xl md:text-4xl font-black text-center mb-8 md:mb-12">FAQ</h2>
                     <div className="space-y-4">
                         {[
                             { q: "Is it free to play?", a: "Yes! Mathemix is 100% free to start. Optional cosmetics available." },
@@ -348,11 +348,11 @@ const LandingPage = ({ user }) => {
                             { q: "Do I need an account?", a: "Yes, account is required to save progress and rank." }
                         ].map((faq, index) => (
                             <details key={index} className="group bg-white/10 rounded-xl overflow-hidden cursor-pointer transition-all hover:bg-white/20 border border-white/10 backdrop-blur-md">
-                                <summary className="p-6 flex justify-between items-center font-bold text-lg list-none">
+                                <summary className="p-4 md:p-6 flex justify-between items-center font-bold text-sm md:text-lg list-none">
                                     {faq.q}
                                     <span className="transform group-open:rotate-180 transition-transform">▼</span>
                                 </summary>
-                                <div className="px-6 pb-6 text-blue-100 leading-relaxed">
+                                <div className="px-4 pb-4 md:px-6 md:pb-6 text-blue-100 text-xs md:text-base leading-relaxed">
                                     {faq.a}
                                 </div>
                             </details>
@@ -362,19 +362,19 @@ const LandingPage = ({ user }) => {
             </section>
 
             {/* 9. Contact Us */}
-            <section className="py-20 relative z-10">
-                <div className="container mx-auto px-4 text-center">
-                    <div className="max-w-2xl mx-auto bg-white/10 backdrop-blur-xl p-8 md:p-12 rounded-3xl border border-white/20 shadow-2xl">
-                        <Mail className="w-12 h-12 text-white mx-auto mb-6" />
-                        <h2 className="text-3xl font-black mb-4">Get in Touch</h2>
-                        <p className="text-blue-100 mb-8">
+            <section className="py-10 md:py-20 relative z-10">
+                <div className="w-[85%] md:container mx-auto text-center">
+                    <div className="max-w-2xl mx-auto bg-white/10 backdrop-blur-xl p-6 md:p-12 rounded-3xl border border-white/20 shadow-2xl">
+                        <Mail className="w-8 h-8 md:w-12 md:h-12 text-white mx-auto mb-4 md:mb-6" />
+                        <h2 className="text-2xl md:text-3xl font-black mb-2 md:mb-4">Get in Touch</h2>
+                        <p className="text-blue-100 mb-6 md:mb-8 text-sm md:text-base">
                             Have questions or feedback? We'd love to hear from you.
                         </p>
-                        <div className="flex flex-col md:flex-row gap-4 justify-center">
-                            <a href="mailto:support@mathemix.com" className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-blue-900 rounded-lg hover:bg-blue-50 transition-colors font-bold">
+                        <div className="flex flex-col md:flex-row gap-3 md:gap-4 justify-center">
+                            <a href="mailto:support@mathemix.com" className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-blue-900 rounded-lg hover:bg-blue-50 transition-colors font-bold text-sm md:text-base">
                                 <Mail className="w-4 h-4" /> support@mathemix.com
                             </a>
-                            <a href="#" className="flex items-center justify-center gap-2 px-6 py-3 bg-[#5865F2] text-white rounded-lg hover:brightness-110 transition-colors font-bold shadow-lg">
+                            <a href="#" className="flex items-center justify-center gap-2 px-6 py-3 bg-[#5865F2] text-white rounded-lg hover:brightness-110 transition-colors font-bold shadow-lg text-sm md:text-base">
                                 Discord Community
                             </a>
                         </div>

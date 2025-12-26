@@ -7,24 +7,25 @@ import { useLoading } from "./context/LoadingContext";
 import { useMobile } from "./hooks/useMobile";
 
 // Pages
-import Game from "./pages/Game";
-import Lobby from "./pages/multiplayer/Lobby.jsx";
-import ModeSelect from "./pages/ModeSelect";
-import LoginPage from "./pages/LoginPage";
-import CategorySelect from "./pages/CategorySelect.jsx";
-import LandingPage from "./pages/LandingPage";
-import Leaderboard from "./pages/Leaderboard";
-import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
-import TermsOfService from "./pages/legal/TermsOfService";
-import CookiePolicy from "./pages/legal/CookiePolicy";
+const Game = lazy(() => import("./pages/Game"));
+const Lobby = lazy(() => import("./pages/multiplayer/Lobby.jsx"));
+const ModeSelect = lazy(() => import("./pages/ModeSelect"));
+const LoginPage = lazy(() => import("./pages/LoginPage"));
+const CategorySelect = lazy(() => import("./pages/CategorySelect.jsx"));
+const LandingPage = lazy(() => import("./pages/LandingPage"));
+const Leaderboard = lazy(() => import("./pages/Leaderboard"));
+const PrivacyPolicy = lazy(() => import("./pages/legal/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./pages/legal/TermsOfService"));
+const CookiePolicy = lazy(() => import("./pages/legal/CookiePolicy"));
 const Stats = lazy(() => import("./pages/Stats.jsx"));
 const Admin = lazy(() => import("./pages/admin/Admin.jsx"));
 
 // Components
 import { Sidebar } from "./components/Sidebar.jsx";
 
-import AnimatedBackground from "./components/AnimatedBackground.jsx";
+const AnimatedBackground = lazy(() => import("./components/AnimatedBackground.jsx"));
 import LoadingScreen from "./components/LoadingScreen.jsx";
+import MobileLoadingFallback from "./components/MobileLoadingFallback.jsx";
 
 import { auth, db } from "./firebaseConfig.js";
 import { onAuthStateChanged, signOut } from "firebase/auth";
@@ -110,10 +111,14 @@ function App() {
     return (
         <div className="font-nunito min-h-screen w-full relative bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]">
             <AnimatePresence>
-                {showLoading && <LoadingScreen key="global-loading" />}
+                {showLoading && (isMobile ? <MobileLoadingFallback key="mobile-loading" /> : <LoadingScreen key="global-loading" />)}
             </AnimatePresence>
 
-            {location.pathname !== "/login" && !showLoading && location.pathname !== "/lobby" && !isMobile && <AnimatedBackground />}
+            {location.pathname !== "/login" && !showLoading && location.pathname !== "/lobby" && !isMobile && (
+                <Suspense fallback={null}>
+                    <AnimatedBackground />
+                </Suspense>
+            )}
 
             {!isPublicPage && currentUser && !location.pathname.startsWith("/admin") && (
                 <Sidebar
@@ -127,22 +132,26 @@ function App() {
             <div className={`relative z-10 w-full h-full`}>
                 <Routes>
                     <Route path="/welcome" element={
-                        <LandingPage user={currentUser} />
+                        <Suspense fallback={isMobile ? <MobileLoadingFallback /> : <LoadingScreen />}>
+                            <LandingPage user={currentUser} />
+                        </Suspense>
                     } />
                     <Route path="/login" element={
                         <PublicRoute user={currentUser} loading={loading}>
-                            <LoginPage />
+                            <Suspense fallback={isMobile ? <MobileLoadingFallback /> : <LoadingScreen />}>
+                                <LoginPage />
+                            </Suspense>
                         </PublicRoute>
                     } />
-                    <Route path="/mode-select" element={<ProtectedRoute user={currentUser} loading={loading}><ModeSelect username={username} onLogout={handleLogout} onOpenSidebar={() => setSidebarOpen(true)} /></ProtectedRoute>} />
-                    <Route path="/category-select" element={<ProtectedRoute user={currentUser} loading={loading}><CategorySelect username={username} onLogout={handleLogout} onOpenSidebar={() => setSidebarOpen(true)} /></ProtectedRoute>} />
-                    <Route path="/game" element={<ProtectedRoute user={currentUser} loading={loading}><Game onGameEnd={() => { }} onOpenSidebar={() => setSidebarOpen(true)} /></ProtectedRoute>} />
-                    <Route path="/lobby" element={<ProtectedRoute user={currentUser} loading={loading}><Lobby user={currentUser} username={username} onOpenSidebar={() => setSidebarOpen(true)} onLogout={handleLogout} /></ProtectedRoute>} />
-                    <Route path="/stats" element={<ProtectedRoute user={currentUser} loading={loading}><Suspense fallback={<div className="text-white text-center">Loading Stats...</div>}><Stats user={currentUser} onOpenSidebar={() => setSidebarOpen(true)} /></Suspense></ProtectedRoute>} />
-                    <Route path="/leaderboard" element={<ProtectedRoute user={currentUser} loading={loading}><Leaderboard onOpenSidebar={() => setSidebarOpen(true)} /></ProtectedRoute>} />
-                    <Route path="/privacy-policy" element={<ProtectedRoute user={currentUser} loading={loading}><PrivacyPolicy /></ProtectedRoute>} />
-                    <Route path="/terms-of-service" element={<ProtectedRoute user={currentUser} loading={loading}><TermsOfService /></ProtectedRoute>} />
-                    <Route path="/cookie-policy" element={<ProtectedRoute user={currentUser} loading={loading}><CookiePolicy /></ProtectedRoute>} />
+                    <Route path="/mode-select" element={<ProtectedRoute user={currentUser} loading={loading}><Suspense fallback={isMobile ? <MobileLoadingFallback /> : <LoadingScreen />}><ModeSelect username={username} onLogout={handleLogout} onOpenSidebar={() => setSidebarOpen(true)} /></Suspense></ProtectedRoute>} />
+                    <Route path="/category-select" element={<ProtectedRoute user={currentUser} loading={loading}><Suspense fallback={isMobile ? <MobileLoadingFallback /> : <LoadingScreen />}><CategorySelect username={username} onLogout={handleLogout} onOpenSidebar={() => setSidebarOpen(true)} /></Suspense></ProtectedRoute>} />
+                    <Route path="/game" element={<ProtectedRoute user={currentUser} loading={loading}><Suspense fallback={isMobile ? <MobileLoadingFallback /> : <LoadingScreen />}><Game onGameEnd={() => { }} onOpenSidebar={() => setSidebarOpen(true)} /></Suspense></ProtectedRoute>} />
+                    <Route path="/lobby" element={<ProtectedRoute user={currentUser} loading={loading}><Suspense fallback={isMobile ? <MobileLoadingFallback /> : <LoadingScreen />}><Lobby user={currentUser} username={username} onOpenSidebar={() => setSidebarOpen(true)} onLogout={handleLogout} /></Suspense></ProtectedRoute>} />
+                    <Route path="/stats" element={<ProtectedRoute user={currentUser} loading={loading}><Suspense fallback={isMobile ? <MobileLoadingFallback /> : <LoadingScreen />}><Stats user={currentUser} onOpenSidebar={() => setSidebarOpen(true)} /></Suspense></ProtectedRoute>} />
+                    <Route path="/leaderboard" element={<ProtectedRoute user={currentUser} loading={loading}><Suspense fallback={isMobile ? <MobileLoadingFallback /> : <LoadingScreen />}><Leaderboard onOpenSidebar={() => setSidebarOpen(true)} /></Suspense></ProtectedRoute>} />
+                    <Route path="/privacy-policy" element={<ProtectedRoute user={currentUser} loading={loading}><Suspense fallback={isMobile ? <MobileLoadingFallback /> : <LoadingScreen />}><PrivacyPolicy /></Suspense></ProtectedRoute>} />
+                    <Route path="/terms-of-service" element={<ProtectedRoute user={currentUser} loading={loading}><Suspense fallback={isMobile ? <MobileLoadingFallback /> : <LoadingScreen />}><TermsOfService /></Suspense></ProtectedRoute>} />
+                    <Route path="/cookie-policy" element={<ProtectedRoute user={currentUser} loading={loading}><Suspense fallback={isMobile ? <MobileLoadingFallback /> : <LoadingScreen />}><CookiePolicy /></Suspense></ProtectedRoute>} />
                     <Route path="/admin/*" element={<ProtectedRoute user={currentUser} loading={loading}><Suspense fallback={<div className="text-white text-center">Loading Admin...</div>}><Admin username={username} onLogout={handleLogout} /></Suspense></ProtectedRoute>} />
 
                     {/* Fallback */}

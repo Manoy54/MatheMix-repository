@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Calculator, Sparkles, Flame, Trophy, Brain, AlertCircle, Menu, RotateCcw, Home, Loader2, Layout } from 'lucide-react';
+import { Calculator, Sparkles, Flame, Trophy, Brain, AlertCircle, Menu, RotateCcw, Home, Loader2, Layout, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Keyboard from '../components/Keyboard.jsx';
 import { auth, db } from '../firebaseConfig.js';
@@ -13,6 +13,8 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
     const isMobile = useMobile();
     const location = useLocation();
     const navigate = useNavigate();
+    const hiddenInputRef = useRef(null);
+
 
     // --- 1. Get Category & Questions ---
     const CATEGORY_MAP = {
@@ -204,7 +206,11 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
         setAnswerStatus(null);
         setInput('');
         setCurrentQ(getRandomQuestion());
-    }, [getRandomQuestion]);
+        if (isMobile && hiddenInputRef.current) {
+            hiddenInputRef.current.value = '';
+            hiddenInputRef.current.focus();
+        }
+    }, [getRandomQuestion, isMobile]);
 
     const handleChar = useCallback((char) => {
         if (answerStatus || isGameOver) return;
@@ -216,6 +222,32 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
             return prev;
         });
     }, [answerWithSpaces.length, answerStatus, isGameOver]);
+
+    const handleMobileInput = useCallback((e) => {
+        const val = e.target.value.toUpperCase();
+        // Since we can't easily sync backspace vs char add with a simple value check if we rely purely on 'val', 
+        // we'll just set input to val, but respecting the max length rule logic if needed. 
+        // However, the game logic relies on 'input' state which includes spaces if any (though current implementation seems to remove spaces from comparison).
+        // The existing handleChar appends. Let's try to sync closely.
+
+        // Actually, easiest way for this specific game type (filling boxes) is:
+        setPressedKey('TYPING'); // Feedback
+        setTimeout(() => setPressedKey(null), 100);
+
+        // Sanitize
+        const cleanVal = val.replace(/[^A-Z]/g, ''); // Only letters? Or whatever allowed chars.
+
+        setInput(prev => {
+            // If length decreased, it's a delete
+            // If increased, it's a char
+            // But we can just direct set. The only catch is if we want to enforce specific logic.
+            // Let's enforce max length based on answer.
+            if (cleanVal.length <= answerWithSpaces.length) {
+                return cleanVal;
+            }
+            return cleanVal.slice(0, answerWithSpaces.length);
+        });
+    }, [answerWithSpaces]);
 
     const handleSpace = useCallback(() => { }, []);
     const handleClear = useCallback(() => {
@@ -241,6 +273,10 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
             updateStats(true, newStreak, false); // Not game end
             setTimeout(() => {
                 nextQuestion();
+                if (isMobile && hiddenInputRef.current) {
+                    hiddenInputRef.current.value = '';
+                    hiddenInputRef.current.focus();
+                }
             }, 2000);
         } else {
             setAnswerStatus('wrong');
@@ -311,6 +347,14 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
         const handleKeyDown = (e) => {
             if (showGiveUpModal || isGameOver) return;
 
+            // If mobile, let default behavior happen on input, but map Enter
+            if (isMobile) {
+                if (e.key === 'Enter') {
+                    handleSubmit();
+                }
+                return;
+            }
+
             let keyToPress = null;
             if (e.key.length === 1 && (/[a-zA-Z]/.test(e.key) || e.key === '-')) {
                 keyToPress = e.key.toUpperCase();
@@ -338,7 +382,22 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [handleChar, handleDelete, handleSubmit, handleClear, showGiveUpModal, isGameOver]);
+    }, [handleChar, handleDelete, handleSubmit, handleClear, showGiveUpModal, isGameOver, isMobile]);
+
+    // Force focus on mobile start
+    useEffect(() => {
+        if (isMobile && !loadingQuestions && !showGiveUpModal && !isGameOver && hiddenInputRef.current) {
+            // Small timeout to ensure render
+            setTimeout(() => hiddenInputRef.current?.focus(), 100);
+        }
+    }, [isMobile, loadingQuestions, showGiveUpModal, isGameOver]);
+
+    // Keep focus if user tapped away (optional aggressive focus)
+    const handleGameAreaClick = () => {
+        if (isMobile && hiddenInputRef.current) {
+            hiddenInputRef.current.focus();
+        }
+    };
 
     // Focus/Blur management for modals
     useEffect(() => {
@@ -389,19 +448,31 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
     }
 
     return (
-        <div className={`px-4 py-3 h-full preserve-3d flex flex-col ${isMobile ? 'pb-[280px]' : ''}`}>
+        <div className={`px-4 pb-3 h-full flex flex-col ${isMobile ? 'pb-[50px] pt-[env(safe-area-inset-top)]' : ''}`} onClick={handleGameAreaClick}>
+            {/* Hidden Input for Mobile Keyboard */}
+            {isMobile && (
+                <input
+                    ref={hiddenInputRef}
+                    type="text"
+                    onChange={handleMobileInput}
+                    value={input}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="characters"
+                    spellCheck="false"
+                    className="opacity-0 absolute top-0 left-0 h-0 w-0 pointer-events-none"
+                    // On mobile, sometimes pointer-events: none prevents focus. 
+                    // Better to just push it off screen or make it z-index -1.
+                    // But we want it 'active' for keyboard.
+                    style={{ opacity: 0, position: 'absolute', top: -1000 }}
+                />
+            )}
             <AnimatePresence>
                 {showGiveUpModal && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
+                    <div
                         className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
                     >
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                        <div
                             className="bg-[#023e8a] border-2 border-white/20 p-6 rounded-3xl shadow-2xl max-w-sm w-full text-center space-y-4"
                         >
                             <div className="w-16 h-16 bg-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-2">
@@ -419,23 +490,17 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
                                     Yes, Give Up
                                 </button>
                             </div>
-                        </motion.div>
-                    </motion.div>
+                        </div>
+                    </div>
                 )}
             </AnimatePresence>
 
             <AnimatePresence>
                 {isGameOver && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
+                    <div
                         className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
                     >
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                        <div
                             className="bg-[#0f172a] border-2 border-white/10 p-8 rounded-3xl shadow-2xl max-w-md w-full text-center space-y-6"
                         >
                             <div className="flex flex-col items-center gap-2">
@@ -471,15 +536,15 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
                                     <span>Play Again</span>
                                 </button>
                             </div>
-                        </motion.div>
-                    </motion.div>
+                        </div>
+                    </div>
                 )}
             </AnimatePresence>
 
             <StandardHeader onOpenSidebar={onOpenSidebar} subtitle={`Solo Mode - ${category}`} />
 
             <div className="flex-1 flex items-center justify-center overflow-hidden py-2">
-                <div className="w-full max-w-5xl space-y-4">
+                <div className="w-[85%] md:w-full max-w-5xl space-y-4 mx-auto">
                     <QuestionStats
                         questionNumber={questionNumber}
                         streak={streak}
@@ -501,28 +566,48 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
                         containerWidth={containerWidth}
                     />
 
-                    <motion.div
-                        ref={keyboardContainerRef}
-                        className={isMobile ? "fixed inset-x-0 bottom-0" : ""}
-                        initial={{ y: 30, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 0.4 }}
-                        style={{
-                            pointerEvents: (showGiveUpModal || isGameOver) ? 'none' : 'auto',
-                            zIndex: (showGiveUpModal || isGameOver) ? 40 : 60,
-                            filter: (showGiveUpModal || isGameOver) ? 'blur(2px)' : 'none'
-                        }}
-                    >
-                        <Keyboard
-                            onChar={handleChar}
-                            onDelete={handleDelete}
-                            onClear={handleClear}
-                            onSpace={handleSpace}
-                            onSubmit={handleSubmit}
-                            onSkip={handleSkip}
-                            pressedKey={pressedKey}
-                        />
-                    </motion.div>
+                    {!isMobile && (
+                        <motion.div
+                            ref={keyboardContainerRef}
+                            className=""
+                            initial={{ y: 30, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ delay: 0.4 }}
+                            style={{
+                                pointerEvents: (showGiveUpModal || isGameOver) ? 'none' : 'auto',
+                                zIndex: (showGiveUpModal || isGameOver) ? 40 : 60,
+                                filter: (showGiveUpModal || isGameOver) ? 'blur(2px)' : 'none'
+                            }}
+                        >
+                            <Keyboard
+                                onChar={handleChar}
+                                onDelete={handleDelete}
+                                onClear={handleClear}
+                                onSpace={handleSpace}
+                                onSubmit={handleSubmit}
+                                onSkip={handleSkip}
+                                pressedKey={pressedKey}
+                            />
+                        </motion.div>
+                    )}
+                    {isMobile && (
+                        <div className="fixed bottom-0 left-0 w-full p-4 z-50 pb-8 pt-6">
+                            <div className="flex gap-3 w-full max-w-md mx-auto">
+                                <button
+                                    onClick={handleSkip}
+                                    className="flex-1 bg-gradient-to-b from-orange-500 to-orange-600 active:from-orange-600 active:to-orange-700 text-white py-3.5 rounded-xl font-black tracking-wider text-sm uppercase active:scale-[0.98] transition-transform"
+                                >
+                                    Give Up
+                                </button>
+                                <button
+                                    onClick={handleSubmit}
+                                    className="flex-1 bg-gradient-to-b from-green-500 to-green-600 active:from-green-600 active:to-green-700 text-white py-3.5 rounded-xl font-black tracking-wider text-sm uppercase active:scale-[0.98] transition-transform"
+                                >
+                                    Submit
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
@@ -542,11 +627,11 @@ const QuestionStats = React.memo(({ questionNumber, streak, bestStreak }) => (
     >
         <div className="relative">
             <div className="absolute inset-0 bg-white/20 rounded-xl blur-lg" />
-            <div className="relative bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2 border-2 border-white/30 flex items-center gap-2 shadow-xl">
-                <Brain className="w-4 h-4 text-cyan-300" />
+            <div className="relative bg-white/20 backdrop-blur-sm rounded-xl px-3 py-1 md:px-4 md:py-2 border-2 border-white/30 flex items-center gap-2 shadow-xl">
+                <Brain className="w-3 h-3 md:w-4 md:h-4 text-cyan-300" />
                 <div>
-                    <div className="text-white/70 text-xs">Question</div>
-                    <div className="text-white text-xl">#{questionNumber}</div>
+                    <div className="text-white/70 text-[10px] md:text-xs">Question</div>
+                    <div className="text-white text-lg md:text-xl">#{questionNumber}</div>
                 </div>
             </div>
         </div>
@@ -554,11 +639,11 @@ const QuestionStats = React.memo(({ questionNumber, streak, bestStreak }) => (
             <FireStreak streak={streak} />
             <div className="relative">
                 <div className="absolute inset-0 bg-white/20 rounded-xl blur-lg" />
-                <div className="relative bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2 border-2 border-white/30 flex items-center gap-2 shadow-xl">
-                    <Trophy className="w-4 h-4 text-yellow-300" />
+                <div className="relative bg-white/20 backdrop-blur-sm rounded-xl px-3 py-1 md:px-4 md:py-2 border-2 border-white/30 flex items-center gap-2 shadow-xl">
+                    <Trophy className="w-3 h-3 md:w-4 md:h-4 text-yellow-300" />
                     <div>
-                        <div className="text-white/70 text-xs">Best</div>
-                        <div className="text-white text-xl">{bestStreak}</div>
+                        <div className="text-white/70 text-[10px] md:text-xs">Best</div>
+                        <div className="text-white text-lg md:text-xl">{bestStreak}</div>
                     </div>
                 </div>
             </div>
@@ -567,18 +652,22 @@ const QuestionStats = React.memo(({ questionNumber, streak, bestStreak }) => (
 ));
 
 const FireStreak = React.memo(({ streak }) => {
+    const isMobile = useMobile();
     // Generate static particle data so we don't call Math.random() on every keystroke
-    const particles = useMemo(() => [...Array(12)].map((_, i) => ({
-        delay: i * 0.2,
-        x: (Math.random() - 0.5) * 80,
-        isOrange: i % 2 === 0,
-        isLarge: i % 3 === 0
-    })), []);
+    const particles = useMemo(() => {
+        const count = isMobile ? 4 : 12;
+        return [...Array(count)].map((_, i) => ({
+            delay: i * 0.2,
+            x: (Math.random() - 0.5) * 80,
+            isOrange: i % 2 === 0,
+            isLarge: i % 3 === 0
+        }));
+    }, [isMobile]);
 
     return (
         <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl blur-lg opacity-60" />
-            {streak > 0 && (
+            <div className={`absolute inset-0 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl ${isMobile ? 'opacity-30' : 'blur-lg opacity-60'}`} />
+            {streak > 0 && !isMobile && (
                 <>
                     {particles.map((p, i) => (
                         <motion.div
@@ -592,19 +681,19 @@ const FireStreak = React.memo(({ streak }) => {
                 </>
             )}
             <motion.div
-                className="relative bg-gradient-to-br from-orange-500 to-red-600 backdrop-blur-sm rounded-xl px-4 py-2 border-2 border-orange-300/50 flex items-center gap-2"
-                animate={streak > 0 ? { boxShadow: ['0 0 40px rgba(251, 146, 60, 0.8), 0 0 80px rgba(239, 68, 68, 0.6)', '0 0 60px rgba(251, 146, 60, 1), 0 0 120px rgba(239, 68, 68, 0.9)', '0 0 40px rgba(251, 146, 60, 0.8), 0 0 80px rgba(239, 68, 68, 0.6)',], } : { boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)' }}
+                className="relative bg-gradient-to-br from-orange-500 to-red-600 backdrop-blur-sm rounded-xl px-3 py-1 md:px-4 md:py-2 border-2 border-orange-300/50 flex items-center gap-2"
+                animate={streak > 0 && !isMobile ? { boxShadow: ['0 0 40px rgba(251, 146, 60, 0.8), 0 0 80px rgba(239, 68, 68, 0.6)', '0 0 60px rgba(251, 146, 60, 1), 0 0 120px rgba(239, 68, 68, 0.9)', '0 0 40px rgba(251, 146, 60, 0.8), 0 0 80px rgba(239, 68, 68, 0.6)',], } : {}}
                 transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
             >
                 <motion.div
                     animate={streak > 0 ? { rotate: [-5, 5, -5, 5, -5, 0], scale: [1, 1.2, 1, 1.15, 1] } : {}}
                     transition={{ duration: 0.8, repeat: Infinity, repeatDelay: 1.5 }}
                 >
-                    <Flame className="w-4 h-4 text-white drop-shadow-lg" />
+                    <Flame className="w-3 h-3 md:w-4 md:h-4 text-white drop-shadow-lg" />
                 </motion.div>
                 <div>
-                    <div className="text-orange-100 text-xs">Streak</div>
-                    <motion.div className="text-white text-xl font-bold" key={streak} initial={{ scale: 1 }} animate={streak > 0 ? { scale: [1, 1.3, 1] } : {}}>
+                    <div className="text-orange-100 text-[10px] md:text-xs">Streak</div>
+                    <motion.div className="text-white text-lg md:text-xl font-bold" key={streak} initial={{ scale: 1 }} animate={streak > 0 ? { scale: [1, 1.3, 1] } : {}}>
                         {streak}
                     </motion.div>
                 </div>

@@ -1,9 +1,9 @@
 // src/pages/CategorySelect.jsx
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import Background3D from '../components/Background3D.jsx';
+const Background3D = React.lazy(() => import('../components/Background3D.jsx'));
 import StandardHeader from '../components/StandardHeader';
 import { useMobile } from '../hooks/useMobile.jsx';
 import { useLoading } from '../context/LoadingContext';
@@ -118,12 +118,14 @@ export default function CategorySelect({ username, onOpenSidebar }) {
 
             {/* 3D Background Layer */}
             {!isMobile && (
-                <Background3D
-                    onLoaded={handleBackgroundLoaded}
-                    interactive={!isMobile && (!hoveredCategory || (hoveredCategory !== 'ui'))}
-                    activeCardId={!isMobile ? hoveredCategory : null}
-                    cardBounds={isMobile ? null : cardBounds}
-                />
+                <Suspense fallback={null}>
+                    <Background3D
+                        onLoaded={handleBackgroundLoaded}
+                        interactive={!isMobile && (!hoveredCategory || (hoveredCategory !== 'ui'))}
+                        activeCardId={!isMobile ? hoveredCategory : null}
+                        cardBounds={isMobile ? null : cardBounds}
+                    />
+                </Suspense>
             )}
 
             {/* Main Content Layer */}
@@ -132,8 +134,8 @@ export default function CategorySelect({ username, onOpenSidebar }) {
 
                     {/* Header */}
                     <motion.div
-                        initial={{ y: -20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
+                        initial={isMobile ? {} : { y: -20, opacity: 0 }}
+                        animate={isMobile ? {} : { y: 0, opacity: 1 }}
                         onMouseEnter={() => !isMobile && setHoveredCategory('ui')}
                         onMouseLeave={() => !isMobile && setHoveredCategory(null)}
                         className="pointer-events-auto"
@@ -143,13 +145,13 @@ export default function CategorySelect({ username, onOpenSidebar }) {
 
                     {/* Centered Content - Adjusted to push content up */}
                     <div className={`flex-1 flex flex-col items-center ${isMobile ? 'justify-start pt-8' : 'justify-center'} min-h-0`}>
-                        <div className={`w-full max-w-5xl flex flex-col ${isMobile ? 'justify-start' : 'justify-center'}`}>
+                        <div className={`w-[85%] md:w-full max-w-5xl mx-auto flex flex-col ${isMobile ? 'justify-start' : 'justify-center'}`}>
 
                             {/* Welcome Section */}
                             <motion.div
-                                initial={{ scale: 0.9, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                transition={{ delay: 0.2 }}
+                                initial={isMobile ? {} : { scale: 0.9, opacity: 0 }}
+                                animate={isMobile ? {} : { scale: 1, opacity: 1 }}
+                                transition={isMobile ? { duration: 0 } : { delay: 0.2 }}
                                 className="text-center mb-5"
                             >
                                 <div className="inline-flex items-center gap-2 bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm px-5 py-2 rounded-full border border-white/30 mb-3 shadow-lg">
@@ -157,28 +159,28 @@ export default function CategorySelect({ username, onOpenSidebar }) {
                                     <span className="text-white text-sm font-bold">Solo Mode</span>
                                 </div>
 
-                                <h2 className="text-white text-4xl md:text-5xl mb-2 leading-tight font-black drop-shadow-lg">
+                                <h2 className="text-white text-3xl md:text-5xl mb-2 leading-tight font-black drop-shadow-lg">
                                     Choose Your <span className="text-yellow-300">Category</span>
                                 </h2>
-                                <p className="text-white/80 text-lg font-medium">Build your streak by answering questions continuously!</p>
+                                <p className="text-white/80 text-sm md:text-lg font-medium">Build your streak by answering questions continuously!</p>
                             </motion.div>
 
                             {/* Info Card - Slightly larger */}
                             <motion.div
-                                initial={{ y: -20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.3 }}
+                                initial={isMobile ? {} : { y: -20, opacity: 0 }}
+                                animate={isMobile ? {} : { y: 0, opacity: 1 }}
+                                transition={isMobile ? { duration: 0 } : { delay: 0.3 }}
                                 onMouseEnter={() => !isMobile && setHoveredCategory('ui')}
                                 onMouseLeave={() => !isMobile && setHoveredCategory(null)}
-                                className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 backdrop-blur-md rounded-2xl p-4 border border-yellow-400/30 mb-6 shadow-lg pointer-events-auto"
+                                className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 backdrop-blur-md rounded-2xl p-2.5 md:p-4 border border-yellow-400/30 mb-3 md:mb-6 shadow-lg pointer-events-auto"
                             >
-                                <div className="flex items-start gap-3">
-                                    <div className="bg-yellow-400/30 rounded-lg p-2 mt-0.5">
-                                        <Info className="w-5 h-5 text-yellow-200" />
+                                <div className="flex items-start gap-2 md:gap-3">
+                                    <div className="bg-yellow-400/30 rounded-lg p-1.5 md:p-2 mt-0.5">
+                                        <Info className="w-3 h-3 md:w-5 md:h-5 text-yellow-200" />
                                     </div>
                                     <div className="flex-1">
-                                        <h3 className="text-white font-bold text-base mb-1">How Solo Mode Works</h3>
-                                        <p className="text-white/90 text-sm leading-relaxed">
+                                        <h3 className="text-white font-bold text-xs md:text-base mb-0 md:mb-1">How Solo Mode Works</h3>
+                                        <p className="text-white/90 text-[10px] md:text-sm leading-tight md:leading-relaxed">
                                             Answer questions continuously to build your streak! There's no question limit—keep going until you stop or can't answer anymore. Challenge yourself to beat your highest streak!
                                         </p>
                                     </div>
@@ -190,9 +192,9 @@ export default function CategorySelect({ username, onOpenSidebar }) {
                                 {categories.map((category, index) => (
                                     <motion.div
                                         key={category.id}
-                                        initial={{ y: 50, opacity: 0 }}
-                                        animate={{ y: 0, opacity: 1 }}
-                                        transition={{ delay: 0.4 + index * 0.1 }}
+                                        initial={isMobile ? {} : { y: 50, opacity: 0 }}
+                                        animate={isMobile ? {} : { y: 0, opacity: 1 }}
+                                        transition={isMobile ? { duration: 0 } : { delay: 0.4 + index * 0.1 }}
                                         onMouseEnter={() => !isMobile && setHoveredCategory(category.id)}
                                         onMouseLeave={() => !isMobile && setHoveredCategory(null)}
                                         className="relative group"
@@ -202,38 +204,38 @@ export default function CategorySelect({ username, onOpenSidebar }) {
                                             onClick={() => handleSelect(category.id)}
                                             whileHover={{ scale: 1.05, y: -5 }}
                                             whileTap={{ scale: 0.98 }}
-                                            className={`w-full h-full relative overflow-hidden rounded-3xl p-5 bg-gradient-to-br ${category.color} border-2 border-white/30 shadow-2xl text-left backdrop-blur-sm transition-all ${hoveredCategory === category.id ? category.glowColor : ''
+                                            className={`w-full h-full relative overflow-hidden rounded-2xl md:rounded-3xl p-2.5 md:p-5 bg-gradient-to-br ${category.color} border-2 border-white/30 shadow-2xl text-left backdrop-blur-sm transition-all ${hoveredCategory === category.id ? category.glowColor : ''
                                                 }`}
                                         >
                                             {/* SHINE EFFECT */}
                                             <div className="absolute inset-0 -translate-x-full group-hover:animate-[shine_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent z-20" />
 
-                                            <div className="relative z-10 flex flex-col h-full min-h-[240px] justify-between">
+                                            <div className="relative z-10 flex flex-col h-full min-h-[90px] md:min-h-[240px] justify-between">
                                                 <div>
-                                                    <div className="flex justify-between items-start mb-4">
-                                                        <div className={`bg-gradient-to-br ${category.iconBg} w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner border border-white/20 backdrop-blur-sm`}>
-                                                            <category.icon className="w-8 h-8 text-white" />
+                                                    <div className="flex justify-between items-start mb-1.5 md:mb-4">
+                                                        <div className={`bg-gradient-to-br ${category.iconBg} w-8 h-8 md:w-14 md:h-14 rounded-lg md:rounded-2xl flex items-center justify-center shadow-inner border border-white/20 backdrop-blur-sm`}>
+                                                            <category.icon className="w-4 h-4 md:w-8 md:h-8 text-white" />
                                                         </div>
-                                                        <div className={`w-3 h-3 rounded-full transition-all ${hoveredCategory === category.id
+                                                        <div className={`w-2.5 h-2.5 md:w-3 md:h-3 rounded-full transition-all ${hoveredCategory === category.id
                                                             ? 'bg-yellow-300 shadow-[0_0_10px_#fde047]'
                                                             : 'bg-white/20'
                                                             }`} />
                                                     </div>
 
-                                                    <h3 className="text-white text-xl font-black mb-2 leading-tight">
+                                                    <h3 className="text-white text-base md:text-xl font-black mb-0.5 md:mb-2 leading-tight">
                                                         {category.name}
                                                     </h3>
-                                                    <p className="text-white/80 text-sm font-medium leading-relaxed">
+                                                    <p className="text-white/80 text-[10px] md:text-sm font-medium leading-tight md:leading-relaxed line-clamp-2 md:line-clamp-none">
                                                         {category.description}
                                                     </p>
                                                 </div>
 
                                                 {/* Category Symbols */}
                                                 {category.symbols.length > 0 && (
-                                                    <div className="flex gap-2 mt-4">
+                                                    <div className="flex gap-1.5 md:gap-2 mt-2 md:mt-4">
                                                         {category.symbols.map((Symbol, idx) => (
-                                                            <div key={idx} className="bg-white/10 rounded-lg p-2 backdrop-blur-sm">
-                                                                <Symbol className="w-4 h-4 text-white/60" />
+                                                            <div key={idx} className="bg-white/10 rounded-md md:rounded-lg p-1 md:p-2 backdrop-blur-sm">
+                                                                <Symbol className="w-2.5 h-2.5 md:w-4 md:h-4 text-white/60" />
                                                             </div>
                                                         ))}
                                                     </div>
@@ -246,26 +248,26 @@ export default function CategorySelect({ username, onOpenSidebar }) {
 
                             {/* Streak Info */}
                             <motion.div
-                                initial={{ y: 30, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.8 }}
+                                initial={isMobile ? {} : { y: 30, opacity: 0 }}
+                                animate={isMobile ? {} : { y: 0, opacity: 1 }}
+                                transition={isMobile ? { duration: 0 } : { delay: 0.8 }}
                                 onMouseEnter={() => !isMobile && setHoveredCategory('ui')}
                                 onMouseLeave={() => !isMobile && setHoveredCategory(null)}
-                                className="mt-6 bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/10 pointer-events-auto"
+                                className="mt-3 md:mt-6 bg-white/10 backdrop-blur-md rounded-2xl p-3 md:p-5 border border-white/10 pointer-events-auto"
                             >
                                 <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="bg-gradient-to-br from-orange-500 to-red-500 w-12 h-12 rounded-xl flex items-center justify-center shadow-lg">
-                                            <Flame className="w-7 h-7 text-white" />
+                                    <div className="flex items-center gap-2 md:gap-3">
+                                        <div className="bg-gradient-to-br from-orange-500 to-red-500 w-8 h-8 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center shadow-lg">
+                                            <Flame className="w-4 h-4 md:w-7 md:h-7 text-white" />
                                         </div>
                                         <div>
-                                            <h3 className="text-white font-black text-lg">Current Streak</h3>
-                                            <p className="text-white/60 text-sm font-medium">Consecutive correct answers</p>
+                                            <h3 className="text-white font-black text-sm md:text-lg">Current Streak</h3>
+                                            <p className="text-white/60 text-[10px] md:text-sm font-medium">Consecutive correct answers</p>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <div className="text-white text-4xl font-black">0</div>
-                                        <div className="text-white/60 text-xs font-bold uppercase tracking-wider">Questions</div>
+                                        <div className="text-white text-2xl md:text-4xl font-black">0</div>
+                                        <div className="text-white/60 text-[8px] md:text-xs font-bold uppercase tracking-wider">Questions</div>
                                     </div>
                                 </div>
                             </motion.div>
@@ -275,9 +277,9 @@ export default function CategorySelect({ username, onOpenSidebar }) {
 
                     {/* Footer - Pushed to bottom */}
                     <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.9 }}
+                        initial={isMobile ? {} : { opacity: 0 }}
+                        animate={isMobile ? {} : { opacity: 1 }}
+                        transition={isMobile ? { duration: 0 } : { delay: 0.9 }}
                         onMouseEnter={() => !isMobile && setHoveredCategory('ui')}
                         onMouseLeave={() => !isMobile && setHoveredCategory(null)}
                         className="text-center text-white/40 text-xs font-semibold py-4 mt-auto"

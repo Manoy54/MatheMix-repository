@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react"; // Imported ChevronDown
 import { useLoading } from "../context/LoadingContext";
 import { useMobile } from "../hooks/useMobile";
+import StandardHeader from '../components/StandardHeader';
 
 
 import createAccImg from "../assets/createaccimg.jpg";
@@ -163,16 +164,18 @@ function App() {
     // --- NEW GAMIFIED STYLES (Applied to Original Structure) ---
 
     // Input: Glassmorphism style (Semi-transparent white, white text, white border)
-    const inputClass = "w-full p-3 bg-white/10 border-2 border-white/20 rounded-md focus:bg-white/20 focus:border-white/50 outline-none transition-all text-white font-bold placeholder-white/50 text-[15px] backdrop-blur-sm";
+    // Input: Glassmorphism style (Semi-transparent white, white text, white border)
+    const inputClass = "w-full p-2 md:p-3 bg-white/10 border-2 border-white/20 rounded-md focus:bg-white/20 focus:border-white/50 outline-none transition-all text-white font-bold placeholder-white/50 text-xs md:text-[15px] backdrop-blur-sm";
 
     // Dropdowns: Glassmorphism style + appearance-none to hide default arrow + pr-8 for icon space
-    const selectClass = "appearance-none p-3 bg-white/10 border-2 border-white/20 rounded-md focus:border-white/50 outline-none text-white font-bold text-[15px] cursor-pointer transition-all backdrop-blur-sm [&>option]:text-gray-900 pr-8";
+    // Dropdowns: Glassmorphism style + appearance-none to hide default arrow + pr-8 for icon space
+    const selectClass = "appearance-none p-2 md:p-3 bg-white/10 border-2 border-white/20 rounded-md focus:border-white/50 outline-none text-white font-bold text-xs md:text-[15px] cursor-pointer transition-all backdrop-blur-sm [&>option]:bg-white [&>option]:text-gray-700 [&>option]:font-light pr-8";
 
     // Labels: White/Blue text to pop against gradient
     const labelClass = "block text-xs font-black text-blue-100 uppercase mb-2 tracking-wide";
 
     // Tabs: White text with white underline for active
-    const tabBaseClass = "text-2xl font-bold pb-1 mr-8 transition-colors cursor-pointer relative";
+    const tabBaseClass = "text-xl md:text-2xl font-bold pb-1 mr-8 transition-colors cursor-pointer relative";
     const activeTabClass = "text-white border-b-[4px] border-white drop-shadow-md";
     const inactiveTabClass = "text-blue-200/60 hover:text-white border-b-[4px] border-transparent";
 
@@ -180,18 +183,20 @@ function App() {
         <div className="flex h-screen w-full font-nunito bg-white overflow-hidden">
 
             {/* --- LEFT SIDE: IMAGE (Fixed) --- */}
-            <div className="hidden md:block w-1/2 h-full relative bg-[#ffe8b5]">
-                <img
-                    src={createAccImg}
-                    alt="Visual"
-                    className="absolute inset-0 w-full h-full object-cover"
-                    style={{ boxShadow: 'inset -25px 0 25px -10px rgba(0,0,0,0.1)' }}
-                />
-            </div>
+            {!isMobile && (
+                <div className="hidden md:block w-1/2 h-full relative bg-[#ffe8b5]">
+                    <img
+                        src={createAccImg}
+                        alt="Visual"
+                        className="absolute inset-0 w-full h-full object-cover"
+                        style={{ boxShadow: 'inset -25px 0 25px -10px rgba(0,0,0,0.1)' }}
+                    />
+                </div>
+            )}
 
             {/* --- RIGHT SIDE: FORM --- */}
             {/* WRAPPER: Changed bg-white to the blue gradient & added relative for floating symbols */}
-            <div className="w-full md:w-1/2 h-full bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7] flex flex-col pt-12 md:pt-24 px-4 md:px-16 overflow-y-auto shadow-xl relative">
+            <div className="w-full md:w-1/2 h-full bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7] flex flex-col pt-2 md:pt-24 px-4 md:px-16 overflow-y-auto shadow-xl relative">
 
                 {/* --- FLOATING SYMBOLS (Background Animation) --- */}
                 {!isMobile && (
@@ -223,7 +228,12 @@ function App() {
                 )}
 
                 {/* Form Wrapper (Z-index ensures it sits above symbols) */}
-                <div className="w-full max-w-[480px] mx-auto z-10">
+                <div className="w-[85%] md:w-full max-w-[480px] mx-auto z-10 flex flex-col md:h-auto justify-start mt-2">
+
+                    {/* Logo for Mobile */}
+                    <div className="md:hidden flex justify-center mb-2">
+                        <StandardHeader />
+                    </div>
 
                     {/* Tabs */}
                     <div className="flex mb-8">
@@ -253,7 +263,7 @@ function App() {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -5 }}
                                 transition={{ duration: 0.2 }}
-                                className="space-y-5"
+                                className="space-y-3"
                             >
 
                                 {/* --- SIGN UP FIELDS --- */}
@@ -263,7 +273,7 @@ function App() {
                                             <label className={labelClass}>Birthday</label>
                                             <div className="flex gap-3">
                                                 {/* Month Select */}
-                                                <div className="relative w-full">
+                                                <div className="relative flex-[1.2]">
                                                     <select className={`${selectClass} w-full`} value={bMonth} onChange={(e) => setBMonth(e.target.value)} required>
                                                         <option value="" disabled>Month</option>
                                                         {months.map(m => <option key={m} value={m}>{m}</option>)}
@@ -272,7 +282,7 @@ function App() {
                                                 </div>
 
                                                 {/* Day Select */}
-                                                <div className="relative w-1/3">
+                                                <div className="relative flex-1">
                                                     <select className={`${selectClass} w-full`} value={bDay} onChange={(e) => setBDay(e.target.value)} required>
                                                         <option value="" disabled>Day</option>
                                                         {days.map(d => <option key={d} value={d}>{d}</option>)}
@@ -281,7 +291,7 @@ function App() {
                                                 </div>
 
                                                 {/* Year Select */}
-                                                <div className="relative w-1/3">
+                                                <div className="relative flex-1">
                                                     <select className={`${selectClass} w-full`} value={bYear} onChange={(e) => setBYear(e.target.value)} required>
                                                         <option value="" disabled>Year</option>
                                                         {years.map(y => <option key={y} value={y}>{y}</option>)}
@@ -321,7 +331,7 @@ function App() {
                                     </div>
                                 )}
 
-                                <div>
+                                <div className="mb-8">
                                     <div className="flex justify-between items-center mb-1">
                                         <label className={`${labelClass} mb-0`}>Password</label>
                                         {!isRegister && <button type="button" className="text-xs font-bold text-blue-200 hover:text-white hover:underline transition-colors">Forgot password</button>}
@@ -336,17 +346,10 @@ function App() {
                                     />
                                 </div>
 
-                                {/* Policy Text (Signup Only) */}
-                                {isRegister && (
-                                    <div className="text-xs text-blue-100/70 font-medium leading-tight mt-1">
-                                        By clicking Sign up, you accept Mathemix's <span className="text-white cursor-pointer hover:underline">Terms</span> and <span className="text-white cursor-pointer hover:underline">Privacy Policy</span>
-                                    </div>
-                                )}
-
                                 {/* Submit Button */}
                                 <button
                                     type="submit"
-                                    className="w-full py-4 bg-white hover:bg-blue-50 text-[#023e8a] font-extrabold rounded-md text-lg transition-transform transform active:scale-95 shadow-lg mt-4"
+                                    className="w-10/12 mx-auto block py-2 bg-white hover:bg-blue-50 text-[#023e8a] font-black uppercase tracking-wide rounded-md text-sm md:text-base transition-transform transform active:scale-95 shadow-lg mt-2"
                                 >
                                     {isRegister ? "Sign up" : "Log in"}
                                 </button>
@@ -356,12 +359,16 @@ function App() {
                     </form>
 
                     {/* Bottom Toggle Link */}
-                    <div className="mt-8 pt-6 border-t border-white/20 text-center">
+                    <div className="mt-3 pt-3 border-t border-white/20 text-center">
                         <button
                             onClick={() => setIsRegister(!isRegister)}
-                            className="w-full py-3.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-md text-lg border-2 border-white/30 transition-colors backdrop-blur-sm"
+                            className="w-10/12 mx-auto block py-2 bg-white/10 hover:bg-white/20 text-[#dee2e6] font-black uppercase tracking-wide rounded-md text-[10px] md:text-sm border-2 border-white/30 transition-colors backdrop-blur-sm"
                         >
-                            {isRegister ? "Already have an account? Log in" : "New to Mathemix? Create an account"}
+                            {isRegister ? (
+                                <span>Already have an account? <span className="text-white">Log in</span></span>
+                            ) : (
+                                <span>New to Mathemix? <span className="text-white">Create an account</span></span>
+                            )}
                         </button>
                     </div>
 
