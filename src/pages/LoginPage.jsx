@@ -165,11 +165,10 @@ function App() {
 
     // Input: Glassmorphism style (Semi-transparent white, white text, white border)
     // Input: Glassmorphism style (Semi-transparent white, white text, white border)
-    const inputClass = "w-full p-2 md:p-3 bg-white/10 border-2 border-white/20 rounded-md focus:bg-white/20 focus:border-white/50 outline-none transition-all text-white font-bold placeholder-white/50 text-xs md:text-[15px] backdrop-blur-sm";
+    const inputClass = "w-full px-4 py-3 md:p-3 bg-white/10 border-2 border-white/20 rounded-md focus:bg-white/20 focus:border-white/50 outline-none transition-all text-white font-bold placeholder-white/50 text-sm md:text-[15px] backdrop-blur-sm leading-relaxed";
 
     // Dropdowns: Glassmorphism style + appearance-none to hide default arrow + pr-8 for icon space
-    // Dropdowns: Glassmorphism style + appearance-none to hide default arrow + pr-8 for icon space
-    const selectClass = "appearance-none p-2 md:p-3 bg-white/10 border-2 border-white/20 rounded-md focus:border-white/50 outline-none text-white font-bold text-xs md:text-[15px] cursor-pointer transition-all backdrop-blur-sm [&>option]:bg-white [&>option]:text-gray-700 [&>option]:font-light pr-8";
+    const selectClass = "appearance-none px-4 py-3 md:p-3 bg-white/10 border-2 border-white/20 rounded-md focus:border-white/50 outline-none text-white font-bold text-sm md:text-[15px] cursor-pointer transition-all backdrop-blur-sm [&>option]:bg-white [&>option]:text-gray-700 [&>option]:font-light pr-8 leading-relaxed";
 
     // Labels: White/Blue text to pop against gradient
     const labelClass = "block text-xs font-black text-blue-100 uppercase mb-2 tracking-wide";
@@ -322,7 +321,7 @@ function App() {
                                         <label className={labelClass}>Username</label>
                                         <input
                                             type="text"
-                                            placeholder="andrew123"
+                                            placeholder="Username"
                                             value={username}
                                             onChange={(e) => setUsername(e.target.value)}
                                             className={inputClass}

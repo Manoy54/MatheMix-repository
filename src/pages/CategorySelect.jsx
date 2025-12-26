@@ -7,6 +7,8 @@ const Background3D = React.lazy(() => import('../components/Background3D.jsx'));
 import StandardHeader from '../components/StandardHeader';
 import { useMobile } from '../hooks/useMobile.jsx';
 import { useLoading } from '../context/LoadingContext';
+import { auth, db } from '../firebaseConfig';
+import { doc, getDoc } from 'firebase/firestore';
 import {
     Calculator, Sparkles, Ruler, PieChart, Flame, Info, Menu,
     // Math Symbols
@@ -24,6 +26,7 @@ export default function CategorySelect({ username, onOpenSidebar }) {
     const [hoveredCategory, setHoveredCategory] = useState(null);
     const [isBackgroundReady, setBackgroundReady] = useState(false);
     const [cardBounds, setCardBounds] = useState({});
+    const [bestStreak, setBestStreak] = useState(0);
 
     // Simulate data fetching readiness
     useEffect(() => {
@@ -32,6 +35,23 @@ export default function CategorySelect({ username, onOpenSidebar }) {
         }, 600);
         return () => clearTimeout(timer);
     }, [setModeDataReady]);
+
+    // Fetch User Stats
+    useEffect(() => {
+        const fetchStats = async () => {
+            if (!auth.currentUser) return;
+            try {
+                const docRef = doc(db, 'userStats', auth.currentUser.uid);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    setBestStreak(docSnap.data().longestStreak || 0);
+                }
+            } catch (error) {
+                console.error("Error fetching stats:", error);
+            }
+        };
+        fetchStats();
+    }, []);
 
     const handleBackgroundLoaded = React.useCallback(() => {
         setBg3DReady(true);
@@ -129,7 +149,7 @@ export default function CategorySelect({ username, onOpenSidebar }) {
             )}
 
             {/* Main Content Layer */}
-            {isBackgroundReady && (
+            {(isBackgroundReady || isMobile) && (
                 <div className={`relative z-10 px-4 flex flex-col pointer-events-none ${isMobile ? 'min-h-screen pt-[env(safe-area-inset-top)] pb-8' : 'h-screen'}`}>
 
                     {/* Header */}
@@ -261,12 +281,12 @@ export default function CategorySelect({ username, onOpenSidebar }) {
                                             <Flame className="w-4 h-4 md:w-7 md:h-7 text-white" />
                                         </div>
                                         <div>
-                                            <h3 className="text-white font-black text-sm md:text-lg">Current Streak</h3>
+                                            <h3 className="text-white font-black text-sm md:text-lg">Best Streak</h3>
                                             <p className="text-white/60 text-[10px] md:text-sm font-medium">Consecutive correct answers</p>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <div className="text-white text-2xl md:text-4xl font-black">0</div>
+                                        <div className="text-white text-2xl md:text-4xl font-black">{bestStreak}</div>
                                         <div className="text-white/60 text-[8px] md:text-xs font-bold uppercase tracking-wider">Questions</div>
                                     </div>
                                 </div>

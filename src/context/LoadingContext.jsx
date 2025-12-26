@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
+import { useMobile } from '../hooks/useMobile'; // Import useMobile
 
 const LoadingContext = createContext();
 
@@ -12,7 +13,21 @@ export const LoadingProvider = ({ children }) => {
     const [isBg3DReady, setBg3DReady] = useState(false);
     const [isLoading, setIsLoading] = useState(!hasFinishedAlready);
     const timerRef = useRef(null);
+    const isMobile = useMobile(); // Use the hook
 
+    // Fallback for mobile to prevent getting stuck
+    useEffect(() => {
+        if (isMobile && isLoading) {
+            const fallbackTimeout = setTimeout(() => {
+                if (isLoading) { // Re-check if still loading
+                    stopLoading();
+                }
+            }, 2000); // 2-second fallback
+
+            return () => clearTimeout(fallbackTimeout);
+        }
+    }, [isMobile, isLoading]);
+    
     const stopLoading = useCallback(() => {
         hasFinishedAlready = true;
         setIsLoading(false);

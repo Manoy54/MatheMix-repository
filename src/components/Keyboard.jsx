@@ -12,7 +12,7 @@ const Keyboard = React.memo(({ onChar, onDelete, onClear, onSpace, onSubmit, onS
 
     const containerClasses = isMobile
         ? "fixed bottom-0 left-0 right-0 z-[60] bg-[#023e8a]/95 backdrop-blur-2xl p-3 border-t-2 border-white/20 pb-[env(safe-area-inset-bottom,1.5rem)]"
-        : "relative bg-white/10 backdrop-blur-xl p-4 rounded-2xl border-2 border-white/20 shadow-2xl space-y-2.5";
+        : "relative bg-white/10 backdrop-blur-xl p-4 rounded-2xl border-2 border-white/20 space-y-2.5";
 
     const rowClasses = isMobile ? "flex gap-1 justify-center mb-1.5" : "flex gap-2.5 justify-center";
     const controlKeySize = isMobile ? "px-3 h-12 text-xs" : "px-5 h-14 text-sm";
@@ -49,7 +49,7 @@ const Keyboard = React.memo(({ onChar, onDelete, onClear, onSpace, onSubmit, onS
                             y: pressedKey === 'CLEAR' ? -2 : 0,
                         }}
                         onClick={onClear}
-                        className={`${controlKeySize} text-white rounded-xl shadow-lg transition-all border-2 font-semibold ${pressedKey === 'CLEAR'
+                        className={`${controlKeySize} text-white rounded-xl transition-all border-2 font-semibold ${pressedKey === 'CLEAR'
                             ? 'bg-white/40 border-white/50'
                             : 'bg-white/20 hover:bg-white/30 border-white/30'
                             }`}
@@ -67,7 +67,7 @@ const Keyboard = React.memo(({ onChar, onDelete, onClear, onSpace, onSubmit, onS
                             y: pressedKey === 'DELETE' ? -2 : 0,
                         }}
                         onClick={onDelete}
-                        className={`${controlKeySize} text-white rounded-xl shadow-lg transition-all border-2 font-semibold ${pressedKey === 'DELETE'
+                        className={`${controlKeySize} text-white rounded-xl transition-all border-2 font-semibold ${pressedKey === 'DELETE'
                             ? 'bg-white/40 border-white/50'
                             : 'bg-white/20 hover:bg-white/30 border-white/30'
                             }`}
@@ -82,7 +82,7 @@ const Keyboard = React.memo(({ onChar, onDelete, onClear, onSpace, onSubmit, onS
                         whileHover={{ scale: 1.03, y: -2 }}
                         whileTap={{ scale: 0.97 }}
                         onClick={onSkip}
-                        className={`flex-1 ${actionButtonSize} bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl shadow-xl shadow-orange-500/40 transition-all border-2 border-orange-300/50 font-semibold`}
+                        className={`flex-1 ${actionButtonSize} bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl transition-all border-2 border-orange-300/50 font-semibold`}
                     >
                         GIVE UP
                     </motion.button>
@@ -94,9 +94,9 @@ const Keyboard = React.memo(({ onChar, onDelete, onClear, onSpace, onSubmit, onS
                             y: pressedKey === 'ENTER' ? -2 : 0,
                         }}
                         onClick={onSubmit}
-                        className={`flex-1 ${actionButtonSize} text-white rounded-xl shadow-xl transition-all border-2 font-semibold flex items-center justify-center gap-2 ${pressedKey === 'ENTER'
-                            ? 'bg-gradient-to-r from-green-400 to-emerald-500 border-green-200 shadow-green-400/60'
-                            : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 border-green-300/50 shadow-green-500/40'
+                        className={`flex-1 ${actionButtonSize} text-white rounded-xl transition-all border-2 font-semibold flex items-center justify-center gap-2 ${pressedKey === 'ENTER'
+                            ? 'bg-gradient-to-r from-green-400 to-emerald-500 border-green-200'
+                            : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 border-green-300/50'
                             }`}
                     >
                         <span>SUBMIT</span>
@@ -121,8 +121,8 @@ const KeyButton = React.memo(({ char, onClick, isPressed, isMobile }) => {
                 y: isPressed ? -2 : 0,
             }}
             onClick={() => onClick(char)}
-            className={`${keySizeClass} bg-gradient-to-br rounded-lg shadow-lg transition-all border-2 text-white font-bold ${isPressed
-                ? 'from-[#48cae4] to-[#0077b6] border-cyan-300 shadow-cyan-400/50'
+            className={`${keySizeClass} bg-gradient-to-br rounded-lg transition-all border-2 text-white font-bold ${isPressed
+                ? 'from-[#48cae4] to-[#0077b6] border-cyan-300'
                 : 'from-[#0077b6] to-[#023e8a] hover:from-[#48cae4] hover:to-[#0077b6] border-white/30'
                 }`}
             transition={{ duration: 0.1 }}
