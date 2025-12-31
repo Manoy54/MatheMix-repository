@@ -134,7 +134,7 @@ export default function CategorySelect({ username, onOpenSidebar }) {
     }, [isMobile, handleBackgroundLoaded]);
 
     return (
-        <div className={`w-full relative ${isMobile ? 'min-h-screen' : 'h-screen overflow-hidden'} bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]`}>
+        <div className={`w-full relative font-nunito ${isMobile ? 'min-h-screen' : 'h-screen overflow-hidden'} bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]`}>
 
             {/* 3D Background Layer */}
             {!isMobile && (
@@ -174,7 +174,7 @@ export default function CategorySelect({ username, onOpenSidebar }) {
                                 transition={isMobile ? { duration: 0 } : { delay: 0.2 }}
                                 className="text-center mb-5"
                             >
-                                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm px-5 py-2 rounded-full border border-white/30 mb-3 shadow-lg">
+                                <div className="inline-flex items-center gap-2 bg-white/10 md:bg-gradient-to-r md:from-white/20 md:to-white/10 md:backdrop-blur-sm px-5 py-2 rounded-full border border-white/30 mb-3 md:shadow-lg">
                                     <Flame className="w-4 h-4 text-orange-300" />
                                     <span className="text-white text-sm font-bold">Solo Mode</span>
                                 </div>
@@ -192,7 +192,7 @@ export default function CategorySelect({ username, onOpenSidebar }) {
                                 transition={isMobile ? { duration: 0 } : { delay: 0.3 }}
                                 onMouseEnter={() => !isMobile && setHoveredCategory('ui')}
                                 onMouseLeave={() => !isMobile && setHoveredCategory(null)}
-                                className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 backdrop-blur-md rounded-2xl p-2.5 md:p-4 border border-yellow-400/30 mb-3 md:mb-6 shadow-lg pointer-events-auto"
+                                className="bg-white/10 md:bg-gradient-to-r md:from-yellow-500/20 md:to-orange-500/20 md:backdrop-blur-md rounded-2xl p-3 md:p-4 border border-white/10 md:border-yellow-400/30 mb-4 md:mb-6 md:shadow-lg pointer-events-auto"
                             >
                                 <div className="flex items-start gap-2 md:gap-3">
                                     <div className="bg-yellow-400/30 rounded-lg p-1.5 md:p-2 mt-0.5">
@@ -200,7 +200,7 @@ export default function CategorySelect({ username, onOpenSidebar }) {
                                     </div>
                                     <div className="flex-1">
                                         <h3 className="text-white font-bold text-xs md:text-base mb-0 md:mb-1">How Solo Mode Works</h3>
-                                        <p className="text-white/90 text-[10px] md:text-sm leading-tight md:leading-relaxed">
+                                        <p className="text-white/90 text-xs md:text-sm leading-tight md:leading-relaxed">
                                             Answer questions continuously to build your streak! There's no question limit—keep going until you stop or can't answer anymore. Challenge yourself to beat your highest streak!
                                         </p>
                                     </div>
@@ -222,13 +222,16 @@ export default function CategorySelect({ username, onOpenSidebar }) {
                                         <motion.button
                                             ref={(el) => (cardRefs.current[category.id] = el)}
                                             onClick={() => handleSelect(category.id)}
-                                            whileHover={{ scale: 1.05, y: -5 }}
-                                            whileTap={{ scale: 0.98 }}
-                                            className={`w-full h-full relative overflow-hidden rounded-2xl md:rounded-3xl p-2.5 md:p-5 bg-gradient-to-br ${category.color} border-2 border-white/30 shadow-2xl text-left backdrop-blur-sm transition-all ${hoveredCategory === category.id ? category.glowColor : ''
-                                                }`}
+                                            whileHover={isMobile ? {} : { scale: 1.05, y: -5 }}
+                                            whileTap={isMobile ? { scale: 0.98 } : { scale: 0.98 }}
+                                            className={`w-full h-full relative overflow-hidden rounded-2xl md:rounded-3xl p-4 md:p-5 
+                                                bg-gradient-to-br ${category.color} 
+                                                ${isMobile ? 'border border-white/10' : 'border-2 border-white/30 shadow-2xl backdrop-blur-sm'} 
+                                                text-left transition-all ${!isMobile && hoveredCategory === category.id ? category.glowColor : ''}
+                                                `}
                                         >
-                                            {/* SHINE EFFECT */}
-                                            <div className="absolute inset-0 -translate-x-full group-hover:animate-[shine_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent z-20" />
+                                            {/* SHINE EFFECT - Desktop Only */}
+                                            <div className="hidden md:block absolute inset-0 -translate-x-full group-hover:animate-[shine_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent z-20" />
 
                                             <div className="relative z-10 flex flex-col h-full min-h-[90px] md:min-h-[240px] justify-between">
                                                 <div>
@@ -245,7 +248,7 @@ export default function CategorySelect({ username, onOpenSidebar }) {
                                                     <h3 className="text-white text-base md:text-xl font-black mb-0.5 md:mb-2 leading-tight">
                                                         {category.name}
                                                     </h3>
-                                                    <p className="text-white/80 text-[10px] md:text-sm font-medium leading-tight md:leading-relaxed line-clamp-2 md:line-clamp-none">
+                                                    <p className="text-white/80 text-xs md:text-sm font-medium leading-tight md:leading-relaxed line-clamp-2 md:line-clamp-none">
                                                         {category.description}
                                                     </p>
                                                 </div>
@@ -273,7 +276,7 @@ export default function CategorySelect({ username, onOpenSidebar }) {
                                 transition={isMobile ? { duration: 0 } : { delay: 0.8 }}
                                 onMouseEnter={() => !isMobile && setHoveredCategory('ui')}
                                 onMouseLeave={() => !isMobile && setHoveredCategory(null)}
-                                className="mt-3 md:mt-6 bg-white/10 backdrop-blur-md rounded-2xl p-3 md:p-5 border border-white/10 pointer-events-auto"
+                                className={`mt-4 md:mt-6 rounded-2xl p-4 md:p-5 pointer-events-auto ${isMobile ? 'bg-white/10 border border-white/10' : 'bg-white/10 backdrop-blur-md border border-white/10'}`}
                             >
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2 md:gap-3">

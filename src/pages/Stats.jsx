@@ -6,8 +6,10 @@ import { Trophy, Target, Zap, Brain, TrendingUp, Clock, Award, Flame, Users, Gam
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer } from 'recharts';
 
 import StandardHeader from '../components/StandardHeader';
+import { useMobile } from '../hooks/useMobile';
 
 export default function Stats({ user, onOpenSidebar }) {
+    const isMobile = useMobile();
     // 1. Define the skeleton structure for safe defaults
     const defaultStats = {
         totalGames: 0, // Treated as Solo
@@ -179,13 +181,13 @@ export default function Stats({ user, onOpenSidebar }) {
     const ranks = ["Bronze", "Silver", "Gold", "Platinum", "Diamond", "Master", "Grandmaster"];
 
     return (
-        <div className="w-full min-h-full">
+        <div className={`w-full min-h-full ${isMobile ? 'bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]' : ''}`}>
             <StandardHeader onOpenSidebar={onOpenSidebar} className="px-6 md:px-8" />
 
             <div className="w-full max-w-6xl mx-auto px-6 py-2 md:p-8 space-y-4 md:space-y-8 pb-20">
                 {/* Header */}
                 <div className="text-center mb-4 md:mb-6">
-                    <div className="inline-flex items-center gap-1.5 md:gap-2 bg-gradient-to-r from-purple-500/20 to-blue-500/20 backdrop-blur-sm px-3 py-1 md:px-4 md:py-1.5 rounded-full border border-purple-400/30 mb-2">
+                    <div className="inline-flex items-center gap-1.5 md:gap-2 bg-purple-500/20 md:bg-gradient-to-r md:from-purple-500/20 md:to-blue-500/20 md:backdrop-blur-sm px-3 py-1 md:px-4 md:py-1.5 rounded-full border border-purple-400/30 mb-2">
                         <Trophy className="w-3 h-3 md:w-4 md:h-4 text-yellow-400" />
                         <span className="text-white text-xs md:text-sm" style={{ fontWeight: 700 }}>Your Statistics</span>
                     </div>
@@ -195,12 +197,12 @@ export default function Stats({ user, onOpenSidebar }) {
 
                     {/* --- TOGGLE FILTER --- */}
                     <div className="flex justify-center mt-3 md:mt-4">
-                        <div className="bg-white/10 backdrop-blur-md p-1 rounded-lg flex gap-1 border border-white/20">
+                        <div className="bg-white/10 md:backdrop-blur-md p-1 rounded-lg flex gap-1 border border-white/20">
                             <button
                                 onClick={() => setShowWeekly(true)}
                                 className={`px-3 py-1 md:px-4 md:py-1.5 rounded-md text-xs md:text-sm font-bold transition-all ${showWeekly
                                     ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg'
-                                    : 'text-white/60 hover:text-white hover:bg-white/5'
+                                    : 'text-white/60 active:text-white md:hover:text-white active:bg-white/5 md:hover:bg-white/5'
                                     }`}
                             >
                                 This Week
@@ -209,7 +211,7 @@ export default function Stats({ user, onOpenSidebar }) {
                                 onClick={() => setShowWeekly(false)}
                                 className={`px-3 py-1 md:px-4 md:py-1.5 rounded-md text-xs md:text-sm font-bold transition-all ${!showWeekly
                                     ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg'
-                                    : 'text-white/60 hover:text-white hover:bg-white/5'
+                                    : 'text-white/60 active:text-white md:hover:text-white active:bg-white/5 md:hover:bg-white/5'
                                     }`}
                             >
                                 All Time
@@ -225,7 +227,7 @@ export default function Stats({ user, onOpenSidebar }) {
                 {/* --- SECTION 1: SOLO MODE --- */}
                 <div className="space-y-3 md:space-y-4">
                     <div className="flex items-center gap-2 md:gap-3 border-b border-white/10 pb-1.5 md:pb-2">
-                        <div className="bg-gradient-to-br from-[#023e8a] to-[#0077b6] p-1.5 md:p-2 rounded-xl shadow-lg border border-white/20">
+                        <div className="bg-[#023e8a] md:bg-gradient-to-br md:from-[#023e8a] md:to-[#0077b6] p-1.5 md:p-2 rounded-xl md:shadow-lg border border-white/20">
                             <Brain className="w-4 h-4 md:w-6 md:h-6 text-white" />
                         </div>
                         <div>
@@ -237,7 +239,7 @@ export default function Stats({ user, onOpenSidebar }) {
                     {/* Core Engagement Stats - Solo */}
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                         {/* Total Games */}
-                        <div className="bg-gradient-to-br from-blue-600/80 to-blue-700/80 backdrop-blur-sm rounded-xl p-2 md:p-3 border-2 border-white/20 shadow-xl">
+                        <div className="bg-blue-600/80 md:bg-gradient-to-br md:from-blue-600/80 md:to-blue-700/80 md:backdrop-blur-sm rounded-xl p-2 md:p-3 border-2 border-white/20 md:shadow-xl">
                             <div className="flex items-center gap-1.5 md:gap-2 mb-0.5 md:mb-1">
                                 <div className="bg-white/20 rounded-lg p-1 md:p-1.5">
                                     <Trophy className="w-3 h-3 md:w-4 md:h-4 text-white" />
@@ -248,7 +250,7 @@ export default function Stats({ user, onOpenSidebar }) {
                         </div>
 
                         {/* Average Correct Answers (Accuracy) */}
-                        <div className="bg-gradient-to-br from-green-600/80 to-green-700/80 backdrop-blur-sm rounded-xl p-2 md:p-3 border-2 border-white/20 shadow-xl">
+                        <div className="bg-green-600/80 md:bg-gradient-to-br md:from-green-600/80 md:to-green-700/80 md:backdrop-blur-sm rounded-xl p-2 md:p-3 border-2 border-white/20 md:shadow-xl">
                             <div className="flex items-center gap-1.5 md:gap-2 mb-0.5 md:mb-1">
                                 <div className="bg-white/20 rounded-lg p-1 md:p-1.5">
                                     <Target className="w-3 h-3 md:w-4 md:h-4 text-white" />
@@ -259,7 +261,7 @@ export default function Stats({ user, onOpenSidebar }) {
                         </div>
 
                         {/* Play Time */}
-                        <div className="bg-gradient-to-br from-orange-600/80 to-orange-700/80 backdrop-blur-sm rounded-xl p-2 md:p-3 border-2 border-white/20 shadow-xl col-span-2 md:col-span-1">
+                        <div className="bg-orange-600/80 md:bg-gradient-to-br md:from-orange-600/80 md:to-orange-700/80 md:backdrop-blur-sm rounded-xl p-2 md:p-3 border-2 border-white/20 md:shadow-xl col-span-2 md:col-span-1">
                             <div className="flex items-center gap-1.5 md:gap-2 mb-0.5 md:mb-1">
                                 <div className="bg-white/20 rounded-lg p-1 md:p-1.5">
                                     <Clock className="w-3 h-3 md:w-4 md:h-4 text-white" />
@@ -273,7 +275,7 @@ export default function Stats({ user, onOpenSidebar }) {
                     {/* Skill & Accuracy + Speed & Reflexes */}
                     <div className="grid md:grid-cols-2 gap-2 md:gap-3">
                         {/* Skill & Accuracy */}
-                        <div className="bg-gradient-to-br from-cyan-600/60 to-blue-600/60 backdrop-blur-sm rounded-xl p-3 md:p-4 border-2 border-white/20 shadow-xl">
+                        <div className="bg-cyan-600/60 md:bg-gradient-to-br md:from-cyan-600/60 md:to-blue-600/60 md:backdrop-blur-sm rounded-xl p-3 md:p-4 border-2 border-white/20 md:shadow-xl">
                             <div className="flex items-center gap-2 mb-2 md:mb-3">
                                 <div className="bg-white/20 rounded-lg p-1.5 md:p-2">
                                     <Target className="w-4 h-4 md:w-5 md:h-5 text-white" />
@@ -313,7 +315,7 @@ export default function Stats({ user, onOpenSidebar }) {
                         </div>
 
                         {/* Speed & Reflexes */}
-                        <div className="bg-gradient-to-br from-yellow-600/60 to-orange-600/60 backdrop-blur-sm rounded-xl p-3 md:p-4 border-2 border-white/20 shadow-xl">
+                        <div className="bg-yellow-600/60 md:bg-gradient-to-br md:from-yellow-600/60 md:to-orange-600/60 md:backdrop-blur-sm rounded-xl p-3 md:p-4 border-2 border-white/20 md:shadow-xl">
                             <div className="flex items-center gap-2 mb-2 md:mb-3">
                                 <div className="bg-white/20 rounded-lg p-1.5 md:p-2">
                                     <Zap className="w-4 h-4 md:w-5 md:h-5 text-white" />
@@ -349,7 +351,7 @@ export default function Stats({ user, onOpenSidebar }) {
                     </div>
 
                     {/* Subject Mastery - Solo only usually */}
-                    <div className="bg-gradient-to-br from-indigo-600/60 to-purple-600/60 backdrop-blur-sm rounded-xl p-3 md:p-4 border-2 border-white/20 shadow-xl">
+                    <div className="bg-indigo-600/60 md:bg-gradient-to-br md:from-indigo-600/60 md:to-purple-600/60 md:backdrop-blur-sm rounded-xl p-3 md:p-4 border-2 border-white/20 md:shadow-xl">
                         <div className="flex items-center gap-2 mb-2 md:mb-3">
                             <div className="bg-white/20 rounded-lg p-1.5 md:p-2">
                                 <Brain className="w-4 h-4 md:w-5 md:h-5 text-white" />
@@ -421,7 +423,7 @@ export default function Stats({ user, onOpenSidebar }) {
                 {/* --- SECTION 2: MULTIPLAYER MODE --- */}
                 <div className="space-y-3 md:space-y-4 pt-2 md:pt-4">
                     <div className="flex items-center gap-2 md:gap-3 border-b border-white/10 pb-1.5 md:pb-2">
-                        <div className="bg-gradient-to-br from-green-600 to-emerald-600 p-1.5 md:p-2 rounded-xl shadow-lg border border-white/20">
+                        <div className="bg-green-600 md:bg-gradient-to-br md:from-green-600 md:to-emerald-600 p-1.5 md:p-2 rounded-xl md:shadow-lg border border-white/20">
                             <Users className="w-4 h-4 md:w-6 md:h-6 text-white" />
                         </div>
                         <div>
@@ -432,7 +434,7 @@ export default function Stats({ user, onOpenSidebar }) {
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                         {/* MP Games */}
-                        <div className="bg-gradient-to-br from-red-600/80 to-red-700/80 backdrop-blur-sm rounded-xl p-2 md:p-3 border-2 border-white/20 shadow-xl">
+                        <div className="bg-red-600/80 md:bg-gradient-to-br md:from-red-600/80 md:to-red-700/80 md:backdrop-blur-sm rounded-xl p-2 md:p-3 border-2 border-white/20 md:shadow-xl">
                             <div className="flex items-center gap-1.5 md:gap-2 mb-0.5 md:mb-1">
                                 <div className="bg-white/20 rounded-lg p-1 md:p-1.5">
                                     <Swords className="w-3 h-3 md:w-4 md:h-4 text-white" />
@@ -443,7 +445,7 @@ export default function Stats({ user, onOpenSidebar }) {
                         </div>
 
                         {/* MP Wins */}
-                        <div className="bg-gradient-to-br from-orange-600/80 to-orange-700/80 backdrop-blur-sm rounded-xl p-2 md:p-3 border-2 border-white/20 shadow-xl">
+                        <div className="bg-orange-600/80 md:bg-gradient-to-br md:from-orange-600/80 md:to-orange-700/80 md:backdrop-blur-sm rounded-xl p-2 md:p-3 border-2 border-white/20 md:shadow-xl">
                             <div className="flex items-center gap-1.5 md:gap-2 mb-0.5 md:mb-1">
                                 <div className="bg-white/20 rounded-lg p-1 md:p-1.5">
                                     <Trophy className="w-3 h-3 md:w-4 md:h-4 text-white" />
@@ -454,7 +456,7 @@ export default function Stats({ user, onOpenSidebar }) {
                         </div>
 
                         {/* MP Win Rate */}
-                        <div className="bg-gradient-to-br from-pink-600/80 to-pink-700/80 backdrop-blur-sm rounded-xl p-2 md:p-3 border-2 border-white/20 shadow-xl">
+                        <div className="bg-pink-600/80 md:bg-gradient-to-br md:from-pink-600/80 md:to-pink-700/80 md:backdrop-blur-sm rounded-xl p-2 md:p-3 border-2 border-white/20 md:shadow-xl">
                             <div className="flex items-center gap-1.5 md:gap-2 mb-0.5 md:mb-1">
                                 <div className="bg-white/20 rounded-lg p-1 md:p-1.5">
                                     <TrendingUp className="w-3 h-3 md:w-4 md:h-4 text-white" />
@@ -465,7 +467,7 @@ export default function Stats({ user, onOpenSidebar }) {
                         </div>
 
                         {/* Rank with Tooltip */}
-                        <div className="group relative bg-gradient-to-br from-purple-800/80 to-slate-800/80 backdrop-blur-sm rounded-xl p-2 md:p-3 border-2 border-purple-400/30 shadow-xl">
+                        <div className="group relative bg-slate-800/80 md:bg-gradient-to-br md:from-purple-800/80 md:to-slate-800/80 md:backdrop-blur-sm rounded-xl p-2 md:p-3 border-2 border-purple-400/30 md:shadow-xl">
                             <div className="flex items-center justify-between mb-0.5 md:mb-1">
                                 <div className="flex items-center gap-1.5 md:gap-2">
                                     <div className="bg-white/20 rounded-lg p-1 md:p-1.5">
@@ -478,7 +480,7 @@ export default function Stats({ user, onOpenSidebar }) {
                             <div className="text-white text-base md:text-xl truncate" style={{ fontWeight: 900 }}>{currentStats.multiplayer.rankName}</div>
 
                             {/* Rank Tooltip / Mini Panel */}
-                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-[#0f172a] border border-white/20 rounded-xl p-3 shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 hidden md:block">
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-[#0f172a] border border-white/20 rounded-xl p-3 md:shadow-2xl opacity-0 md:group-hover:opacity-100 transition-opacity pointer-events-none z-50 hidden md:block">
                                 <h4 className="text-white text-xs font-bold mb-2 border-b border-white/10 pb-1">Ranking System</h4>
                                 <div className="space-y-1">
                                     {ranks.map((rank) => (
@@ -494,7 +496,7 @@ export default function Stats({ user, onOpenSidebar }) {
                 </div>
 
                 {/* Recent History */}
-                <div className="bg-gradient-to-br from-slate-700/60 to-slate-800/60 backdrop-blur-sm rounded-xl p-3 md:p-4 border-2 border-white/20 shadow-xl mt-4 md:mt-6">
+                <div className="bg-slate-700/60 md:bg-gradient-to-br md:from-slate-700/60 md:to-slate-800/60 md:backdrop-blur-sm rounded-xl p-3 md:p-4 border-2 border-white/20 md:shadow-xl mt-4 md:mt-6">
                     <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
                         <div className="bg-white/20 rounded-lg p-1.5 md:p-2">
                             <Clock className="w-4 h-4 md:w-5 md:h-5 text-white" />
@@ -507,11 +509,11 @@ export default function Stats({ user, onOpenSidebar }) {
                             currentStats.recentGames.map((game, index) => (
                                 <div
                                     key={game.id || index}
-                                    className="bg-white/5 hover:bg-white/10 rounded-lg p-2 md:p-3 border border-white/10 transition-all flex items-center justify-between"
+                                    className="bg-white/5 active:bg-white/10 md:hover:bg-white/10 rounded-lg p-2 md:p-3 border border-white/10 transition-all flex items-center justify-between"
                                 >
                                     <div className="flex items-center gap-2 md:gap-3">
                                         {/* Result Badge */}
-                                        {!game.mode.startsWith('Solo') && (
+                                        {game.mode && !game.mode.startsWith('Solo') && (
                                             <div className={`px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg text-[10px] md:text-xs ${game.result === 'Victory'
                                                 ? 'bg-green-500/30 text-green-300 border border-green-400/30'
                                                 : 'bg-red-500/30 text-red-300 border border-red-400/30'

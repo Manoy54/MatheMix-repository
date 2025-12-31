@@ -64,9 +64,9 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
 
     if (loadingQuestions) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7] flex flex-col items-center justify-center p-4">
+            <div className="min-h-screen bg-[#023e8a] md:bg-gradient-to-br md:from-[#023e8a] md:via-[#0077b6] md:to-[#0096c7] flex flex-col items-center justify-center p-4">
                 <div className="relative">
-                    <div className="absolute inset-0 bg-cyan-400 blur-2xl opacity-20 animate-pulse" />
+                    <div className="absolute inset-0 bg-cyan-400 md:blur-2xl opacity-20 animate-pulse hidden md:block" />
                     <Loader2 className="w-16 h-16 text-white animate-spin relative z-10" />
                 </div>
                 <motion.p
@@ -82,11 +82,11 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
 
     if (!currentQ) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7] flex flex-col items-center justify-center p-4">
+            <div className="min-h-screen bg-[#023e8a] md:bg-gradient-to-br md:from-[#023e8a] md:via-[#0077b6] md:to-[#0096c7] flex flex-col items-center justify-center p-4">
                 <AlertCircle className="w-16 h-16 text-white/40 mb-4" />
                 <h1 className="text-white text-2xl font-black mb-2">Oops! No questions found</h1>
                 <p className="text-white/60 mb-6">We couldn't find any questions for this category.</p>
-                <button onClick={() => navigate('/category-select')} className="px-8 py-3 bg-white/10 hover:bg-white/20 text-white rounded-2xl font-bold transition-all border border-white/20">
+                <button onClick={() => navigate('/category-select')} className="px-8 py-3 bg-white/10 active:bg-white/20 md:hover:bg-white/20 text-white rounded-2xl font-bold transition-all border border-white/20">
                     Go Back
                 </button>
             </div>

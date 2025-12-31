@@ -1,8 +1,11 @@
 import { Users, LogOut } from 'lucide-react';
+import { useMobile } from '../../hooks/useMobile';
 
 export default function PlayerWaiting({ roomCode, roomData, user, leaveLobby }) {
+    const isMobile = useMobile();
     return (
-        <div className="bg-gradient-to-br from-white/25 via-white/20 to-white/15 backdrop-blur-2xl rounded-2xl border-2 border-white/40 shadow-2xl p-4 md:p-8 animate-scale-in">
+        <div className={`flex flex-col justify-center overflow-hidden h-full md:h-auto p-4 md:p-8 rounded-2xl 
+            ${isMobile ? 'bg-white/5 border border-white/10' : 'bg-gradient-to-br from-white/25 via-white/20 to-white/15 backdrop-blur-2xl border-2 border-white/40 shadow-2xl animate-scale-in'}`}>
             <div className="text-center mb-4 md:mb-6">
                 <h2 className="text-white text-xl md:text-3xl mb-1" style={{ fontWeight: 900 }}>
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 via-white to-purple-200">
@@ -35,7 +38,7 @@ export default function PlayerWaiting({ roomCode, roomData, user, leaveLobby }) 
             </div>
 
             {/* Waiting Message */}
-            <div className="relative animate-pulse mb-4 md:mb-6">
+            <div className={`relative mb-4 md:mb-6 ${isMobile ? '' : 'animate-pulse'}`}>
                 <div className="absolute inset-0 bg-yellow-400/20 rounded-xl blur-lg" />
                 <div className="relative bg-yellow-300/30 backdrop-blur-sm p-3 md:p-6 rounded-xl border-2 border-yellow-200/50 text-center">
                     <p className="text-yellow-100 text-sm md:text-2xl italic" style={{ fontWeight: 600 }}>

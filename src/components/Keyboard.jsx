@@ -3,6 +3,30 @@ import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 import { useMobile } from '../hooks/useMobile';
 
+// Key Button Component
+const KeyButton = React.memo(({ char, onClick, isPressed, isMobile }) => {
+    const keySizeClass = isMobile ? "flex-1 h-12 text-base" : "w-14 h-14 text-xl";
+
+    return (
+        <motion.button
+            whileHover={!isMobile ? { scale: 1.1, y: -2 } : {}}
+            whileTap={{ scale: 0.95 }}
+            animate={{
+                scale: isPressed ? 0.95 : 1,
+                y: isPressed ? -2 : 0,
+            }}
+            onClick={() => onClick(char)}
+            className={`${keySizeClass} bg-gradient-to-br rounded-lg transition-all border-2 text-white font-bold ${isPressed
+                ? 'from-[#48cae4] to-[#0077b6] border-cyan-300'
+                : 'from-[#0077b6] to-[#023e8a] hover:from-[#48cae4] hover:to-[#0077b6] border-white/30'
+                }`}
+            transition={{ duration: 0.1 }}
+        >
+            {char}
+        </motion.button>
+    );
+});
+
 const Keyboard = React.memo(({ onChar, onDelete, onClear, onSpace, onSubmit, onSkip, pressedKey }) => {
     const isMobile = useMobile();
 
@@ -105,30 +129,6 @@ const Keyboard = React.memo(({ onChar, onDelete, onClear, onSpace, onSubmit, onS
                 </div>
             </div>
         </div>
-    );
-});
-
-// Key Button Component
-const KeyButton = React.memo(({ char, onClick, isPressed, isMobile }) => {
-    const keySizeClass = isMobile ? "flex-1 h-12 text-base" : "w-14 h-14 text-xl";
-
-    return (
-        <motion.button
-            whileHover={!isMobile ? { scale: 1.1, y: -2 } : {}}
-            whileTap={{ scale: 0.95 }}
-            animate={{
-                scale: isPressed ? 0.95 : 1,
-                y: isPressed ? -2 : 0,
-            }}
-            onClick={() => onClick(char)}
-            className={`${keySizeClass} bg-gradient-to-br rounded-lg transition-all border-2 text-white font-bold ${isPressed
-                ? 'from-[#48cae4] to-[#0077b6] border-cyan-300'
-                : 'from-[#0077b6] to-[#023e8a] hover:from-[#48cae4] hover:to-[#0077b6] border-white/30'
-                }`}
-            transition={{ duration: 0.1 }}
-        >
-            {char}
-        </motion.button>
     );
 });
 

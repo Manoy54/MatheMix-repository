@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 // FIX 1: Change import from 'motion/react' to 'framer-motion'
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Copy, Check, Play, LogOut, ChevronDown } from 'lucide-react';
+import { useMobile } from '../../hooks/useMobile';
 
 export default function HostLobby({
     roomCode,
@@ -47,8 +48,11 @@ export default function HostLobby({
         }
     };
 
+    const isMobile = useMobile();
+
     return (
-        <div className="bg-gradient-to-br from-white/25 via-white/20 to-white/15 backdrop-blur-2xl rounded-2xl border-2 border-white/40 shadow-2xl p-4 md:p-6 animate-scale-in max-w-4xl mx-auto">
+        <div className={`flex flex-col justify-center overflow-hidden h-full md:h-auto p-4 md:p-6 max-w-4xl mx-auto rounded-2xl
+            ${isMobile ? 'bg-white/5 border border-white/10' : 'bg-gradient-to-br from-white/25 via-white/20 to-white/15 backdrop-blur-2xl border-2 border-white/40 shadow-2xl animate-scale-in'}`}>
             {/* Hide native number spinners */}
             <style>{`
                 input::-webkit-outer-spin-button,
@@ -71,7 +75,7 @@ export default function HostLobby({
             </div>
 
             {/* Room Code Display */}
-            <div className="mb-4 md:mb-5 relative animate-scale-in">
+            <div className={`mb-4 md:mb-5 relative ${isMobile ? '' : 'animate-scale-in'}`}>
                 <div className="relative bg-gradient-to-r from-yellow-300 to-orange-300 p-3 md:p-4 rounded-xl border-2 border-yellow-200/50 flex items-center justify-between shadow-lg">
                     <div>
                         <p className="text-[#023e8a] text-[10px] md:text-xs mb-0.5 md:mb-1" style={{ fontWeight: 700 }}>ROOM CODE</p>
@@ -131,9 +135,10 @@ export default function HostLobby({
                                 <>
                                     <div className="fixed inset-0 z-10" onClick={() => setIsDropdownOpen(false)} />
                                     <motion.div
-                                        initial={{ opacity: 0, y: -10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -10 }}
+                                        initial={isMobile ? {} : { opacity: 0, y: -10 }}
+                                        animate={isMobile ? {} : { opacity: 1, y: 0 }}
+                                        exit={isMobile ? {} : { opacity: 0, y: -10 }}
+                                        transition={isMobile ? { duration: 0 } : {}}
                                         className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl overflow-hidden z-20 py-1 max-h-48 overflow-y-auto border-2 border-purple-100"
                                     >
                                         {categories.map((cat) => (

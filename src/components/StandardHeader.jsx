@@ -8,7 +8,7 @@ export default function StandardHeader({ onOpenSidebar, subtitle, className = ""
         <motion.div
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className={`flex items-center ${isLarge ? 'justify-center flex-col gap-6' : 'justify-between pt-4 pb-2'} shrink-0 ${className}`}
+            className={`flex items-center ${isLarge ? 'justify-center flex-col gap-6' : 'justify-between pt-2 pb-1 md:pt-4 md:pb-2'} shrink-0 ${className}`}
         >
             <div className={`flex items-center ${isLarge ? 'flex-col gap-6' : 'gap-3'}`}>
                 {/* Hamburger Menu Button */}

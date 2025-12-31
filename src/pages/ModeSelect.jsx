@@ -136,7 +136,7 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
                                     onMouseLeave={() => setHoveredMode(null)}
                                     className="text-center mb-6 w-[85%] md:w-full mx-auto"
                                 >
-                                    <div className="inline-flex items-center gap-2 bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm px-5 py-2 rounded-full border border-white/30 mb-3 shadow-lg">
+                                    <div className="inline-flex items-center gap-2 bg-white/10 md:bg-gradient-to-r md:from-white/20 md:to-white/10 md:backdrop-blur-sm px-5 py-2 rounded-full border border-white/30 mb-3 md:shadow-lg">
                                         <User className="w-3 h-3 md:w-4 md:h-4 text-white" />
                                         <span className="text-white text-sm md:text-base font-bold">Welcome back, {username || "Player"}!</span>
                                     </div>
@@ -162,13 +162,13 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
                                         <motion.button
                                             ref={soloCardRef}
                                             onClick={() => navigate('/category-select')}
-                                            whileHover={{ scale: 1.02 }}
+                                            whileHover={isMobile ? {} : { scale: 1.02 }}
                                             whileTap={{ scale: 0.98 }}
                                             // Reduced padding from p-10 to p-6
-                                            className="w-full h-full relative overflow-hidden rounded-3xl p-5 md:p-6 bg-gradient-to-br from-[#023e8a]/80 to-[#0077b6]/80 border-2 border-white/30 shadow-2xl text-left backdrop-blur-sm"
+                                            className="w-full h-full relative overflow-hidden rounded-3xl p-5 md:p-6 bg-[#023e8a]/80 md:bg-gradient-to-br md:from-[#023e8a]/80 md:to-[#0077b6]/80 border-2 border-white/30 md:shadow-2xl text-left md:backdrop-blur-sm"
                                         >
                                             {/* SHINE EFFECT */}
-                                            <div className="absolute inset-0 -translate-x-full group-hover:animate-[shine_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent z-20" />
+                                            <div className="absolute inset-0 -translate-x-full md:group-hover:animate-[shine_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent z-20" />
 
                                             <div className="relative z-10 flex flex-col h-full justify-between">
                                                 <div className="flex justify-between items-start mb-4">
@@ -200,13 +200,13 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
                                         <motion.button
                                             ref={multiCardRef}
                                             onClick={() => navigate('/lobby')}
-                                            whileHover={{ scale: 1.02 }}
+                                            whileHover={isMobile ? {} : { scale: 1.02 }}
                                             whileTap={{ scale: 0.98 }}
                                             // Reduced padding from p-10 to p-6
-                                            className="w-full h-full relative overflow-hidden rounded-3xl p-5 md:p-6 bg-gradient-to-br from-green-600/80 to-emerald-600/80 border-2 border-white/30 shadow-2xl text-left backdrop-blur-sm"
+                                            className="w-full h-full relative overflow-hidden rounded-3xl p-5 md:p-6 bg-green-600/80 md:bg-gradient-to-br md:from-green-600/80 md:to-emerald-600/80 border-2 border-white/30 md:shadow-2xl text-left md:backdrop-blur-sm"
                                         >
                                             {/* SHINE EFFECT */}
-                                            <div className="absolute inset-0 -translate-x-full group-hover:animate-[shine_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent z-20" />
+                                            <div className="absolute inset-0 -translate-x-full md:group-hover:animate-[shine_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent z-20" />
 
                                             <div className="relative z-10 flex flex-col h-full justify-between">
                                                 <div className="flex justify-between items-start mb-4">
@@ -236,15 +236,15 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
                                         transition={isMobile ? { duration: 0 } : { delay: 0.6 }}
                                         onMouseEnter={() => setHoveredMode('ui')}
                                         onMouseLeave={() => setHoveredMode(null)}
-                                        className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/10"
+                                        className="bg-white/10 md:backdrop-blur-md rounded-2xl p-5 border border-white/10"
                                     >
                                         <h3 className="text-white/90 text-sm font-bold mb-3 flex items-center gap-2 uppercase tracking-wide">
                                             <Trophy className="w-4 h-4 text-yellow-300" /> Your Stats
                                         </h3>
                                         <div className="grid grid-cols-3 gap-2">
                                             {stats.map((stat, index) => (
-                                                <div key={index} className="text-center p-2 rounded-lg bg-black/20 border border-white/5 hover:bg-white/10 transition-colors">
-                                                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center mx-auto mb-1 shadow-lg`}>
+                                                <div key={index} className="text-center p-2 rounded-lg bg-black/20 border border-white/5 active:bg-white/10 md:hover:bg-white/10 transition-colors">
+                                                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center mx-auto mb-1 md:shadow-lg`}>
                                                         <stat.icon className="w-4 h-4 text-white" />
                                                     </div>
                                                     <div className="text-white text-xl font-black">{stat.value}</div>
@@ -261,7 +261,7 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
                                         transition={isMobile ? { duration: 0 } : { delay: 0.7 }}
                                         onMouseEnter={() => setHoveredMode('ui')}
                                         onMouseLeave={() => setHoveredMode(null)}
-                                        className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/10"
+                                        className="bg-white/10 md:backdrop-blur-md rounded-2xl p-5 border border-white/10"
                                     >
                                         <h3 className="text-white/90 text-sm font-bold mb-3 flex items-center gap-2 uppercase tracking-wide">
                                             <Award className="w-4 h-4 text-yellow-300" /> Recent Achievements
@@ -269,7 +269,7 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
                                         <div className="space-y-2">
                                             {achievements.map((achievement, index) => (
                                                 <div key={index} className={`flex items-center gap-3 p-2 rounded-lg border transition-colors ${achievement.earned
-                                                    ? 'bg-white/20 border-white/30 hover:bg-white/30'
+                                                    ? 'bg-white/20 border-white/30 active:bg-white/30 md:hover:bg-white/30'
                                                     : 'bg-white/5 border-white/10 opacity-60'
                                                     }`}>
                                                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center shadow-md ${achievement.earned

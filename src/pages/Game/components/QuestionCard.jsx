@@ -30,13 +30,13 @@ export const QuestionCard = React.memo(({ questionNumber, category, definition, 
             transition={{ delay: 0.1 }}
             className="relative"
         >
-            <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/30 to-blue-400/30 rounded-2xl blur-xl" />
-            <div className="relative bg-white/15 backdrop-blur-xl p-5 rounded-2xl border-2 border-white/30 shadow-2xl transition-all flex flex-col">
+            <div className="absolute inset-0 md:bg-gradient-to-r md:from-cyan-400/30 md:to-blue-400/30 rounded-2xl md:blur-xl" />
+            <div className="relative bg-white/15 md:backdrop-blur-xl p-5 rounded-2xl border-2 border-white/30 md:shadow-2xl transition-all flex flex-col">
                 <div className="flex items-center justify-between w-full mb-2">
-                    <div className="px-3 py-1 text-xs bg-white/20 backdrop-blur-sm text-white rounded-full border border-white/30 shadow-sm">
+                    <div className="px-3 py-1 text-xs bg-white/20 md:backdrop-blur-sm text-white rounded-full border border-white/30 shadow-sm md:shadow-none">
                         {category}
                     </div>
-                    <div className="px-4 py-1 text-sm bg-gradient-to-r from-yellow-300 to-orange-300 text-[#023e8a] rounded-full shadow-lg font-bold">
+                    <div className="px-4 py-1 text-sm bg-gradient-to-r from-yellow-300 to-orange-300 text-[#023e8a] rounded-full md:shadow-lg font-bold">
                         Question #{questionNumber}
                     </div>
                 </div>

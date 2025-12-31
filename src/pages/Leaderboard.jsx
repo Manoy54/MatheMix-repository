@@ -111,7 +111,7 @@ export default function Leaderboard({ onOpenSidebar }) {
     };
 
     return (
-        <div className="min-h-screen font-nunito pb-24">
+        <div className={`min-h-screen font-nunito pb-24 ${isMobile ? 'bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]' : ''}`}>
             <StandardHeader onOpenSidebar={onOpenSidebar} className="px-4" />
 
             <div className="p-4 md:p-8">
@@ -138,7 +138,7 @@ export default function Leaderboard({ onOpenSidebar }) {
                     transition={isMobile ? { duration: 0 } : { delay: 0.1 }}
                     className="max-w-5xl mx-auto mb-8 flex justify-center"
                 >
-                    <div className="bg-white/5 backdrop-blur-md p-1.5 rounded-xl border border-white/10 flex gap-1 shadow-2xl">
+                    <div className={`p-1.5 rounded-xl flex gap-1 ${isMobile ? 'bg-white/10 border border-white/10' : 'bg-white/5 backdrop-blur-md border border-white/10 shadow-2xl'}`}>
                         {[
                             { id: 'totalWins', label: 'Most Wins', icon: Trophy },
                             { id: 'accuracy', label: 'Highest Accuracy', icon: Target },
@@ -197,7 +197,7 @@ export default function Leaderboard({ onOpenSidebar }) {
                                 {leaders.length >= 3 && (
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 items-end">
                                         {/* 2nd Place */}
-                                        <div className="order-2 md:order-1 bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 p-6 rounded-2xl relative shadow-xl transform hover:-translate-y-2 transition-transform duration-300">
+                                        <div className={`order-2 md:order-1 p-4 md:p-6 rounded-2xl relative transition-transform duration-300 ${isMobile ? 'bg-white/10 border border-white/10' : 'bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 shadow-xl hover:-translate-y-2'}`}>
                                             <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gray-300 text-gray-900 font-bold rounded-full w-8 h-8 flex items-center justify-center border-4 border-[#0f172a]">2</div>
                                             <div className="text-center">
                                                 <div className="w-16 h-16 bg-gray-500/20 rounded-full mx-auto mb-3 flex items-center justify-center">
@@ -211,9 +211,9 @@ export default function Leaderboard({ onOpenSidebar }) {
                                         </div>
 
                                         {/* 1st Place */}
-                                        <div className="order-1 md:order-2 bg-gradient-to-br from-yellow-900/40 to-amber-900/40 border border-yellow-500/30 p-8 rounded-2xl relative shadow-2xl shadow-yellow-500/10 z-10 transform scale-105 hover:-translate-y-2 transition-transform duration-300">
+                                        <div className={`order-1 md:order-2 p-6 md:p-8 rounded-2xl relative z-10 transition-transform duration-300 ${isMobile ? 'bg-white/20 border border-white/20' : 'bg-gradient-to-br from-yellow-900/40 to-amber-900/40 border border-yellow-500/30 shadow-2xl shadow-yellow-500/10 transform scale-105 hover:-translate-y-2'}`}>
                                             <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-yellow-400 text-yellow-900 font-black rounded-full w-10 h-10 flex items-center justify-center border-4 border-[#0f172a] shadow-lg shadow-yellow-500/50">1</div>
-                                            <div className="absolute inset-0 bg-gradient-to-t from-yellow-500/10 to-transparent rounded-2xl" />
+                                            {!isMobile && <div className="absolute inset-0 bg-gradient-to-t from-yellow-500/10 to-transparent rounded-2xl" />}
                                             <div className="text-center relative">
                                                 <div className="w-20 h-20 bg-yellow-500/20 rounded-full mx-auto mb-4 flex items-center justify-center ring-4 ring-yellow-500/20">
                                                     <Crown className="w-10 h-10 text-yellow-400" />
@@ -226,7 +226,7 @@ export default function Leaderboard({ onOpenSidebar }) {
                                         </div>
 
                                         {/* 3rd Place */}
-                                        <div className="order-3 bg-gradient-to-br from-amber-900/20 to-orange-900/20 border border-amber-800/50 p-6 rounded-2xl relative shadow-xl transform hover:-translate-y-2 transition-transform duration-300">
+                                        <div className={`order-3 p-4 md:p-6 rounded-2xl relative transition-transform duration-300 ${isMobile ? 'bg-white/10 border border-white/10' : 'bg-gradient-to-br from-amber-900/20 to-orange-900/20 border border-amber-800/50 shadow-xl hover:-translate-y-2'}`}>
                                             <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-amber-600 text-white font-bold rounded-full w-8 h-8 flex items-center justify-center border-4 border-[#0f172a]">3</div>
                                             <div className="text-center">
                                                 <div className="w-16 h-16 bg-amber-600/20 rounded-full mx-auto mb-3 flex items-center justify-center">
@@ -242,7 +242,7 @@ export default function Leaderboard({ onOpenSidebar }) {
                                 )}
 
                                 {/* List View */}
-                                <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 overflow-hidden shadow-2xl">
+                                <div className={`rounded-2xl border overflow-hidden ${isMobile ? 'bg-white/5 border-white/5' : 'bg-white/5 backdrop-blur-md border-white/10 shadow-2xl'}`}>
                                     <div className="grid grid-cols-12 gap-4 p-4 border-b border-white/10 text-xs font-bold text-white/40 uppercase tracking-wider">
                                         <div className="col-span-2 md:col-span-1 text-center">Rank</div>
                                         <div className="col-span-6 md:col-span-5">Player</div>

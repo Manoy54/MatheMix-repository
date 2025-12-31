@@ -14,13 +14,14 @@ import {
     addDoc,
 } from 'firebase/firestore';
 import { db } from '../../firebaseConfig.js';
-import MultiplayerGame from '../../components/MultiplayerGame';
+// Lazy load large game components to prevent initialization errors and improve performance
+const MultiplayerGame = React.lazy(() => import('../../components/MultiplayerGame'));
+const MultiplayerGameFinish = React.lazy(() => import('../../components/MultiplayerGameFinish'));
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, Calculator, Sparkles, LogOut } from 'lucide-react';
 import RoomSelection from './RoomSelection';
 import HostLobby from './HostLobby';
 import PlayerWaiting from './PlayerWaiting';
-import MultiplayerGameFinish from '../../components/MultiplayerGameFinish';
 import { QUESTIONS } from '../../data.js';
 import StandardHeader from '../../components/StandardHeader';
 import { useMobile } from '../../hooks/useMobile';
@@ -31,6 +32,39 @@ const generateRoomCode = () => {
 };
 
 const mathSymbols = ['+', '−', '×', '÷', '=', 'π', '∑', '√', '∞', 'α', 'β', 'θ'];
+
+class ErrorBoundary extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = { hasError: false, error: null };
+    }
+
+    static getDerivedStateFromError(error) {
+        return { hasError: true, error };
+    }
+
+    componentDidCatch(error, errorInfo) {
+        console.error("MultiplayerGame Crash:", error, errorInfo);
+    }
+
+    render() {
+        if (this.state.hasError) {
+            return (
+                <div className="flex flex-col items-center justify-center h-full text-white p-4 text-center">
+                    <h2 className="text-xl font-bold text-red-400 mb-2">Something went wrong.</h2>
+                    <p className="text-sm opacity-70 mb-4">{this.state.error?.toString()}</p>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="bg-white/10 px-4 py-2 rounded-lg border border-white/20 hover:bg-white/20 transition-all"
+                    >
+                        Reload Game
+                    </button>
+                </div>
+            );
+        }
+        return this.props.children;
+    }
+}
 
 export default function Lobby({ user, username, onOpenSidebar }) {
     const isMobile = useMobile();
@@ -126,12 +160,17 @@ export default function Lobby({ user, username, onOpenSidebar }) {
     }, [roomCode, user?.uid]);
 
     // This effect cleans up the room if the host navigates away
+    // MODIFY: disable auto-delete on unmount to prevent room destruction on crash/refresh
     useEffect(() => {
         return () => {
+            // Auto-deletion removed for safety. 
+            // Room should be deleted via explicit 'Leave' button or TTL.
+            /* 
             if (isHost && roomCode) {
                 const roomRef = doc(db, "rooms", roomCode);
                 deleteDoc(roomRef);
-            }
+            } 
+            */
         };
     }, [isHost, roomCode]);
 
@@ -354,25 +393,44 @@ export default function Lobby({ user, username, onOpenSidebar }) {
     if (gameStarted && roomData) {
         if (roomData.status === "finished") {
             return (
-                <MultiplayerGameFinish
-                    user={user}
-                    roomData={roomData}
-                    onLeave={leaveLobby}
-                    onHostPlayAgain={handlePlayAgain}
-                />
+                <ErrorBoundary>
+                    <React.Suspense fallback={
+                        <div className="flex items-center justify-center h-full">
+                            <div className="text-white text-xl font-bold animate-pulse">Loading Results...</div>
+                        </div>
+                    }>
+                        <MultiplayerGameFinish
+                            user={user}
+                            roomData={roomData}
+                            onLeave={leaveLobby}
+                            onHostPlayAgain={handlePlayAgain}
+                        />
+                    </React.Suspense>
+                </ErrorBoundary>
             );
         }
 
         if (roomData.currentQuestion) {
             return (
-                <MultiplayerGame
-                    user={user}
-                    nickname={nickname}
-                    roomCode={roomCode}
-                    roomData={roomData}
-                    onLeave={leaveLobby}
-                    onOpenSidebar={onOpenSidebar}
-                />
+                <ErrorBoundary>
+                    <React.Suspense fallback={
+                        <div className="h-screen w-full flex items-center justify-center bg-[#023e8a]">
+                            <div className="text-white text-xl font-bold animate-pulse flex flex-col items-center gap-2">
+                                <Sparkles className="w-8 h-8 text-yellow-300 animate-spin" />
+                                <span>Loading Game...</span>
+                            </div>
+                        </div>
+                    }>
+                        <MultiplayerGame
+                            user={user}
+                            nickname={nickname}
+                            roomCode={roomCode}
+                            roomData={roomData}
+                            onLeave={leaveLobby}
+                            onOpenSidebar={onOpenSidebar}
+                        />
+                    </React.Suspense>
+                </ErrorBoundary>
             );
         }
     }
@@ -425,12 +483,12 @@ export default function Lobby({ user, username, onOpenSidebar }) {
             )}
 
             {/* Content */}
-            <div className="relative z-10 px-4 h-full flex flex-col">
+            <div className="relative z-10 px-8 md:px-4 h-full flex flex-col">
                 <StandardHeader onOpenSidebar={onOpenSidebar} />
 
                 {/* Main Content - Non-scrollable */}
-                <div className="flex-1 flex items-center justify-center p-4">
-                    <div className="w-[85%] md:w-full max-w-5xl mx-auto">
+                <div className="flex-1 flex items-start justify-center p-2 md:p-4 overflow-hidden">
+                    <div className="w-full h-full md:h-auto md:w-full max-w-5xl mx-auto flex flex-col justify-start">
                         {/* SELECT VIEW */}
                         {view === "select" && (
                             <RoomSelection
@@ -467,18 +525,6 @@ export default function Lobby({ user, username, onOpenSidebar }) {
                         )}
                     </div>
                 </div>
-
-                {/* Footer */}
-                {view === "select" && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.8 }}
-                        className="text-center text-white/40 text-xs font-semibold py-3"
-                    >
-                        <p>Enter your nickname and choose to host or join a game! 🎮</p>
-                    </motion.div>
-                )}
             </div>
 
             {/* Final Global Overlays */}

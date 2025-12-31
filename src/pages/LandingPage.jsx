@@ -84,7 +84,7 @@ const LandingPage = ({ user }) => {
     };
 
     return (
-        <div className="min-h-screen text-white font-nunito overflow-x-hidden">
+        <div className={`min-h-screen text-white font-nunito overflow-x-hidden ${isMobile ? 'bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]' : ''}`}>
 
 
 
@@ -114,7 +114,7 @@ const LandingPage = ({ user }) => {
                     >
                         <button
                             onClick={handlePlayNow}
-                            className="group relative px-5 py-2.5 md:px-8 md:py-4 bg-white text-blue-600 hover:bg-blue-50 rounded-full font-extrabold text-base md:text-xl transition-all hover:scale-105 shadow-xl flex items-center gap-2"
+                            className="group relative px-5 py-2.5 md:px-8 md:py-4 bg-white text-blue-600 active:bg-blue-50 md:hover:bg-blue-50 rounded-full font-extrabold text-base md:text-xl transition-all active:scale-95 md:hover:scale-105 md:shadow-xl flex items-center gap-2 transform-gpu"
                         >
                             <Play className="fill-blue-600 w-4 h-4 md:w-6 md:h-6" />
                             Play Now
@@ -122,7 +122,7 @@ const LandingPage = ({ user }) => {
 
                         <button
                             onClick={() => document.getElementById('how-to-play')?.scrollIntoView({ behavior: 'smooth' })}
-                            className="px-5 py-2.5 md:px-8 md:py-4 bg-white/10 hover:bg-white/20 text-white border-2 border-white/30 rounded-full font-extrabold text-base md:text-xl transition-all hover:scale-105 backdrop-blur-md shadow-xl flex items-center gap-2"
+                            className="px-5 py-2.5 md:px-8 md:py-4 bg-white/10 active:bg-white/20 md:hover:bg-white/20 text-white border-2 border-white/30 rounded-full font-extrabold text-base md:text-xl transition-all active:scale-95 md:hover:scale-105 md:backdrop-blur-md md:shadow-xl flex items-center gap-2 transform-gpu"
                         >
                             <Gamepad2 className="w-4 h-4 md:w-6 md:h-6" />
                             How to Play
@@ -132,7 +132,7 @@ const LandingPage = ({ user }) => {
             </section>
 
             {/* 2. About the Game */}
-            <section className="py-10 md:py-20 bg-white/5 backdrop-blur-sm relative z-10">
+            <section className="py-10 md:py-20 md:bg-white/5 md:backdrop-blur-sm relative z-10">
                 <div className="w-[85%] md:container mx-auto">
                     <motion.div
                         variants={isMobile ? {} : fadeInUp}
@@ -159,9 +159,9 @@ const LandingPage = ({ user }) => {
                                 whileInView="whileInView"
                                 viewport={{ once: true }}
                                 transition={isMobile ? { duration: 0 } : { delay: index * 0.2 }}
-                                className="p-4 md:p-8 rounded-2xl bg-white/10 border border-white/20 hover:bg-white/20 transition-all group backdrop-blur-md shadow-lg"
+                                className="p-4 md:p-8 rounded-2xl bg-white/10 border border-white/20 active:bg-white/20 md:hover:bg-white/20 transition-all group md:backdrop-blur-md md:shadow-lg transform-gpu"
                             >
-                                <div className="w-10 h-10 md:w-16 md:h-16 bg-white/20 rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform">
+                                <div className="w-10 h-10 md:w-16 md:h-16 bg-white/20 rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-6 md:group-hover:scale-110 transition-transform transform-gpu">
                                     <feature.icon className="w-5 h-5 md:w-8 md:h-8 text-white" />
                                 </div>
                                 <h3 className="text-lg md:text-2xl font-bold mb-2 md:mb-3">{feature.title}</h3>
@@ -205,7 +205,7 @@ const LandingPage = ({ user }) => {
                                 variants={itemVariants}
                                 className="relative z-10 flex flex-col items-center text-center"
                             >
-                                <div className="w-16 h-16 md:w-24 md:h-24 bg-[#0077b6] border-4 border-white rounded-full flex items-center justify-center mb-4 md:mb-6 shadow-xl relative">
+                                <div className="w-16 h-16 md:w-24 md:h-24 bg-[#0077b6] border-4 border-white rounded-full flex items-center justify-center mb-4 md:mb-6 md:shadow-xl relative transform-gpu">
                                     <item.icon className="w-6 h-6 md:w-10 md:h-10 text-white" />
                                     <div className="absolute -top-1 -right-1 md:-top-2 md:-right-2 w-6 h-6 md:w-8 md:h-8 bg-white text-blue-600 rounded-full flex items-center justify-center font-black shadow-md text-xs md:text-base">
                                         {item.step}
@@ -220,7 +220,7 @@ const LandingPage = ({ user }) => {
             </section>
 
             {/* 4. Gameplay Preview */}
-            <section className="py-10 md:py-20 bg-black/20 backdrop-blur-sm z-10 relative">
+            <section className="py-10 md:py-20 md:bg-black/20 md:backdrop-blur-sm z-10 relative">
                 <div className="w-[85%] md:container mx-auto">
                     <motion.div
                         variants={isMobile ? {} : fadeInUp}
@@ -236,7 +236,7 @@ const LandingPage = ({ user }) => {
                         initial={isMobile ? {} : { opacity: 0, scale: 0.95 }}
                         whileInView={isMobile ? {} : { opacity: 1, scale: 1 }}
                         viewport={{ once: true }}
-                        className="relative aspect-video max-w-5xl mx-auto bg-black rounded-3xl overflow-hidden border border-white/10 shadow-2xl"
+                        className="relative aspect-video max-w-5xl mx-auto bg-black rounded-3xl overflow-hidden border border-white/10 md:shadow-2xl transform-gpu"
                     >
                         <video
                             className="w-full h-full object-cover"
@@ -269,8 +269,8 @@ const LandingPage = ({ user }) => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
                         <motion.div
-                            whileHover={{ scale: 1.02 }}
-                            className="p-4 md:p-8 rounded-3xl bg-white/10 border border-white/20 backdrop-blur-md"
+                            whileHover={isMobile ? {} : { scale: 1.02 }}
+                            className="p-4 md:p-8 rounded-3xl bg-white/10 border border-white/20 md:backdrop-blur-md"
                         >
                             <div className="flex items-center gap-3 md:gap-4 mb-3 md:mb-6">
                                 <Trophy className="w-6 h-6 md:w-10 md:h-10 text-yellow-300 drop-shadow-md" />
@@ -285,8 +285,8 @@ const LandingPage = ({ user }) => {
                         </motion.div>
 
                         <motion.div
-                            whileHover={{ scale: 1.02 }}
-                            className="p-4 md:p-8 rounded-3xl bg-white/10 border border-white/20 backdrop-blur-md"
+                            whileHover={isMobile ? {} : { scale: 1.02 }}
+                            className="p-4 md:p-8 rounded-3xl bg-white/10 border border-white/20 md:backdrop-blur-md"
                         >
                             <div className="flex items-center gap-3 md:gap-4 mb-3 md:mb-6">
                                 <Calculator className="w-6 h-6 md:w-10 md:h-10 text-purple-300 drop-shadow-md" />
@@ -321,10 +321,10 @@ const LandingPage = ({ user }) => {
                         ].map((dev, index) => (
                             <motion.div
                                 key={index}
-                                whileHover={{ y: -10 }}
+                                whileHover={isMobile ? {} : { y: -10 }}
                                 className="flex flex-col items-center p-3 md:p-6"
                             >
-                                <div className="w-20 h-20 md:w-32 md:h-32 rounded-full bg-white/20 border-4 border-white/30 flex items-center justify-center mb-4 md:mb-6 shadow-xl backdrop-blur-md overflow-hidden">
+                                <div className="w-20 h-20 md:w-32 md:h-32 rounded-full bg-white/20 border-4 border-white/30 flex items-center justify-center mb-4 md:mb-6 md:shadow-xl md:backdrop-blur-md overflow-hidden">
                                     <dev.icon className="w-10 h-10 md:w-16 md:h-16 text-white" />
                                 </div>
                                 <h3 className="text-lg md:text-xl font-bold text-center">{dev.name}</h3>
@@ -337,7 +337,7 @@ const LandingPage = ({ user }) => {
 
 
             {/* 8. FAQ */}
-            <section className="py-10 md:py-20 bg-black/20 backdrop-blur-sm relative z-10">
+            <section className="py-10 md:py-20 md:bg-black/20 md:backdrop-blur-sm relative z-10">
                 <div className="w-[85%] md:container mx-auto max-w-3xl">
                     <h2 className="text-2xl md:text-4xl font-black text-center mb-8 md:mb-12">FAQ</h2>
                     <div className="space-y-4">
@@ -347,7 +347,7 @@ const LandingPage = ({ user }) => {
                             { q: "What devices are supported?", a: "Currently available on Web (Desktop & Mobile). Native apps coming soon." },
                             { q: "Do I need an account?", a: "Yes, account is required to save progress and rank." }
                         ].map((faq, index) => (
-                            <details key={index} className="group bg-white/10 rounded-xl overflow-hidden cursor-pointer transition-all hover:bg-white/20 border border-white/10 backdrop-blur-md">
+                            <details key={index} className="group bg-white/10 rounded-xl overflow-hidden cursor-pointer transition-all active:bg-white/20 md:hover:bg-white/20 border border-white/10 md:backdrop-blur-md transform-gpu">
                                 <summary className="p-4 md:p-6 flex justify-between items-center font-bold text-sm md:text-lg list-none">
                                     {faq.q}
                                     <span className="transform group-open:rotate-180 transition-transform">▼</span>
@@ -364,31 +364,31 @@ const LandingPage = ({ user }) => {
             {/* 9. Contact Us */}
             <section className="py-10 md:py-20 relative z-10">
                 <div className="w-[85%] md:container mx-auto text-center">
-                    <div className="max-w-2xl mx-auto bg-white/10 backdrop-blur-xl p-6 md:p-12 rounded-3xl border border-white/20 shadow-2xl">
+                    <div className="max-w-2xl mx-auto bg-white/10 md:backdrop-blur-xl p-6 md:p-12 rounded-3xl border border-white/20 md:shadow-2xl">
                         <Mail className="w-8 h-8 md:w-12 md:h-12 text-white mx-auto mb-4 md:mb-6" />
                         <h2 className="text-2xl md:text-3xl font-black mb-2 md:mb-4">Get in Touch</h2>
                         <p className="text-blue-100 mb-6 md:mb-8 text-sm md:text-base">
                             Have questions or feedback? We'd love to hear from you.
                         </p>
                         <div className="flex flex-col md:flex-row gap-3 md:gap-4 justify-center">
-                            <a href="mailto:support@mathemix.com" className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-blue-900 rounded-lg hover:bg-blue-50 transition-colors font-bold text-sm md:text-base">
+                            <a href="mailto:support@mathemix.com" className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-blue-900 rounded-lg active:bg-blue-50 md:hover:bg-blue-50 transition-colors font-bold text-sm md:text-base transform-gpu">
                                 <Mail className="w-4 h-4" /> support@mathemix.com
                             </a>
-                            <a href="#" className="flex items-center justify-center gap-2 px-6 py-3 bg-[#5865F2] text-white rounded-lg hover:brightness-110 transition-colors font-bold shadow-lg text-sm md:text-base">
+                            <a href="#" className="flex items-center justify-center gap-2 px-6 py-3 bg-[#5865F2] text-white rounded-lg active:brightness-110 md:hover:brightness-110 transition-colors font-bold md:shadow-lg text-sm md:text-base transform-gpu">
                                 Discord Community
                             </a>
                         </div>
 
                         <div className="flex justify-center gap-6 mt-8">
-                            <a href="#" className="text-blue-200 hover:text-white transition-colors transform hover:scale-110"><Twitter className="w-6 h-6" /></a>
-                            <a href="#" className="text-blue-200 hover:text-white transition-colors transform hover:scale-110"><Instagram className="w-6 h-6" /></a>
+                            <a href="#" className="text-blue-200 active:text-white md:hover:text-white transition-colors transform active:scale-95 md:hover:scale-110"><Twitter className="w-6 h-6" /></a>
+                            <a href="#" className="text-blue-200 active:text-white md:hover:text-white transition-colors transform active:scale-95 md:hover:scale-110"><Instagram className="w-6 h-6" /></a>
                         </div>
                     </div>
                 </div>
             </section>
 
             {/* 10. Footer */}
-            <footer className="py-12 bg-black/40 text-blue-200 text-sm border-t border-white/10 relative z-10 backdrop-blur-md">
+            <footer className="py-12 md:bg-black/40 text-blue-200 text-sm border-t border-white/10 relative z-10 md:backdrop-blur-md">
                 <div className="container mx-auto px-4">
                     <div className="flex flex-col md:flex-row justify-between items-center gap-6">
                         <div className="flex items-center gap-4">
@@ -397,8 +397,8 @@ const LandingPage = ({ user }) => {
                                 transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                                 className="relative"
                             >
-                                <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl blur-lg opacity-40" />
-                                <div className="relative bg-gradient-to-br from-white/20 to-white/10 p-2 rounded-xl border border-white/30 backdrop-blur-md shadow-lg">
+                                <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl md:blur-lg md:opacity-40 hidden md:block" />
+                                <div className="relative bg-gradient-to-br from-white/20 to-white/10 p-2 rounded-xl border border-white/30 md:backdrop-blur-md md:shadow-lg">
                                     <Calculator className="w-6 h-6 text-white drop-shadow-md" />
                                 </div>
                             </motion.div>
@@ -415,9 +415,9 @@ const LandingPage = ({ user }) => {
                         </div>
 
                         <div className="flex gap-8">
-                            <button onClick={() => navigate('/privacy-policy')} className="hover:text-white transition-colors">Privacy Policy</button>
-                            <button onClick={() => navigate('/terms-of-service')} className="hover:text-white transition-colors">Terms of Service</button>
-                            <button onClick={() => navigate('/cookie-policy')} className="hover:text-white transition-colors">Cookie Policy</button>
+                            <button onClick={() => navigate('/privacy-policy')} className="active:text-white md:hover:text-white transition-colors">Privacy Policy</button>
+                            <button onClick={() => navigate('/terms-of-service')} className="active:text-white md:hover:text-white transition-colors">Terms of Service</button>
+                            <button onClick={() => navigate('/cookie-policy')} className="active:text-white md:hover:text-white transition-colors">Cookie Policy</button>
                         </div>
 
                         <div>
