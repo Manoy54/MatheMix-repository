@@ -111,7 +111,7 @@ export default function Leaderboard({ onOpenSidebar }) {
     };
 
     return (
-        <div className={`min-h-screen font-nunito pb-24 ${isMobile ? 'bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]' : ''}`}>
+        <div className={`min-h-screen font-nunito pb-24 ${isMobile ? 'bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7] pt-[env(safe-area-inset-top)]' : ''}`}>
             <StandardHeader onOpenSidebar={onOpenSidebar} className="px-4" />
 
             <div className="p-4 md:p-8">

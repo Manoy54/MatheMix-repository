@@ -181,8 +181,8 @@ export default function Stats({ user, onOpenSidebar }) {
     const ranks = ["Bronze", "Silver", "Gold", "Platinum", "Diamond", "Master", "Grandmaster"];
 
     return (
-        <div className={`w-full min-h-full ${isMobile ? 'bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]' : ''}`}>
-            <StandardHeader onOpenSidebar={onOpenSidebar} className="px-6 md:px-8" />
+        <div className={`w-full min-h-full ${isMobile ? 'bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7] pt-[env(safe-area-inset-top)]' : ''}`}>
+            <StandardHeader onOpenSidebar={onOpenSidebar} className="px-4" />
 
             <div className="w-full max-w-6xl mx-auto px-6 py-2 md:p-8 space-y-4 md:space-y-8 pb-20">
                 {/* Header */}

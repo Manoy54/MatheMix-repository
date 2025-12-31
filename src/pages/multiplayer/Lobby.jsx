@@ -483,7 +483,7 @@ export default function Lobby({ user, username, onOpenSidebar }) {
             )}
 
             {/* Content */}
-            <div className="relative z-10 px-8 md:px-4 h-full flex flex-col">
+            <div className={`relative z-10 px-4 h-full flex flex-col ${isMobile ? 'pt-[env(safe-area-inset-top)]' : ''}`}>
                 <StandardHeader onOpenSidebar={onOpenSidebar} />
 
                 {/* Main Content - Non-scrollable */}

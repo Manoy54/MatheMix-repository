@@ -587,6 +587,18 @@ const LeaveConfirmationModal = React.memo(({ isOpen, isHost, onClose, onConfirm 
 
 export default function MultiplayerGame({ roomCode, roomData, user, nickname, onLeave, onOpenSidebar }) {
     // --- Logic State ---
+    const {
+        currentQuestion,
+        players = [],
+        hostId,
+        answers = [],
+        roundStartTime,
+    } = roomData || {};
+
+    const answer = currentQuestion?.answer?.toUpperCase() || "";
+    const pureAnswer = answer.replace(/[^A-Z0-9]/g, '');
+    const numGuessableBoxes = pureAnswer.length;
+
     const [guess, setGuess] = useState("");
     const [status, setStatus] = useState("playing"); // playing, correct, wrong
     const [scoreMessage, setScoreMessage] = useState("");
@@ -646,32 +658,10 @@ export default function MultiplayerGame({ roomCode, roomData, user, nickname, on
         return () => observer.disconnect();
     }, []);
 
-    const {
-        currentQuestion,
-        players = [],
-        hostId,
-        answers = [],
-        roundStartTime,
-    } = roomData;
-
-    // Guard against missing question data to prevent white screen crashes
-    if (!currentQuestion || !currentQuestion.answer) {
-        return (
-            <div className="h-screen w-full flex items-center justify-center bg-[#023e8a] md:bg-gradient-to-br md:from-[#023e8a] md:via-[#0077b6] md:to-[#0096c7]">
-                <div className="text-white text-xl font-bold animate-pulse md:animate-pulse flex flex-col items-center gap-2">
-                    <Sparkles className="w-8 h-8 text-yellow-300 spin-slow" />
-                    <span>Loading round...</span>
-                </div>
-            </div>
-        );
-    }
-
-    const answer = currentQuestion.answer.toUpperCase();
-    const pureAnswer = answer.replace(/[^A-Z0-9]/g, '');
-    const numGuessableBoxes = pureAnswer.length;
-
     const isHost = hostId === user.uid;
     const hasAnswered = answers.some(a => a.uid === user.uid);
+
+    // --- Effects ---
 
     // --- Effects ---
     useEffect(() => {
@@ -893,6 +883,17 @@ export default function MultiplayerGame({ roomCode, roomData, user, nickname, on
     const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
     const myPlayer = sortedPlayers.find(p => p.uid === user.uid);
     const myCurrentRank = sortedPlayers.indexOf(myPlayer) + 1;
+
+    if (!currentQuestion || !currentQuestion.answer) {
+        return (
+            <div className="h-screen w-full flex items-center justify-center bg-[#023e8a] md:bg-gradient-to-br md:from-[#023e8a] md:via-[#0077b6] md:to-[#0096c7]">
+                <div className="text-white text-xl font-bold animate-pulse md:animate-pulse flex flex-col items-center gap-2">
+                    <Sparkles className="w-8 h-8 text-yellow-300 spin-slow" />
+                    <span>Loading round...</span>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="h-screen w-full flex flex-col overflow-hidden bg-[#023e8a] md:bg-gradient-to-br md:from-[#023e8a] md:via-[#0077b6] md:to-[#0096c7] px-4 pb-3">

@@ -254,7 +254,7 @@ function App() {
                     {error && <div className="mb-4 p-3 bg-red-500/20 border-l-4 border-red-400 text-white text-sm font-bold rounded-md backdrop-blur-sm">{error}</div>}
                     {message && <div className="mb-4 p-3 bg-green-500/20 border-l-4 border-green-400 text-white text-sm font-bold rounded-md backdrop-blur-sm">{message}</div>}
 
-                    <form onSubmit={handleAuth} className="w-full">
+                    <form onSubmit={handleAuth} className="w-full" autoComplete="off">
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={isRegister ? "signup" : "login"}
@@ -273,7 +273,7 @@ function App() {
                                             <div className="flex gap-3">
                                                 {/* Month Select */}
                                                 <div className="relative flex-[1.2]">
-                                                    <select className={`${selectClass} w-full`} value={bMonth} onChange={(e) => setBMonth(e.target.value)} required>
+                                                    <select className={`${selectClass} w-full`} value={bMonth} onChange={(e) => setBMonth(e.target.value)} required autoComplete="off">
                                                         <option value="" disabled>Month</option>
                                                         {months.map(m => <option key={m} value={m}>{m}</option>)}
                                                     </select>
@@ -282,7 +282,7 @@ function App() {
 
                                                 {/* Day Select */}
                                                 <div className="relative flex-1">
-                                                    <select className={`${selectClass} w-full`} value={bDay} onChange={(e) => setBDay(e.target.value)} required>
+                                                    <select className={`${selectClass} w-full`} value={bDay} onChange={(e) => setBDay(e.target.value)} required autoComplete="off">
                                                         <option value="" disabled>Day</option>
                                                         {days.map(d => <option key={d} value={d}>{d}</option>)}
                                                     </select>
@@ -291,7 +291,7 @@ function App() {
 
                                                 {/* Year Select */}
                                                 <div className="relative flex-1">
-                                                    <select className={`${selectClass} w-full`} value={bYear} onChange={(e) => setBYear(e.target.value)} required>
+                                                    <select className={`${selectClass} w-full`} value={bYear} onChange={(e) => setBYear(e.target.value)} required autoComplete="off">
                                                         <option value="" disabled>Year</option>
                                                         {years.map(y => <option key={y} value={y}>{y}</option>)}
                                                     </select>
@@ -313,6 +313,7 @@ function App() {
                                         onChange={(e) => setEmail(e.target.value)}
                                         className={inputClass}
                                         required
+                                        autoComplete="off"
                                     />
                                 </div>
 
@@ -326,6 +327,7 @@ function App() {
                                             onChange={(e) => setUsername(e.target.value)}
                                             className={inputClass}
                                             required
+                                            autoComplete="off"
                                         />
                                     </div>
                                 )}
@@ -342,6 +344,7 @@ function App() {
                                         onChange={(e) => setPassword(e.target.value)}
                                         className={inputClass}
                                         required
+                                        autoComplete="new-password"
                                     />
                                 </div>
 
