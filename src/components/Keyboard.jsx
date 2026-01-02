@@ -27,8 +27,9 @@ const KeyButton = React.memo(({ char, onClick, isPressed, isMobile }) => {
     );
 });
 
-const Keyboard = React.memo(({ onChar, onDelete, onClear, onSpace, onSubmit, onSkip, pressedKey }) => {
-    const isMobile = useMobile();
+const Keyboard = React.memo(({ onChar, onDelete, onClear, onSpace, onSubmit, onSkip, pressedKey, isMobile: propIsMobile }) => {
+    const mobileHook = useMobile();
+    const isMobile = propIsMobile !== undefined ? propIsMobile : mobileHook;
 
     const row1 = useMemo(() => ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '-'], []);
     const row2 = useMemo(() => ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'], []);

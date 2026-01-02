@@ -27,7 +27,7 @@ export const LoadingProvider = ({ children }) => {
             return () => clearTimeout(fallbackTimeout);
         }
     }, [isMobile, isLoading]);
-    
+
     const stopLoading = useCallback(() => {
         hasFinishedAlready = true;
         setIsLoading(false);
@@ -37,8 +37,20 @@ export const LoadingProvider = ({ children }) => {
         }
     }, []);
 
+    // Safety effect: If we are loading but no timer works (e.g. initial refresh), force finish after delay
+    useEffect(() => {
+        if (isLoading && !isModeDataReady && !timerRef.current) {
+            const safetyTimer = setTimeout(() => {
+                setModeDataReady(true);
+                setBg3DReady(true);
+            }, 2500); // 2.5s safety net for initial load
+            return () => clearTimeout(safetyTimer);
+        }
+    }, [isLoading, isModeDataReady]);
+
     const startLoading = useCallback((options = {}) => {
-        const { durationMs = 0 } = options;
+        // Default to 1500ms if no duration specified to prevent infinite hanging
+        const { durationMs = 1500 } = options;
 
         // Reset readiness flags
         setModeDataReady(false);
@@ -49,14 +61,13 @@ export const LoadingProvider = ({ children }) => {
             clearTimeout(timerRef.current);
         }
 
-        if (durationMs > 0) {
-            timerRef.current = setTimeout(() => {
-                setModeDataReady(true);
-                setBg3DReady(true);
-                // Note: LoadingScreen component will call markAsFinished/stopLoading 
-                // when its internal progress animation reaches 100%.
-            }, durationMs);
-        }
+        // Always set a timer since we have a default duration now
+        timerRef.current = setTimeout(() => {
+            setModeDataReady(true);
+            setBg3DReady(true);
+            // Note: LoadingScreen component will call markAsFinished/stopLoading 
+            // when its internal progress animation reaches 100%.
+        }, durationMs);
     }, []);
 
     // Maintain backward compatibility aliases

@@ -11,7 +11,7 @@ import { QuestionStats } from './components/QuestionStats';
 import { QuestionCard } from './components/QuestionCard';
 import { CharacterBoxes } from './components/CharacterBoxes';
 import { GameModals } from './components/GameModals';
-import { MobileControls } from './components/MobileControls';
+import GameControls from '../../components/GameControls';
 
 export default function Game({ onGameEnd, onOpenSidebar }) {
     const isMobile = useMobile();
@@ -165,7 +165,8 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
                         </motion.div>
                     )}
                     {isMobile && (
-                        <MobileControls
+                        <GameControls
+                            isMobile={true}
                             onSkip={handleSkip}
                             onSubmit={handleSubmit}
                         />

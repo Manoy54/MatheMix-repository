@@ -5,12 +5,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Calculator, Sparkles, Trophy, Brain, Users, Zap, Menu, Crown, LogOut, CheckCircle, XCircle, Clock, AlertCircle, Maximize2, X } from 'lucide-react';
 import { useMobile } from "../hooks/useMobile.jsx";
 import AnimatedBackground from "./AnimatedBackground.jsx";
+import GameControls from "./GameControls.jsx";
+import Keyboard from "./Keyboard.jsx";
 
 
 const CATEGORY_MAP = {
     "Number & Algebra": "number-algebra",
     "Measurement & Geometry": "measurement-geometry",
-    "Data & probability": "data-probability"
+    "Data & Probability": "data-probability"
 };
 
 
@@ -239,7 +241,7 @@ const RankingsModal = React.memo(({ isOpen, onClose, sortedPlayers, userId }) =>
 ));
 
 
-const RoundOverOverlay = React.memo(({ roomData, user, sortedPlayers, isHost, onNextRound, nextCategory, setNextCategory, answers }) => {
+const RoundOverOverlay = ({ roomData, user, sortedPlayers, isHost, onNextRound, nextCategory, setNextCategory, answers }) => {
     const isWinner = sortedPlayers[0]?.uid === user.uid;
     const myPlayer = sortedPlayers.find(p => p.uid === user.uid);
     const isFinalRound = (roomData.roundNumber || 1) >= (roomData.rounds || 5);
@@ -255,35 +257,35 @@ const RoundOverOverlay = React.memo(({ roomData, user, sortedPlayers, isHost, on
                 initial={{ scale: 0.9, y: 50, opacity: 0 }}
                 animate={{ scale: 1, y: 0, opacity: 1 }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                className="bg-[#0f172a] border-2 border-white/10 p-4 md:p-8 rounded-[30px] md:rounded-[40px] md:shadow-[0_0_100px_rgba(0,0,0,0.5)] max-w-xl w-full h-[70vh] md:h-auto text-center flex flex-col md:block relative overflow-hidden"
+                className="bg-[#0f172a] border-2 border-white/10 p-3 md:p-8 rounded-[20px] md:rounded-[40px] md:shadow-[0_0_100px_rgba(0,0,0,0.5)] max-w-xl w-[90%] md:w-full h-auto max-h-[70vh] md:max-h-none text-center flex flex-col md:block relative overflow-hidden"
             >
                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 shrink-0" />
-                <div className="space-y-1 md:space-y-2 shrink-0 mb-2">
-                    <div className="inline-block p-3 md:p-4 bg-yellow-400/10 rounded-3xl mb-1 md:mb-2">
-                        <Trophy className={`w-8 h-8 md:w-12 md:h-12 ${isWinner ? 'text-yellow-400 animate-bounce' : 'text-gray-400'}`} />
+                <div className="space-y-1 md:space-y-2 shrink-0 mb-1 md:mb-2">
+                    <div className="inline-block p-2 md:p-4 bg-yellow-400/10 rounded-2xl md:rounded-3xl mb-1 md:mb-2">
+                        <Trophy className={`w-6 h-6 md:w-12 md:h-12 ${isWinner ? 'text-yellow-400 animate-bounce' : 'text-gray-400'}`} />
                     </div>
-                    <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight">
+                    <h2 className="text-2xl md:text-4xl font-black text-white tracking-tight">
                         {isFinalRound ? "Match Over!" : "Round Over!"}
                     </h2>
-                    <p className="text-white/60 font-medium text-xs md:text-base">Amazing performance from everyone!</p>
+                    <p className="text-white/60 font-medium text-[10px] md:text-base">Amazing performance from everyone!</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 flex-1 overflow-y-auto md:overflow-visible content-center py-2 px-1">
-                    <div className="md:col-span-3 bg-gradient-to-r from-yellow-400/20 to-orange-500/20 p-4 rounded-3xl border border-yellow-400/30">
-                        <p className="text-yellow-400 text-xs font-bold uppercase tracking-widest mb-1">Round Winner</p>
-                        <p className="text-2xl font-black text-white">
+                <div className="grid grid-cols-3 gap-2 md:gap-4 flex-1 overflow-y-auto md:overflow-visible content-start md:content-center py-1 md:py-2 px-1">
+                    <div className="col-span-3 bg-gradient-to-r from-yellow-400/20 to-orange-500/20 p-2 md:p-4 rounded-2xl md:rounded-3xl border border-yellow-400/30 flex flex-col items-center justify-center">
+                        <p className="text-yellow-400 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-0.5 md:mb-1">Round Winner</p>
+                        <p className="text-lg md:text-2xl font-black text-white truncate w-full">
                             {answers.filter(a => a.isCorrect).sort((a, b) => a.timestamp - b.timestamp)[0]?.nickname || "Calculating..."}
                         </p>
                     </div>
-                    <div className="bg-white/5 p-4 rounded-3xl border border-white/10">
-                        <p className="text-white/40 text-[10px] font-bold uppercase mb-1">Items Found</p>
-                        <p className={`text-2xl font-black ${answers.filter(a => a.uid === user.uid && a.isCorrect).length > 0 ? "text-green-500" : "text-red-500"}`}>
+                    <div className="bg-white/5 p-2 md:p-4 rounded-xl md:rounded-3xl border border-white/10 flex flex-col items-center justify-center">
+                        <p className="text-white/40 text-[8px] md:text-[10px] font-bold uppercase mb-0.5 md:mb-1">Items Found</p>
+                        <p className={`text-sm md:text-2xl font-black ${answers.filter(a => a.uid === user.uid && a.isCorrect).length > 0 ? "text-green-500" : "text-red-500"}`}>
                             {answers.filter(a => a.uid === user.uid && a.isCorrect).length > 0 ? "Correct" : "Missed"}
                         </p>
                     </div>
-                    <div className="bg-white/5 p-4 rounded-3xl border border-white/10">
-                        <p className="text-white/40 text-[10px] font-bold uppercase mb-1">Points Earned</p>
-                        <p className="text-2xl font-black text-white">
+                    <div className="bg-white/5 p-2 md:p-4 rounded-xl md:rounded-3xl border border-white/10 flex flex-col items-center justify-center">
+                        <p className="text-white/40 text-[8px] md:text-[10px] font-bold uppercase mb-0.5 md:mb-1">Points Earned</p>
+                        <p className="text-sm md:text-2xl font-black text-white">
                             {(() => {
                                 const myRoundAnswer = answers.find(a => a.uid === user.uid && a.isCorrect);
                                 if (!myRoundAnswer) return 0;
@@ -293,9 +295,9 @@ const RoundOverOverlay = React.memo(({ roomData, user, sortedPlayers, isHost, on
                             })()}
                         </p>
                     </div>
-                    <div className="bg-white/5 p-4 rounded-3xl border border-white/10">
-                        <p className="text-white/40 text-[10px] font-bold uppercase mb-1">Total Score</p>
-                        <p className="text-2xl font-black text-white">
+                    <div className="bg-white/5 p-2 md:p-4 rounded-xl md:rounded-3xl border border-white/10 flex flex-col items-center justify-center">
+                        <p className="text-white/40 text-[8px] md:text-[10px] font-bold uppercase mb-0.5 md:mb-1">Total Score</p>
+                        <p className="text-sm md:text-2xl font-black text-white">
                             {(() => {
                                 const baseScore = myPlayer?.score || 0;
                                 const myRoundAnswer = answers.find(a => a.uid === user.uid && a.isCorrect);
@@ -324,9 +326,9 @@ const RoundOverOverlay = React.memo(({ roomData, user, sortedPlayers, isHost, on
                         <div className="relative group">
                             <Menu className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                             <select
-                                value={nextCategory}
+                                value={Object.keys(CATEGORY_MAP).includes(nextCategory) ? nextCategory : Object.keys(CATEGORY_MAP)[0]}
                                 onChange={(e) => setNextCategory(e.target.value)}
-                                className="w-full bg-white/5 border-2 border-white/10 text-white rounded-2xl py-4 pl-12 pr-4 font-bold appearance-none active:bg-white/10 md:hover:bg-white/10 transition-all focus:outline-none focus:border-cyan-500/50"
+                                className="w-full bg-white/5 border-2 border-white/10 text-white rounded-2xl py-4 pl-12 pr-4 font-bold appearance-none active:bg-white/10 md:hover:bg-white/10 transition-all focus:outline-none focus:border-cyan-500/50 cursor-pointer relative z-20"
                             >
                                 {Object.keys(CATEGORY_MAP).map(cat => (
                                     <option key={cat} value={cat} className="bg-[#0f172a] text-white font-bold">{cat}</option>
@@ -352,7 +354,7 @@ const RoundOverOverlay = React.memo(({ roomData, user, sortedPlayers, isHost, on
             </motion.div>
         </motion.div>
     );
-});
+};
 
 // --- Optimized Character Boxes Subcomponent (Mobile Responsive with Input) ---
 const CharacterBox = React.memo(({ inputChar, index, answerStatus, boxWidth, boxHeight, fontSize, isMobile, isActive, onBoxClick, onInput, onBackspace, inputRef }) => {
@@ -586,24 +588,7 @@ const LeaveConfirmationModal = React.memo(({ isOpen, isHost, onClose, onConfirm 
 
 
 
-const MobileControls = React.memo(({ onSkip, onSubmit }) => (
-    <div className="fixed bottom-0 left-0 w-full p-4 z-50 pb-8 pt-6">
-        <div className="flex gap-3 w-full max-w-md mx-auto">
-            <button
-                onClick={onSkip}
-                className="flex-1 bg-gradient-to-b from-orange-500 to-orange-600 active:from-orange-600 active:to-orange-700 text-white py-3.5 rounded-xl font-black tracking-wider text-sm uppercase active:scale-[0.98] transition-transform"
-            >
-                Give Up
-            </button>
-            <button
-                onClick={onSubmit}
-                className="flex-1 bg-gradient-to-b from-green-500 to-green-600 active:from-green-600 active:to-green-700 text-white py-3.5 rounded-xl font-black tracking-wider text-sm uppercase active:scale-[0.98] transition-transform"
-            >
-                Submit
-            </button>
-        </div>
-    </div>
-));
+
 
 
 export default function MultiplayerGame({ roomCode, roomData, user, nickname, onLeave, onOpenSidebar }) {
@@ -623,7 +608,12 @@ export default function MultiplayerGame({ roomCode, roomData, user, nickname, on
     const [guess, setGuess] = useState("");
     const [status, setStatus] = useState("playing"); // playing, correct, wrong
     const [scoreMessage, setScoreMessage] = useState("");
-    const [nextCategory, setNextCategory] = useState(roomData.category);
+    const [nextCategory, setNextCategory] = useState(() => {
+        const foundKey = Object.keys(CATEGORY_MAP).find(key =>
+            CATEGORY_MAP[key] === roomData.category || key === roomData.category
+        );
+        return foundKey || "Number & Algebra";
+    });
     const [showGiveUpModal, setShowGiveUpModal] = useState(false);
     const [showLeaveModal, setShowLeaveModal] = useState(false);
     const [showRankingsModal, setShowRankingsModal] = useState(false);
@@ -961,7 +951,7 @@ export default function MultiplayerGame({ roomCode, roomData, user, nickname, on
                 onLeave={() => setShowLeaveModal(true)}
             />
 
-            <div className={`flex-1 overflow-y-auto ${isMobile ? 'pb-32' : ''}`}>
+            <div className={`flex-1 overflow-y-auto pb-32`}>
                 <div className={`flex flex-col md:flex-row-reverse ${isMobile ? 'items-center' : 'items-start'} justify-center py-4 gap-6 max-w-7xl mx-auto w-full`}>
 
                     <RankingsSidebar
@@ -998,16 +988,32 @@ export default function MultiplayerGame({ roomCode, roomData, user, nickname, on
                             onBoxBackspace={handleBoxBackspaceNav}
                         />
 
-                        {/* Keyboard Removed */}
-                        {isMobile && (
-                            <MobileControls
-                                onSkip={handleSkip}
-                                onSubmit={handleSubmit}
-                            />
+                        {!isMobile && (
+                            <div className="w-full max-w-2xl mt-6 z-40 relative">
+                                <Keyboard
+                                    isMobile={false}
+                                    onChar={handleKey}
+                                    onDelete={handleDelete}
+                                    onClear={handleClear}
+                                    onSpace={() => { }}
+                                    onSubmit={handleSubmit}
+                                    onSkip={handleSkip}
+                                    pressedKey={pressedKey}
+                                />
+                            </div>
                         )}
+
+
                     </div>
                 </div>
             </div>
+
+            {isMobile && <GameControls
+                isMobile={true}
+                onSkip={handleSkip}
+                onSubmit={handleSubmit}
+            />
+            }
 
             {/* Round Over Overlay */}
             <AnimatePresence>
