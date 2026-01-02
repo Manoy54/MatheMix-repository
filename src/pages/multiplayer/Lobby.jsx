@@ -15,8 +15,8 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../firebaseConfig.js';
 // Lazy load large game components to prevent initialization errors and improve performance
-const MultiplayerGame = React.lazy(() => import('../../components/MultiplayerGame'));
-const MultiplayerGameFinish = React.lazy(() => import('../../components/MultiplayerGameFinish'));
+const MultiplayerGame = React.lazy(() => import('../../components/MultiplayerGame.jsx'));
+const MultiplayerGameFinish = React.lazy(() => import('../../components/MultiplayerGameFinish.jsx'));
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, Calculator, Sparkles, LogOut } from 'lucide-react';
 import RoomSelection from './RoomSelection';
@@ -373,11 +373,6 @@ export default function Lobby({ user, username, onOpenSidebar }) {
     const leaveLobby = async () => {
         if (isHost) {
             // If host leaves, delete the entire room
-            const roomRef = doc(db, "rooms", roomCode);
-            await deleteDoc(roomRef);
-        } else {
-            // If a player leaves, remove them from the players list
-            const roomRef = doc(db, "rooms", roomCode);
             const updatedPlayers = roomData.players.filter(p => p.uid !== user.uid);
             await updateDoc(roomRef, { players: updatedPlayers });
         }
@@ -388,49 +383,47 @@ export default function Lobby({ user, username, onOpenSidebar }) {
         setGameStarted(false);
     };
 
-
+    // Lazy load large game components to prevent initialization errors and improve performance
+    const MultiplayerGame = React.lazy(() => import('../../components/MultiplayerGame'));
+    const MultiplayerGameFinish = React.lazy(() => import('../../components/MultiplayerGameFinish'));
 
     if (gameStarted && roomData) {
         if (roomData.status === "finished") {
             return (
-                <ErrorBoundary>
-                    <React.Suspense fallback={
-                        <div className="flex items-center justify-center h-full">
-                            <div className="text-white text-xl font-bold animate-pulse">Loading Results...</div>
-                        </div>
-                    }>
-                        <MultiplayerGameFinish
-                            user={user}
-                            roomData={roomData}
-                            onLeave={leaveLobby}
-                            onHostPlayAgain={handlePlayAgain}
-                        />
-                    </React.Suspense>
-                </ErrorBoundary>
+                <React.Suspense fallback={
+                    <div className="flex items-center justify-center h-full">
+                        <div className="text-white text-xl font-bold animate-pulse">Loading Results...</div>
+                    </div>
+                }>
+                    <MultiplayerGameFinish
+                        user={user}
+                        roomData={roomData}
+                        onLeave={leaveLobby}
+                        onHostPlayAgain={handlePlayAgain}
+                    />
+                </React.Suspense>
             );
         }
 
         if (roomData.currentQuestion) {
             return (
-                <ErrorBoundary>
-                    <React.Suspense fallback={
-                        <div className="h-screen w-full flex items-center justify-center bg-[#023e8a]">
-                            <div className="text-white text-xl font-bold animate-pulse flex flex-col items-center gap-2">
-                                <Sparkles className="w-8 h-8 text-yellow-300 animate-spin" />
-                                <span>Loading Game...</span>
-                            </div>
+                <React.Suspense fallback={
+                    <div className="h-screen w-full flex items-center justify-center bg-[#023e8a]">
+                        <div className="text-white text-xl font-bold animate-pulse flex flex-col items-center gap-2">
+                            <Sparkles className="w-8 h-8 text-yellow-300 animate-spin" />
+                            <span>Loading Game...</span>
                         </div>
-                    }>
-                        <MultiplayerGame
-                            user={user}
-                            nickname={nickname}
-                            roomCode={roomCode}
-                            roomData={roomData}
-                            onLeave={leaveLobby}
-                            onOpenSidebar={onOpenSidebar}
-                        />
-                    </React.Suspense>
-                </ErrorBoundary>
+                    </div>
+                }>
+                    <MultiplayerGame
+                        user={user}
+                        nickname={nickname}
+                        roomCode={roomCode}
+                        roomData={roomData}
+                        onLeave={leaveLobby}
+                        onOpenSidebar={onOpenSidebar}
+                    />
+                </React.Suspense>
             );
         }
     }

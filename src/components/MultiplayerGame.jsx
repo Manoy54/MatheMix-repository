@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Calculator, Sparkles, Trophy, Brain, Users, Zap, Menu, Crown, LogOut, CheckCircle, XCircle, Clock, AlertCircle, Maximize2, X } from 'lucide-react';
 import { useMobile } from "../hooks/useMobile.jsx";
 import AnimatedBackground from "./AnimatedBackground.jsx";
-import { MobileControls } from "../pages/Game/components/MobileControls.jsx";
+
 
 const CATEGORY_MAP = {
     "Number & Algebra": "number-algebra",
@@ -22,7 +22,7 @@ const TopBar = React.memo(({ onOpenSidebar, roomCode, onLeave }) => (
     <motion.div
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="px-4 py-3 flex items-center justify-between flex-shrink-0 z-20"
+        className="w-full py-3 flex items-center justify-between flex-shrink-0 z-20"
     >
         <div className="flex items-center gap-3">
             {onOpenSidebar && (
@@ -163,19 +163,19 @@ const QuestionCard = React.memo(({ roundNumber, category, definition, hasAnswere
         className="relative w-full max-w-3xl"
     >
         <div className="absolute inset-0 md:bg-gradient-to-r md:from-cyan-400/20 md:to-blue-400/20 rounded-2xl md:blur-xl" />
-        <div className="relative bg-white/10 md:backdrop-blur-xl p-3 md:p-6 rounded-2xl border border-white/20 md:shadow-2xl text-center min-h-[100px] md:min-h-[130px] flex flex-col justify-center items-center">
-            <div className="absolute top-3 left-3 bg-white/10 px-3 py-1 rounded-full text-[10px] font-bold text-white/50 border border-white/10 uppercase tracking-widest">
+        <div className="relative bg-white/10 md:backdrop-blur-xl p-3 md:p-6 rounded-2xl border border-white/20 md:shadow-2xl text-center min-h-[130px] md:min-h-[130px] flex flex-col justify-center items-center">
+            <div className="absolute top-2 left-2 md:top-3 md:left-3 bg-white/10 px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[8px] md:text-[10px] font-bold text-white/50 border border-white/10 uppercase tracking-widest">
                 {category || "General"}
             </div>
 
             {/* Round Counter in Top Right */}
-            <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-cyan-400/10 px-3 py-1 rounded-full border border-cyan-400/20">
-                <Brain className="w-3.5 h-3.5 text-cyan-300" />
-                <span className="text-[10px] font-black text-cyan-200 uppercase tracking-wider">
+            <div className="absolute top-2 right-2 md:top-3 md:right-3 flex items-center gap-1.5 bg-cyan-400/10 px-2 py-0.5 md:px-3 md:py-1 rounded-full border border-cyan-400/20">
+                <Brain className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 text-cyan-300" />
+                <span className="text-[8px] md:text-[10px] font-black text-cyan-200 uppercase tracking-wider">
                     Round #{roundNumber || 1}
                 </span>
             </div>
-            <p className="text-white text-sm md:text-xl font-medium leading-relaxed mt-2 md:mt-2">
+            <p className="text-white text-sm md:text-xl font-medium leading-relaxed mt-4 md:mt-2">
                 {definition}
             </p>
             {hasAnswered && !allPlayersAnswered && (
@@ -255,20 +255,20 @@ const RoundOverOverlay = React.memo(({ roomData, user, sortedPlayers, isHost, on
                 initial={{ scale: 0.9, y: 50, opacity: 0 }}
                 animate={{ scale: 1, y: 0, opacity: 1 }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                className="bg-[#0f172a] border-2 border-white/10 p-8 rounded-[40px] md:shadow-[0_0_100px_rgba(0,0,0,0.5)] max-w-xl w-full text-center space-y-8 relative overflow-hidden"
+                className="bg-[#0f172a] border-2 border-white/10 p-4 md:p-8 rounded-[30px] md:rounded-[40px] md:shadow-[0_0_100px_rgba(0,0,0,0.5)] max-w-xl w-full h-[70vh] md:h-auto text-center flex flex-col md:block relative overflow-hidden"
             >
-                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500" />
-                <div className="space-y-2">
-                    <div className="inline-block p-4 bg-yellow-400/10 rounded-3xl mb-2">
-                        <Trophy className={`w-12 h-12 ${isWinner ? 'text-yellow-400 animate-bounce' : 'text-gray-400'}`} />
+                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 shrink-0" />
+                <div className="space-y-1 md:space-y-2 shrink-0 mb-2">
+                    <div className="inline-block p-3 md:p-4 bg-yellow-400/10 rounded-3xl mb-1 md:mb-2">
+                        <Trophy className={`w-8 h-8 md:w-12 md:h-12 ${isWinner ? 'text-yellow-400 animate-bounce' : 'text-gray-400'}`} />
                     </div>
-                    <h2 className="text-4xl font-black text-white tracking-tight">
+                    <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight">
                         {isFinalRound ? "Match Over!" : "Round Over!"}
                     </h2>
-                    <p className="text-white/60 font-medium">Amazing performance from everyone!</p>
+                    <p className="text-white/60 font-medium text-xs md:text-base">Amazing performance from everyone!</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 flex-1 overflow-y-auto md:overflow-visible content-center py-2 px-1">
                     <div className="md:col-span-3 bg-gradient-to-r from-yellow-400/20 to-orange-500/20 p-4 rounded-3xl border border-yellow-400/30">
                         <p className="text-yellow-400 text-xs font-bold uppercase tracking-widest mb-1">Round Winner</p>
                         <p className="text-2xl font-black text-white">
@@ -310,7 +310,7 @@ const RoundOverOverlay = React.memo(({ roomData, user, sortedPlayers, isHost, on
                 </div>
 
                 {isFinalRound ? (
-                    <div className="pt-4">
+                    <div className="pt-2 md:pt-4 shrink-0 mt-auto">
                         <button
                             onClick={() => isHost && onNextRound(nextCategory)}
                             className={`w-full bg-gradient-to-r from-yellow-400 to-orange-500 active:from-yellow-300 active:to-orange-400 md:hover:from-yellow-300 md:hover:to-orange-400 text-white font-black py-5 rounded-2xl md:shadow-[0_20px_40px_rgba(251,191,36,0.3)] transition-all flex items-center justify-center gap-3 group ${!isHost ? 'opacity-70 cursor-default' : ''}`}
@@ -320,7 +320,7 @@ const RoundOverOverlay = React.memo(({ roomData, user, sortedPlayers, isHost, on
                         </button>
                     </div>
                 ) : isHost ? (
-                    <div className="space-y-4 pt-4">
+                    <div className="space-y-3 md:space-y-4 pt-2 md:pt-4 shrink-0 mt-auto">
                         <div className="relative group">
                             <Menu className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                             <select
@@ -342,7 +342,7 @@ const RoundOverOverlay = React.memo(({ roomData, user, sortedPlayers, isHost, on
                         </button>
                     </div>
                 ) : (
-                    <div className="bg-white/5 rounded-3xl p-6 border border-white/10 flex flex-col items-center gap-3">
+                    <div className="bg-white/5 rounded-3xl p-4 md:p-6 border border-white/10 flex flex-col items-center gap-3 shrink-0 mt-auto">
                         <div className="flex items-center gap-2">
                             <Clock className="w-5 h-5 text-cyan-400 animate-spin-slow" />
                             <span className="text-white/80 font-bold italic">Waiting for host to start next round...</span>
@@ -477,8 +477,8 @@ const CharacterBoxes = React.memo(({ containerRef, answer, guess, allPlayersAnsw
             });
 
             // Available width: Game container usually has padding
-            // We use a safe margin.
-            const availableWidth = containerWidth - 32; // -32px for padding
+            // We use a safe margin to ensure it fits strictly inside the visual width.
+            const availableWidth = containerWidth - 60;
 
             if (maxWordWidthNeeded > availableWidth) {
                 scale = availableWidth / maxWordWidthNeeded;
@@ -501,7 +501,7 @@ const CharacterBoxes = React.memo(({ containerRef, answer, guess, allPlayersAnsw
     return (
         <div
             ref={containerRef}
-            className={`flex flex-wrap items-center justify-center ${isMobile ? 'gap-[6px]' : 'gap-x-8 gap-y-6'} max-w-5xl mx-auto min-h-[120px] w-full px-2`}
+            className={`flex flex-wrap items-center justify-center ${isMobile ? 'gap-[6px]' : 'gap-x-8 gap-y-6'} max-w-3xl mx-auto min-h-[120px] w-full px-2`}
         >
             {words.map((word, wordIndex) => (
                 <div
@@ -582,6 +582,27 @@ const LeaveConfirmationModal = React.memo(({ isOpen, isHost, onClose, onConfirm 
             </div>
         </motion.div>
     </motion.div>
+));
+
+
+
+const MobileControls = React.memo(({ onSkip, onSubmit }) => (
+    <div className="fixed bottom-0 left-0 w-full p-4 z-50 pb-8 pt-6">
+        <div className="flex gap-3 w-full max-w-md mx-auto">
+            <button
+                onClick={onSkip}
+                className="flex-1 bg-gradient-to-b from-orange-500 to-orange-600 active:from-orange-600 active:to-orange-700 text-white py-3.5 rounded-xl font-black tracking-wider text-sm uppercase active:scale-[0.98] transition-transform"
+            >
+                Give Up
+            </button>
+            <button
+                onClick={onSubmit}
+                className="flex-1 bg-gradient-to-b from-green-500 to-green-600 active:from-green-600 active:to-green-700 text-white py-3.5 rounded-xl font-black tracking-wider text-sm uppercase active:scale-[0.98] transition-transform"
+            >
+                Submit
+            </button>
+        </div>
+    </div>
 ));
 
 

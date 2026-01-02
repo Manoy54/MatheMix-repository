@@ -5,16 +5,16 @@ export const QuestionCard = React.memo(({ questionNumber, category, definition, 
     if (isMobile) {
         return (
             <div className="relative">
-                <div className="bg-white/10 rounded-2xl p-3 border border-white/20 flex flex-col shadow-sm">
-                    <div className="flex items-center justify-between w-full mb-2">
-                        <div className="px-2 py-0.5 text-[10px] bg-white/20 text-white rounded-full border border-white/30">
-                            {category}
-                        </div>
-                        <div className="px-2 py-0.5 text-[10px] bg-gradient-to-r from-yellow-300 to-orange-300 text-[#023e8a] rounded-full font-bold">
-                            Question #{questionNumber}
-                        </div>
+                <div className="bg-white/10 rounded-2xl p-3 border border-white/20 flex flex-col items-center justify-center shadow-sm min-h-[140px] relative">
+                    {/* Absolutely positioned badges */}
+                    <div className="absolute top-2 left-2 px-2 py-0.5 text-[8px] bg-white/20 text-white rounded-full border border-white/30 font-bold uppercase tracking-wide">
+                        {category}
                     </div>
-                    <p className="text-white text-sm mt-0 leading-snug text-center font-medium w-full">
+                    <div className="absolute top-2 right-2 px-2 py-0.5 text-[8px] bg-gradient-to-r from-yellow-300 to-orange-300 text-[#023e8a] rounded-full font-black uppercase tracking-wide">
+                        Question #{questionNumber}
+                    </div>
+
+                    <p className="text-white text-sm mt-4 leading-snug text-center font-medium w-full">
                         {definition}
                     </p>
                 </div>

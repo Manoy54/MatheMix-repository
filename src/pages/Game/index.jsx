@@ -48,17 +48,18 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
     } = useGameLogic(onGameEnd);
 
     // --- Container Measurement for CharacterBoxes ---
-    const containerRef = useRef(null);
-    const [containerWidth, setContainerWidth] = useState(0);
+    // We measure the QuestionCard width to ensure CharacterBoxes never exceed it.
+    const questionCardRef = useRef(null);
+    const [questionWidth, setQuestionWidth] = useState(0);
 
     useEffect(() => {
-        if (!containerRef.current) return;
+        if (!questionCardRef.current) return;
         const observer = new ResizeObserver((entries) => {
             for (let entry of entries) {
-                setContainerWidth(entry.contentRect.width);
+                setQuestionWidth(entry.contentRect.width);
             }
         });
-        observer.observe(containerRef.current);
+        observer.observe(questionCardRef.current);
         return () => observer.disconnect();
     }, []);
 
@@ -116,20 +117,22 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
                         bestStreak={bestStreak}
                     />
 
-                    <QuestionCard
-                        questionNumber={questionNumber}
-                        category={category}
-                        definition={currentQ.definition}
-                        isMobile={isMobile}
-                    />
+                    <div className="w-full" ref={questionCardRef}>
+                        <QuestionCard
+                            questionNumber={questionNumber}
+                            category={category}
+                            definition={currentQ.definition}
+                            isMobile={isMobile}
+                        />
+                    </div>
 
-                    <div className="relative" ref={containerRef}>
+                    <div className="relative w-full flex justify-center">
                         <CharacterBoxes
                             answer={answer}
                             input={input}
                             answerStatus={answerStatus}
                             isMobile={isMobile}
-                            containerWidth={containerWidth}
+                            containerWidth={questionWidth}
                             activeBoxIndex={activeBoxIndex}
                             onBoxClick={setActiveBoxIndex}
                             onBoxInput={handleBoxInput}

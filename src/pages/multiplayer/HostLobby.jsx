@@ -51,7 +51,7 @@ export default function HostLobby({
     const isMobile = useMobile();
 
     return (
-        <div className={`flex flex-col justify-center overflow-hidden h-full md:h-auto p-4 md:p-6 max-w-4xl mx-auto rounded-2xl
+        <div className={`w-full flex flex-col justify-center overflow-hidden h-full md:h-auto p-4 md:p-6 max-w-4xl mx-auto rounded-2xl
             ${isMobile ? 'bg-white/5 border border-white/10' : 'bg-gradient-to-br from-white/25 via-white/20 to-white/15 backdrop-blur-2xl border-2 border-white/40 shadow-2xl animate-scale-in'}`}>
             {/* Hide native number spinners */}
             <style>{`
