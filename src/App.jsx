@@ -26,6 +26,7 @@ import { Sidebar } from "./components/Sidebar.jsx";
 const AnimatedBackground = lazy(() => import("./components/AnimatedBackground.jsx"));
 import LoadingScreen from "./components/LoadingScreen.jsx";
 import MobileLoadingFallback from "./components/MobileLoadingFallback.jsx";
+import AdminRoute from "./components/AdminRoute.jsx";
 
 import { auth, db } from "./firebaseConfig.js";
 import { onAuthStateChanged, signOut } from "firebase/auth";
@@ -37,9 +38,12 @@ const ProtectedRoute = ({ user, loading, children }) => {
     return children;
 };
 
-const PublicRoute = ({ user, loading, children }) => {
+const PublicRoute = ({ user, loading, role, children }) => {
     if (loading) return null;
-    if (user) return <Navigate to="/mode-select" replace />;
+    if (user) {
+        if (role === "ADMIN" || role === "SUPERADMIN") return <Navigate to="/admin" replace />;
+        return <Navigate to="/mode-select" replace />;
+    }
     return children;
 };
 
@@ -47,6 +51,7 @@ function App() {
     const isMobile = useMobile();
     const [currentUser, setCurrentUser] = useState(null);
     const [username, setUsername] = useState("");
+    const [role, setRole] = useState("");
     const [loading, setLoading] = useState(true);
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     const location = useLocation();
@@ -62,12 +67,15 @@ function App() {
                 const userDocRef = doc(db, "users", user.uid);
                 onSnapshot(userDocRef, (docSnap) => {
                     if (docSnap.exists()) {
-                        setUsername(docSnap.data().username || "");
+                        const data = docSnap.data();
+                        setUsername(data.username || "");
+                        setRole(data.role || "");
                     }
                 });
             } else {
                 setCurrentUser(null);
                 setUsername("");
+                setRole("");
             }
             setLoading(false);
         });
@@ -81,6 +89,7 @@ function App() {
             navigate("/welcome", { replace: true });
         }
     }, [currentUser, loading, location.pathname, navigate]);
+
 
     // Centralized route-entry loading trigger
     useEffect(() => {
@@ -137,7 +146,7 @@ function App() {
                         </Suspense>
                     } />
                     <Route path="/login" element={
-                        <PublicRoute user={currentUser} loading={loading}>
+                        <PublicRoute user={currentUser} loading={loading} role={role}>
                             <Suspense fallback={isMobile ? <MobileLoadingFallback /> : <LoadingScreen />}>
                                 <LoginPage />
                             </Suspense>
@@ -152,7 +161,13 @@ function App() {
                     <Route path="/privacy-policy" element={<ProtectedRoute user={currentUser} loading={loading}><Suspense fallback={isMobile ? <MobileLoadingFallback /> : <LoadingScreen />}><PrivacyPolicy /></Suspense></ProtectedRoute>} />
                     <Route path="/terms-of-service" element={<ProtectedRoute user={currentUser} loading={loading}><Suspense fallback={isMobile ? <MobileLoadingFallback /> : <LoadingScreen />}><TermsOfService /></Suspense></ProtectedRoute>} />
                     <Route path="/cookie-policy" element={<ProtectedRoute user={currentUser} loading={loading}><Suspense fallback={isMobile ? <MobileLoadingFallback /> : <LoadingScreen />}><CookiePolicy /></Suspense></ProtectedRoute>} />
-                    <Route path="/admin/*" element={<ProtectedRoute user={currentUser} loading={loading}><Suspense fallback={<div className="text-white text-center">Loading Admin...</div>}><Admin username={username} onLogout={handleLogout} /></Suspense></ProtectedRoute>} />
+                    <Route path="/admin/*" element={
+                        <AdminRoute>
+                            <Suspense fallback={<div className="text-white text-center">Loading Admin...</div>}>
+                                <Admin username={username} onLogout={handleLogout} />
+                            </Suspense>
+                        </AdminRoute>
+                    } />
 
                     {/* Fallback */}
                     <Route path="*" element={<Navigate to={currentUser ? "/mode-select" : "/welcome"} replace />} />

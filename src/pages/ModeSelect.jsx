@@ -8,6 +8,9 @@ const Background3D = React.lazy(() => import('../components/Background3D.jsx'));
 import StandardHeader from '../components/StandardHeader';
 import { useMobile } from '../hooks/useMobile';
 import { useLoading } from '../context/LoadingContext';
+import { auth } from '../firebaseConfig';
+import { checkIfAdmin } from '../utils/adminUtils';
+import { LayoutDashboard } from 'lucide-react';
 
 const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
     const isMobile = useMobile();
@@ -16,12 +19,22 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
     const [hoveredMode, setHoveredMode] = useState(null);
     const [isBackgroundReady, setBackgroundReady] = useState(false);
     const [cardBounds, setCardBounds] = useState({ solo: null, multi: null });
+    const [isAdmin, setIsAdmin] = useState(false);
 
     const soloCardRef = useRef(null);
     const multiCardRef = useRef(null);
 
-    // Simulate data fetching readiness
+    // Simulate data fetching readiness and check admin status
     useEffect(() => {
+        const checkStatus = async () => {
+            const user = auth.currentUser;
+            if (user) {
+                const adminStatus = await checkIfAdmin(user.uid);
+                setIsAdmin(adminStatus);
+            }
+        };
+        checkStatus();
+
         const timer = setTimeout(() => {
             setModeDataReady(true);
         }, 800);
@@ -115,7 +128,19 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
                         onMouseEnter={() => setHoveredMode('ui')}
                         onMouseLeave={() => setHoveredMode(null)}
                     >
-                        <StandardHeader onOpenSidebar={onOpenSidebar} />
+                        <StandardHeader onOpenSidebar={onOpenSidebar}>
+                            {isAdmin && (
+                                <motion.button
+                                    whileHover={{ scale: 1.05, backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => navigate('/admin')}
+                                    className="bg-white/10 backdrop-blur-md px-3 py-1.5 md:px-4 md:py-2 rounded-xl border border-white/20 text-white flex items-center gap-2 font-bold shadow-lg transition-all text-xs md:text-sm"
+                                >
+                                    <LayoutDashboard className="w-4 h-4 md:w-5 md:h-5" />
+                                    <span>Admin Dashboard</span>
+                                </motion.button>
+                            )}
+                        </StandardHeader>
                     </div>
 
 

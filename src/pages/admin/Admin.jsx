@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from '../../components/Sidebar';
 import AnimatedBackground from '../../components/AnimatedBackground';
-import { Menu, X, Layout, Users as UsersIcon, Shield, Settings, Activity } from 'lucide-react';
+import { Menu, X, Layout, Users as UsersIcon, Shield, Settings, Activity, Gamepad2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLoading } from '../../context/LoadingContext';
 import { Routes, Route, useNavigate, useLocation, useParams } from 'react-router-dom';
 import GameContent from './GameContent';
 import EditQuestion from './EditQuestion';
 import Users from './Users';
+import SystemConfig from './SystemConfig';
 
 const Admin = ({ username, onLogout }) => {
     // Requirement: The sidebar must be visible by default (open state = true on initial render).
@@ -25,7 +26,8 @@ const Admin = ({ username, onLogout }) => {
     // Derived view for sidebar highlighting
     const activeView = location.pathname === '/admin' ? 'overview' :
         location.pathname.startsWith('/admin/game-content') ? 'game-content' :
-            location.pathname.startsWith('/admin/users') ? 'users' : '';
+            location.pathname.startsWith('/admin/users') ? 'users' :
+                location.pathname.startsWith('/admin/system-config') ? 'config' : '';
 
     // Sidebar items specifically for Admin page if needed, 
     // but the requirement says to use Sidebar.jsx as is.
@@ -46,6 +48,7 @@ const Admin = ({ username, onLogout }) => {
                 onAdminViewChange={(view) => {
                     if (view === 'overview') navigate('/admin');
                     else if (view === 'game-content') navigate('/admin/game-content');
+                    else if (view === 'config') navigate('/admin/system-config');
                     else navigate(`/admin/${view}`);
                 }}
             />
@@ -93,14 +96,20 @@ const Admin = ({ username, onLogout }) => {
 
                                             <div>
                                                 <h1 className="text-white text-4xl font-black tracking-tight drop-shadow-md">Admin Dashboard</h1>
-                                                <p className="text-cyan-100/60 font-medium">Control center and system management</p>
+                                                <p className="text-cyan-100/60 font-medium">Control center and management</p>
                                             </div>
                                         </div>
 
                                         <div className="flex items-center gap-3">
-                                            <div className="bg-white/20 p-2 rounded-xl border-2 border-white/30">
-                                                <Shield className="w-5 h-5 text-cyan-300" />
-                                            </div>
+                                            <motion.button
+                                                whileHover={{ scale: 1.05, backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+                                                whileTap={{ scale: 0.95 }}
+                                                onClick={() => navigate('/mode-select')}
+                                                className="bg-white/10 backdrop-blur-md px-4 py-2 rounded-xl border-2 border-white/30 text-white flex items-center gap-2 font-bold shadow-lg transition-all"
+                                            >
+                                                <Gamepad2 className="w-5 h-5 text-cyan-300" />
+                                                <span>Go to Game</span>
+                                            </motion.button>
                                         </div>
                                     </div>
 
@@ -186,6 +195,29 @@ const Admin = ({ username, onLogout }) => {
                                 </motion.div>
                             } />
 
+                            <Route path="/system-config" element={
+                                <motion.div
+                                    key="system-config"
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                    transition={{ duration: 0.2 }}
+                                >
+                                    <div className="mb-6 flex items-center gap-4">
+                                        <motion.button
+                                            whileHover={{ scale: 1.1 }}
+                                            whileTap={{ scale: 0.9 }}
+                                            onClick={() => setSidebarOpen(!isSidebarOpen)}
+                                            className="bg-white/20 p-2.5 rounded-xl border-2 border-white/30 hover:bg-white/30 transition-all shadow-lg text-white"
+                                        >
+                                            {isSidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                                        </motion.button>
+                                        <h2 className="text-white/40 text-sm font-bold uppercase tracking-widest">Admin / System Config</h2>
+                                    </div>
+                                    <SystemConfig />
+                                </motion.div>
+                            } />
+
                             <Route path="*" element={
                                 <motion.div
                                     key="fallback"
@@ -194,7 +226,7 @@ const Admin = ({ username, onLogout }) => {
                                     className="h-[60vh] flex flex-col items-center justify-center text-white/40"
                                 >
                                     <Settings className="w-16 h-16 mb-4 animate-spin-slow" />
-                                    <p className="text-xl font-bold italic truncate">Module Not Found</p>
+                                    <p className="text-xl font-bold italic truncate">Coming Soon! Sorry to keep you waiting</p>
                                     <button
                                         onClick={() => navigate('/admin')}
                                         className="mt-6 px-6 py-2 bg-white/10 hover:bg-white/20 rounded-xl border border-white/20 transition-all"

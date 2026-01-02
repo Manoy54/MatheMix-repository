@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Menu, Calculator, Sparkles } from 'lucide-react';
 
-export default function StandardHeader({ onOpenSidebar, subtitle, className = "", size = "normal" }) {
+export default function StandardHeader({ onOpenSidebar, subtitle, children, className = "", size = "normal" }) {
     const isLarge = size === "large";
     return (
         <motion.div
@@ -51,6 +51,13 @@ export default function StandardHeader({ onOpenSidebar, subtitle, className = ""
                     )}
                 </div>
             </div>
+
+            {/* Right Side Content (Children) */}
+            {!isLarge && children && (
+                <div className="flex items-center gap-3">
+                    {children}
+                </div>
+            )}
         </motion.div>
     );
 }
