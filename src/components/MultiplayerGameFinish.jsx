@@ -100,31 +100,31 @@ export default function MultiplayerGameFinish({ roomData, user, onLeave, onHostP
 
     return (
         <div className="fixed inset-0 z-[100] bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7] overflow-y-auto no-scrollbar">
-            <div className="min-h-screen w-full flex flex-col items-center justify-start py-12 px-4 gap-8">
+            <div className="min-h-screen w-full flex flex-col items-center justify-start py-6 md:py-8 px-4 gap-4 md:gap-6">
 
                 {/* Header */}
                 <motion.div
                     initial={{ y: -50, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    className="text-center space-y-2"
+                    className="text-center space-y-1 md:space-y-2"
                 >
-                    <div className="inline-block p-3 bg-white/10 rounded-2xl backdrop-blur-md border border-white/20 mb-2">
-                        <Trophy className="w-10 h-10 text-yellow-400 animate-bounce" />
+                    <div className="inline-block p-2 md:p-3 bg-white/10 rounded-2xl backdrop-blur-md border border-white/20 mb-1 md:mb-2">
+                        <Trophy className="w-8 h-8 md:w-10 md:h-10 text-yellow-400 animate-bounce" />
                     </div>
-                    <h1 className="text-5xl md:text-6xl font-black text-white tracking-tighter uppercase italic drop-shadow-lg">
+                    <h1 className="text-3xl md:text-5xl font-black text-white tracking-tighter uppercase italic drop-shadow-lg">
                         Match Results
                     </h1>
-                    <p className="text-white/60 font-bold tracking-widest uppercase text-sm">
+                    <p className="text-white/60 font-bold tracking-widest uppercase text-xs md:text-sm">
                         Legendary Performance!
                     </p>
                 </motion.div>
 
                 {/* Podium Section */}
-                <div className="w-full max-w-2xl flex items-end justify-center gap-2 md:gap-4 mt-8 min-h-[300px]">
+                <div className="w-full max-w-2xl flex items-end justify-center gap-2 md:gap-4 mt-4 min-h-[220px] md:min-h-[260px]">
                     <PodiumItem
                         player={top3[0]}
                         rank={2}
-                        height={160}
+                        height={120}
                         color="border-slate-300"
                         glow="bg-slate-300"
                         delay={0.4}
@@ -132,7 +132,7 @@ export default function MultiplayerGameFinish({ roomData, user, onLeave, onHostP
                     <PodiumItem
                         player={top3[1]}
                         rank={1}
-                        height={220}
+                        height={160}
                         color="border-yellow-400"
                         glow="bg-yellow-400"
                         delay={0.2}
@@ -140,7 +140,7 @@ export default function MultiplayerGameFinish({ roomData, user, onLeave, onHostP
                     <PodiumItem
                         player={top3[2]}
                         rank={3}
-                        height={120}
+                        height={90}
                         color="border-orange-500"
                         glow="bg-orange-500"
                         delay={0.6}
@@ -152,7 +152,7 @@ export default function MultiplayerGameFinish({ roomData, user, onLeave, onHostP
                     initial={{ y: 50, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.8 }}
-                    className="w-full max-w-2xl bg-black/20 backdrop-blur-xl rounded-[40px] border-2 border-white/10 p-6 md:p-8 shadow-2xl space-y-4"
+                    className="w-full max-w-2xl bg-black/20 backdrop-blur-xl rounded-[30px] border-2 border-white/10 p-4 md:p-6 shadow-2xl space-y-3"
                 >
                     <div className="flex items-center justify-between px-4 mb-4">
                         <h3 className="text-white/40 font-black uppercase tracking-widest text-xs">Final Standings</h3>
@@ -170,10 +170,10 @@ export default function MultiplayerGameFinish({ roomData, user, onLeave, onHostP
                                 animate={{ x: 0, opacity: 1 }}
                                 transition={{ delay: 1 + index * 0.1 }}
                                 className={`flex items-center justify-between p-4 rounded-2xl border-2 transition-all relative ${playAgainVotes.includes(player.uid)
-                                        ? 'bg-green-500/10 border-green-500/50 shadow-[0_0_20px_rgba(34,197,94,0.2)]'
-                                        : player.uid === user.uid
-                                            ? 'bg-white/20 border-white/40 shadow-xl'
-                                            : 'bg-white/5 border-transparent hover:bg-white/10'
+                                    ? 'bg-green-500/10 border-green-500/50 shadow-[0_0_20px_rgba(34,197,94,0.2)]'
+                                    : player.uid === user.uid
+                                        ? 'bg-white/20 border-white/40 shadow-xl'
+                                        : 'bg-white/5 border-transparent hover:bg-white/10'
                                     }`}
                             >
                                 {playAgainVotes.includes(player.uid) && (
@@ -218,8 +218,8 @@ export default function MultiplayerGameFinish({ roomData, user, onLeave, onHostP
                             onClick={hasVoted ? undefined : handleVotePlayAgain}
                             disabled={hasVoted}
                             className={`py-6 rounded-3xl font-black uppercase tracking-[0.2em] shadow-xl transition-all flex items-center justify-center gap-3 ${hasVoted
-                                    ? 'bg-green-500/20 text-green-300 border-2 border-green-500/30 cursor-default'
-                                    : 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white hover:from-cyan-300 hover:to-blue-400 hover:scale-[1.02] active:scale-[0.98]'
+                                ? 'bg-green-500/20 text-green-300 border-2 border-green-500/30 cursor-default'
+                                : 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white hover:from-cyan-300 hover:to-blue-400 hover:scale-[1.02] active:scale-[0.98]'
                                 }`}
                         >
                             {hasVoted ? (
@@ -239,10 +239,10 @@ export default function MultiplayerGameFinish({ roomData, user, onLeave, onHostP
                             onClick={isHost && canPlayAgain ? onHostPlayAgain : undefined}
                             disabled={!isHost || !canPlayAgain}
                             className={`py-6 rounded-3xl font-black uppercase tracking-[0.2em] shadow-xl transition-all flex items-center justify-center gap-3 ${isHost && canPlayAgain
-                                    ? 'bg-white text-[#023e8a] hover:bg-white/90 hover:scale-[1.02] active:scale-[0.98]'
-                                    : isHost
-                                        ? 'bg-white/10 text-white/40 border-2 border-white/10 cursor-not-allowed opacity-50'
-                                        : 'hidden md:flex bg-white/5 text-white/20 border-2 border-white/5 cursor-not-allowed'
+                                ? 'bg-white text-[#023e8a] hover:bg-white/90 hover:scale-[1.02] active:scale-[0.98]'
+                                : isHost
+                                    ? 'bg-white/10 text-white/40 border-2 border-white/10 cursor-not-allowed opacity-50'
+                                    : 'hidden md:flex bg-white/5 text-white/20 border-2 border-white/5 cursor-not-allowed'
                                 }`}
                         >
                             <Star className={`w-6 h-6 ${isHost && canPlayAgain ? 'animate-spin-slow text-yellow-500' : ''}`} />

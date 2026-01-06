@@ -21,6 +21,7 @@ import createAccImg from "../assets/createaccimg.jpg";
 
 
 
+
 // --- 2. FIREBASE CONFIGURATION ---
 let auth;
 let db;
@@ -190,6 +191,10 @@ function App() {
                         className="absolute inset-0 w-full h-full object-cover"
                         style={{ boxShadow: 'inset -25px 0 25px -10px rgba(0,0,0,0.1)' }}
                     />
+                    <div className="absolute bottom-12 left-12 z-20">
+                        <h1 className="text-white font-black text-6xl drop-shadow-lg tracking-tight">Mathemix</h1>
+                        <p className="text-[#6c757d] text-xl mt-3 font-bold">Know your terms. Sharpen your mind.</p>
+                    </div>
                 </div>
             )}
 
@@ -335,7 +340,6 @@ function App() {
                                 <div className="mb-8">
                                     <div className="flex justify-between items-center mb-1">
                                         <label className={`${labelClass} mb-0`}>Password</label>
-                                        {!isRegister && <button type="button" className="text-xs font-bold text-blue-200 hover:text-white hover:underline transition-colors">Forgot password</button>}
                                     </div>
                                     <input
                                         type="password"
