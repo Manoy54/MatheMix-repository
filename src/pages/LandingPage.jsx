@@ -305,22 +305,47 @@ const LandingPage = ({ user }) => {
 
 
 
-            {/* Meet the Developers (NEW) */}
+            {/* Meet the Team */}
             <section className="py-10 md:py-20 relative z-10">
                 <div className="w-[85%] md:container mx-auto">
                     <h2 className="text-2xl md:text-4xl font-black text-center mb-4 md:mb-6">Game Designers & Conceptualizers</h2>
+                    <p className="text-center text-blue-100 max-w-3xl mx-auto mb-8 md:mb-16 text-xs md:text-lg leading-relaxed drop-shadow-md">
+                        "We are BSED Mathematics students from Bicol University Tabaco. As game designers and conceptualizers, we developed a web-based educational game that integrates mathematical vocabulary with interactive learning experiences. This innovation aims to support Grade 8 learners in understanding key mathematical terms while promoting engagement and positive attitudes toward mathematics."
+                    </p>
+                    <div className="flex flex-col md:flex-row justify-center gap-6 md:gap-8 flex-wrap mb-16">
+                        {[
+                            { name: "BARCENAS, REYMUND B.", role: "Game Designer & Conceptualizer", icon: Gamepad2 },
+                            { name: "BROQUEZA, MARIANNE JOY B.", role: "Game Designer & Conceptualizer", icon: Brain },
+                            { name: "PLANDEZ, PRINCESS JAIRA B.", role: "Game Designer & Conceptualizer", icon: Star },
+                            { name: "TADURAN, BIANCA MAE R.", role: "Game Designer & Conceptualizer", icon: Sparkles }
+                        ].map((dev, index) => (
+                            <motion.div
+                                key={index}
+                                whileHover={isMobile ? {} : { y: -10 }}
+                                className="flex flex-col items-center p-3 md:p-6"
+                            >
+                                <div className="w-20 h-20 md:w-32 md:h-32 rounded-full bg-white/20 border-4 border-white/30 flex items-center justify-center mb-4 md:mb-6 md:shadow-xl md:backdrop-blur-md overflow-hidden">
+                                    <dev.icon className="w-10 h-10 md:w-16 md:h-16 text-white" />
+                                </div>
+                                <h3 className="text-lg md:text-xl font-bold text-center">{dev.name}</h3>
+                                <p className="text-blue-200 font-medium text-xs md:text-sm">{dev.role}</p>
+                            </motion.div>
+                        ))}
+                    </div>
+
+                    <h2 className="text-2xl md:text-4xl font-black text-center mb-4 md:mb-6 mt-12">Developer</h2>
                     <p className="text-center text-blue-100 max-w-3xl mx-auto mb-8 md:mb-16 text-xs md:text-lg leading-relaxed drop-shadow-md">
                         "We are BSIT students from the Bicol University College of Science, pushing the boundaries of technology by building a high-performance website that bridges the gap between innovation and user experience."
                     </p>
                     <div className="flex flex-col md:flex-row justify-center gap-6 md:gap-8 flex-wrap">
                         {[
-                            { name: "PLANDEZ, PRINCESS JAIRA B.", role: "Game Designer & Conceptualizer", icon: Star },
-                            { name: "BARCENAS, REYMUND B.", role: "Game Designer & Conceptualizer", icon: Gamepad2 },
-                            { name: "BROQUEZA, MARIANNE JOY B.", role: "Game Designer & Conceptualizer", icon: Brain },
-                            { name: "TADURAN, BIANCA MAE R.", role: "Game Designer & Conceptualizer", icon: Sparkles }
+                            { name: "SEAN DYLAN ARMENTA", role: "Developer", icon: Code },
+                            { name: "JOHN BENEDICT CANDELARIA", role: "Developer", icon: Cpu },
+                            { name: "JEFFREY CRUEL", role: "Developer", icon: Monitor },
+                            { name: "NASH MAPULA", role: "Developer", icon: MousePointerClick }
                         ].map((dev, index) => (
                             <motion.div
-                                key={index}
+                                key={`dev-${index}`}
                                 whileHover={isMobile ? {} : { y: -10 }}
                                 className="flex flex-col items-center p-3 md:p-6"
                             >
