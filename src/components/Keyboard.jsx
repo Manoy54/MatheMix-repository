@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Check } from 'lucide-react';
+import { Check, Lightbulb } from 'lucide-react';
 import { useMobile } from '../hooks/useMobile';
 
 // Key Button Component
@@ -27,7 +27,7 @@ const KeyButton = React.memo(({ char, onClick, isPressed, isMobile }) => {
     );
 });
 
-const Keyboard = React.memo(({ onChar, onDelete, onClear, onSpace, onSubmit, onSkip, pressedKey, isMobile: propIsMobile }) => {
+const Keyboard = React.memo(({ onChar, onDelete, onClear, onSpace, onSubmit, onSkip, onHint, pressedKey, isMobile: propIsMobile, currentPoints, hintError }) => {
     const mobileHook = useMobile();
     const isMobile = propIsMobile !== undefined ? propIsMobile : mobileHook;
 
@@ -111,6 +111,17 @@ const Keyboard = React.memo(({ onChar, onDelete, onClear, onSpace, onSubmit, onS
                     >
                         GIVE UP
                     </motion.button>
+
+                    <motion.button
+                        whileHover={{ scale: 1.03, y: -2 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={onHint}
+                        className={`flex-1 ${actionButtonSize} ${hintError ? 'bg-red-500 animate-pulse border-red-500' : 'bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 border-purple-300/50'} text-white rounded-xl transition-all border-2 font-semibold flex items-center justify-center gap-2`}
+                    >
+                        <span>HINT</span>
+                        <Lightbulb className={isMobile ? "w-4 h-4" : "w-4 h-4"} strokeWidth={3} />
+                    </motion.button>
+
                     <motion.button
                         whileHover={{ scale: 1.03, y: -2 }}
                         whileTap={{ scale: 0.97 }}

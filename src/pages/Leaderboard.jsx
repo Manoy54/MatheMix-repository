@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
 import { collection, query, orderBy, limit, getDocs, doc, getDoc } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Medal, Crown, TrendingUp, Target, Flame, Medal as MedalIcon } from 'lucide-react';
+import { Trophy, Medal, Crown, TrendingUp, Target, Flame, Medal as MedalIcon, Star } from 'lucide-react';
 import { useLoading } from '../context/LoadingContext';
 import { useMobile } from '../hooks/useMobile';
 
@@ -141,6 +141,7 @@ export default function Leaderboard({ onOpenSidebar }) {
                     <div className={`p-1.5 rounded-xl flex gap-1 ${isMobile ? 'bg-white/10 border border-white/10' : 'bg-white/5 backdrop-blur-md border border-white/10 shadow-2xl'}`}>
                         {[
                             { id: 'totalWins', label: 'Most Wins', icon: Trophy },
+                            { id: 'highestPoints', label: 'Highest Points', icon: Star },
                             { id: 'accuracy', label: 'Highest Accuracy', icon: Target },
                             { id: 'longestStreak', label: 'Best Streak', icon: Flame }
                         ].map((tab) => (
@@ -248,6 +249,7 @@ export default function Leaderboard({ onOpenSidebar }) {
                                         <div className="col-span-6 md:col-span-5">Player</div>
                                         <div className="col-span-4 md:col-span-6 flex justify-between pr-4">
                                             <span className="text-center flex-1 hidden md:block">Wins</span>
+                                            <span className="text-center flex-1 hidden md:block">Points</span>
                                             <span className="text-center flex-1 hidden md:block">Accuracy</span>
                                             <span className="text-center flex-1 hidden md:block">Streak</span>
                                             <span className="text-right flex-1 md:hidden">Stat</span>
@@ -283,6 +285,9 @@ export default function Leaderboard({ onOpenSidebar }) {
                                                     {/* Desktop Columns */}
                                                     <div className={`flex-1 text-center font-mono font-bold hidden md:block ${filter === 'totalWins' ? 'text-blue-400 text-lg' : 'text-white/50'}`}>
                                                         {player.totalWins || 0}
+                                                    </div>
+                                                    <div className={`flex-1 text-center font-mono font-bold hidden md:block ${filter === 'highestPoints' ? 'text-yellow-400 text-lg' : 'text-white/50'}`}>
+                                                        {player.highestPoints || 0}
                                                     </div>
                                                     <div className={`flex-1 text-center font-mono font-bold hidden md:block ${filter === 'accuracy' ? 'text-green-400 text-lg' : 'text-white/50'}`}>
                                                         {player.accuracy || 0}%

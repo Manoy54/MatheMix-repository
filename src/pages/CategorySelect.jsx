@@ -111,7 +111,7 @@ export default function CategorySelect({ username, onOpenSidebar }) {
             symbols: [Triangle, Square, Circle, Compass],
         },
         {
-            id: 'Data & probability',
+            id: 'Data & Probability',
             name: 'Data and Probability',
             description: 'Analyze data, understand statistics, and predict outcomes.',
             icon: PieChart,

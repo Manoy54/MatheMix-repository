@@ -12,7 +12,10 @@ export default function HostLobby({
     onStartGame,
     onCategoryChange,
     onRoundsChange,
+
     leaveLobby,
+    hostParticipates,
+    onHostParticipationToggle
 }) {
     const [copiedCode, setCopiedCode] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -186,6 +189,24 @@ export default function HostLobby({
                         />
                     </div>
                 </div>
+            </div>
+
+            {/* Host Participation Toggle */}
+            <div className="mb-4 md:mb-5 bg-white/10 p-3 rounded-xl border border-white/20 flex items-center justify-between">
+                <div>
+                    <h3 className="text-white text-xs md:text-sm font-bold uppercase tracking-wide">Play as Host</h3>
+                    <p className="text-white/60 text-[10px] md:text-xs">Join the game as a player</p>
+                </div>
+                <button
+                    onClick={() => {
+                        if (onHostParticipationToggle) {
+                            onHostParticipationToggle(!hostParticipates);
+                        }
+                    }}
+                    className={`w-12 h-6 rounded-full p-1 transition-colors duration-200 ease-in-out relative ${hostParticipates ? 'bg-green-500' : 'bg-gray-600'}`}
+                >
+                    <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out ${hostParticipates ? 'translate-x-6' : 'translate-x-0'}`} />
+                </button>
             </div>
 
             {/* Action Buttons */}

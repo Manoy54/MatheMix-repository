@@ -1,7 +1,4 @@
-
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { db } from "../firebaseConfig.js";
-import { doc, updateDoc, arrayUnion } from "firebase/firestore";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertCircle, LogOut } from 'lucide-react';
 import { useMobile } from "../hooks/useMobile.jsx";
@@ -16,21 +13,37 @@ import {
     RankingsModal,
     RoundOverOverlay,
     CharacterBoxes,
-    LeaveConfirmationModal,
-    CATEGORY_MAP
+    LeaveConfirmationModal
 } from "./MultiplayerComponents.jsx";
 
-export default function PlayerGamePage({ roomCode, roomData, user, nickname, onLeave, onOpenSidebar }) {
+import { useHostGameLogic } from "../hooks/useHostGameLogic";
+import { MultiplayerService } from "../services/MultiplayerService";
+import { useLeaveNotifications } from "../hooks/useLeaveNotifications";
+
+// Memoize RoundTimer to prevent re-renders from parent if props haven't changed
+const MemoizedRoundTimer = React.memo(RoundTimer);
+
+export default function PlayerGamePage({ roomCode, roomData, user, nickname, onLeave, onOpenSidebar, isHost }) {
+    // --- Host Logic (if participating) ---
+    const {
+        handleNextRound,
+        nextCategory,
+        setNextCategory,
+        handleTimeUp: hostHandleTimeUp
+    } = useHostGameLogic(roomCode, roomData, isHost);
+
     // --- Logic State ---
     const {
         currentQuestion,
         players = [],
         answers = [],
         roundStartTime,
+        status: roomStatus
     } = roomData || {};
 
     const answer = currentQuestion?.answer?.toUpperCase() || "";
-    const pureAnswer = answer.replace(/[^A-Z0-9]/g, '');
+    // Memoize derived answer to prevent recalc
+    const pureAnswer = useMemo(() => answer.replace(/[^A-Z0-9]/g, ''), [answer]);
     const numGuessableBoxes = pureAnswer.length;
 
     const [guess, setGuess] = useState("");
@@ -39,9 +52,11 @@ export default function PlayerGamePage({ roomCode, roomData, user, nickname, onL
     const [showGiveUpModal, setShowGiveUpModal] = useState(false);
     const [showLeaveModal, setShowLeaveModal] = useState(false);
     const [showRankingsModal, setShowRankingsModal] = useState(false);
-    const [leaveNotifications, setLeaveNotifications] = useState([]);
     const [pressedKey, setPressedKey] = useState(null);
-    const prevPlayersRef = useRef(roomData.players);
+
+    // Extracted Hook
+    const leaveNotifications = useLeaveNotifications(players);
+
     const isMobile = useMobile();
     const containerRef = useRef(null);
     const [containerWidth, setContainerWidth] = useState(0);
@@ -55,7 +70,8 @@ export default function PlayerGamePage({ roomCode, roomData, user, nickname, onL
         if (!char.match(/[A-Z0-9]/)) return;
 
         setGuess(prev => {
-            const arr = prev.padEnd(numGuessableBoxes, ' ').split('');
+            const padded = prev.padEnd(numGuessableBoxes, ' ');
+            const arr = padded.split('');
             arr[index] = char;
             return arr.join('').slice(0, numGuessableBoxes);
         });
@@ -76,7 +92,7 @@ export default function PlayerGamePage({ roomCode, roomData, user, nickname, onL
         if (index > 0) {
             setActiveBoxIndex(index - 1);
         }
-    }, [numGuessableBoxes]);
+    }, []);
 
     useEffect(() => {
         if (!containerRef.current) return;
@@ -89,7 +105,21 @@ export default function PlayerGamePage({ roomCode, roomData, user, nickname, onL
         return () => observer.disconnect();
     }, []);
 
-    const hasAnswered = answers.some(a => a.uid === user.uid);
+    // --- Derived UI State (Memoized) ---
+    const myAnswerData = useMemo(() => answers.find(a => a.uid === user.uid), [answers, user.uid]);
+    const hasAnswered = !!myAnswerData;
+    const allPlayersAnswered = useMemo(() => players.length > 0 && players.length === answers.length, [players.length, answers.length]);
+
+    // Sort players (Optimization: Memoize to avoid sorting on every keystroke)
+    const sortedPlayers = useMemo(() => {
+        return [...players].sort((a, b) => b.score - a.score);
+    }, [players]);
+
+    const myPlayer = useMemo(() => sortedPlayers.find(p => p.uid === user.uid), [sortedPlayers, user.uid]);
+    const myCurrentRank = useMemo(() => sortedPlayers.indexOf(myPlayer) + 1, [sortedPlayers, myPlayer]);
+
+    // Is the round effectively over? Time up OR everyone answered.
+    const isRoundOver = allPlayersAnswered || isTimeUp;
 
     // --- Effects ---
     useEffect(() => {
@@ -98,18 +128,21 @@ export default function PlayerGamePage({ roomCode, roomData, user, nickname, onL
         setScoreMessage("");
         setShowGiveUpModal(false);
         setIsTimeUp(false);
-    }, [currentQuestion]);
+        setActiveBoxIndex(0);
+    }, [currentQuestion]); // Dependency on Question ID/Definition implicitly via object ref
 
     // Handle Time Up
-    const handleTimeUp = useCallback(async () => {
+    const handleTimeUp = useCallback(() => {
         setIsTimeUp(true);
-        // If player hasn't answered, maybe mark as missed locally? 
-        // The overlay handles showing "Missed".
-    }, []);
+        // If we are the host, notify the logic hook
+        if (isHost && hostHandleTimeUp) {
+            hostHandleTimeUp();
+        }
+    }, [isHost, hostHandleTimeUp]);
 
     // --- Handlers (Memoized for performance) ---
     const handleKey = useCallback((key) => {
-        if (status !== "playing" || hasAnswered || showGiveUpModal || roomData.status === "finished" || isTimeUp) return;
+        if (status !== "playing" || hasAnswered || showGiveUpModal || roomStatus === "finished" || isTimeUp) return;
         setGuess(prev => {
             if (prev.length < numGuessableBoxes) {
                 return prev + key;
@@ -118,50 +151,35 @@ export default function PlayerGamePage({ roomCode, roomData, user, nickname, onL
         });
         setPressedKey(key);
         setTimeout(() => setPressedKey(null), 150);
-    }, [status, hasAnswered, showGiveUpModal, numGuessableBoxes, roomData.status, isTimeUp]);
+    }, [status, hasAnswered, showGiveUpModal, numGuessableBoxes, roomStatus, isTimeUp]);
 
     const handleClear = useCallback(() => {
-        if (status === "playing" && !hasAnswered && !showGiveUpModal && roomData.status !== "finished" && !isTimeUp) {
+        if (status === "playing" && !hasAnswered && !showGiveUpModal && roomStatus !== "finished" && !isTimeUp) {
             setGuess("");
             setPressedKey('CLEAR');
             setTimeout(() => setPressedKey(null), 150);
         }
-    }, [status, hasAnswered, showGiveUpModal, roomData.status, isTimeUp]);
+    }, [status, hasAnswered, showGiveUpModal, roomStatus, isTimeUp]);
 
     const handleDelete = useCallback(() => {
-        if (status === "playing" && !hasAnswered && !showGiveUpModal && roomData.status !== "finished" && !isTimeUp) {
+        if (status === "playing" && !hasAnswered && !showGiveUpModal && roomStatus !== "finished" && !isTimeUp) {
             setGuess(prev => prev.slice(0, -1));
             setPressedKey('DELETE');
             setTimeout(() => setPressedKey(null), 150);
         }
-    }, [status, hasAnswered, showGiveUpModal, roomData.status, isTimeUp]);
-
-    const submitAnswerToFirestore = async (isCorrect, score, finalGuess) => {
-        const roomRef = doc(db, "rooms", roomCode);
-        const answerData = {
-            uid: user.uid,
-            nickname: nickname || user.username || "Player",
-            guess: finalGuess,
-            isCorrect,
-            score,
-            timestamp: Date.now(),
-        };
-
-        await updateDoc(roomRef, {
-            answers: arrayUnion(answerData)
-        });
-    };
+    }, [status, hasAnswered, showGiveUpModal, roomStatus, isTimeUp]);
 
     const handleSubmit = useCallback(async () => {
-        if (status !== "playing" || hasAnswered || guess.length !== numGuessableBoxes || showGiveUpModal || roomData.status === "finished" || isTimeUp) return;
+        if (status !== "playing" || hasAnswered || guess.length !== numGuessableBoxes || showGiveUpModal || roomStatus === "finished" || isTimeUp) return;
 
         setPressedKey('ENTER');
         setTimeout(() => setPressedKey(null), 150);
 
         let score = 0;
         let isCorrect = false;
+        const guessClean = guess.trim().toUpperCase();
 
-        if (guess.trim().toUpperCase() === pureAnswer) {
+        if (guessClean === pureAnswer) {
             isCorrect = true;
             const correctAnswersSoFar = answers ? answers.filter(a => a.isCorrect).length : 0;
             const myRankAtSubmit = correctAnswersSoFar + 1;
@@ -176,8 +194,9 @@ export default function PlayerGamePage({ roomCode, roomData, user, nickname, onL
             score = 0;
         }
 
-        await submitAnswerToFirestore(isCorrect, score, guess.toUpperCase());
-    }, [status, hasAnswered, guess, numGuessableBoxes, showGiveUpModal, pureAnswer, answers, roomCode, user.uid, user.username, isTimeUp]);
+        await MultiplayerService.submitAnswer(roomCode, user, nickname, guessClean, isCorrect, score);
+
+    }, [status, hasAnswered, guess, numGuessableBoxes, showGiveUpModal, pureAnswer, answers, roomCode, user, nickname, isTimeUp, roomStatus]);
 
     const handleSkip = useCallback(() => {
         if (status === "playing" && !hasAnswered && !isTimeUp) {
@@ -189,7 +208,7 @@ export default function PlayerGamePage({ roomCode, roomData, user, nickname, onL
         setShowGiveUpModal(false);
         setStatus("wrong");
         setScoreMessage("Gave Up");
-        await submitAnswerToFirestore(false, 0, "GAVE UP");
+        await MultiplayerService.giveUp(roomCode, user, nickname);
     };
 
     const cancelGiveUp = () => {
@@ -199,7 +218,7 @@ export default function PlayerGamePage({ roomCode, roomData, user, nickname, onL
     // --- Keyboard Listeners ---
     const handleKeyDown = useCallback(
         (e) => {
-            if (showGiveUpModal || roomData.status === "finished" || isTimeUp) return;
+            if (showGiveUpModal || roomStatus === "finished" || isTimeUp) return;
             if (status !== 'playing' || hasAnswered) return;
 
             const key = e.key.toUpperCase();
@@ -208,7 +227,7 @@ export default function PlayerGamePage({ roomCode, roomData, user, nickname, onL
             else if (key === "ESCAPE") handleClear();
             else if (key.length === 1 && key.match(/[A-Z0-9-]/)) handleKey(key);
         },
-        [guess, status, hasAnswered, showGiveUpModal, roomData.status, isTimeUp, handleSubmit, handleDelete, handleClear, handleKey]
+        [status, hasAnswered, showGiveUpModal, roomStatus, isTimeUp, handleSubmit, handleDelete, handleClear, handleKey]
     );
 
     useEffect(() => {
@@ -226,31 +245,6 @@ export default function PlayerGamePage({ roomCode, roomData, user, nickname, onL
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [handleKeyDown]);
 
-    // Notification for players leaving (reused logic)
-    useEffect(() => {
-        const prevPlayers = prevPlayersRef.current;
-        if (players.length < prevPlayers.length) {
-            const leftPlayer = prevPlayers.find(p => !players.some(curr => curr.uid === p.uid));
-            if (leftPlayer) {
-                const id = Date.now();
-                setLeaveNotifications(prev => [...prev, { id, name: leftPlayer.nickname }]);
-                setTimeout(() => {
-                    setLeaveNotifications(prev => prev.filter(n => n.id !== id));
-                }, 4000);
-            }
-        }
-        prevPlayersRef.current = players;
-    }, [players]);
-
-    // --- Derived UI State ---
-    const allPlayersAnswered = players.length === answers.length;
-    const myAnswerData = answers.find(a => a.uid === user.uid);
-    const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
-    const myPlayer = sortedPlayers.find(p => p.uid === user.uid);
-    const myCurrentRank = sortedPlayers.indexOf(myPlayer) + 1;
-
-    // Is the round effectively over? Time up OR everyone answered.
-    const isRoundOver = allPlayersAnswered || isTimeUp;
 
     return (
         <div className="h-screen w-full flex flex-col overflow-hidden bg-[#023e8a] md:bg-gradient-to-br md:from-[#023e8a] md:via-[#0077b6] md:to-[#0096c7] px-4 pb-3">
@@ -313,13 +307,13 @@ export default function PlayerGamePage({ roomCode, roomData, user, nickname, onL
                         <QuestionCard
                             roundNumber={roomData.roundNumber}
                             category={roomData.category}
-                            definition={currentQuestion.definition}
+                            definition={currentQuestion?.definition}
                             hasAnswered={hasAnswered}
                             allPlayersAnswered={allPlayersAnswered}
                             scoreMessage={scoreMessage}
                         />
-                        <RoundTimer
-                            key={roomData.roundNumber}
+                        <MemoizedRoundTimer
+                            key={`timer-${roomData.roundNumber}`} // Only remount if round number changes
                             startTime={roundStartTime}
                             duration={60}
                             onTimeUp={handleTimeUp}
@@ -368,12 +362,15 @@ export default function PlayerGamePage({ roomCode, roomData, user, nickname, onL
 
             {/* Round Over Overlay */}
             <AnimatePresence>
-                {(isRoundOver) && roomData.status !== "finished" && (
+                {(isRoundOver || roomStatus === 'intermission') && roomStatus !== "finished" && (
                     <RoundOverOverlay
                         roomData={roomData}
                         user={user}
                         sortedPlayers={sortedPlayers}
-                        isHost={false}
+                        isHost={isHost}
+                        onNextRound={handleNextRound}
+                        nextCategory={nextCategory}
+                        setNextCategory={setNextCategory}
                         answers={answers}
                         autoAdvancing={true}
                     />
@@ -397,7 +394,7 @@ export default function PlayerGamePage({ roomCode, roomData, user, nickname, onL
                 {showLeaveModal && (
                     <LeaveConfirmationModal
                         isOpen={showLeaveModal}
-                        isHost={false}
+                        isHost={isHost}
                         onClose={() => setShowLeaveModal(false)}
                         onConfirm={onLeave}
                     />
@@ -424,3 +421,6 @@ export default function PlayerGamePage({ roomCode, roomData, user, nickname, onL
         </div>
     );
 }
+
+// Ensure pureAnswer memoization is safe.
+// pureAnswer.length used in states.

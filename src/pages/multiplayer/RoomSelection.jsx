@@ -35,7 +35,12 @@ export default function RoomSelection({
             <div className="flex-none h-4 md:hidden" />
 
             {/* Welcome Section */}
-            <div className={`text-center flex-none mb-4 md:mb-6 ${isMobile ? '' : 'opacity-0 animate-fade-in-up'}`} style={isMobile ? {} : { animationDelay: '0.2s' }}>
+            <motion.div
+                className={`text-center flex-none mb-4 md:mb-6`}
+                initial={isMobile ? {} : { opacity: 0, y: 20 }}
+                animate={isMobile ? {} : { opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+            >
                 <div className="inline-flex items-center gap-2 bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm px-3 py-1 md:px-4 md:py-2 rounded-full border border-white/30 mb-2 shadow-lg">
                     <Users className="w-4 h-4 md:w-4 md:h-4 text-cyan-300" />
                     <span className="text-white text-xs md:text-sm" style={{ fontWeight: 700 }}>Multiplayer Mode</span>
@@ -45,12 +50,16 @@ export default function RoomSelection({
                     Compete with <span className="text-yellow-300">Friends</span>
                 </h2>
                 <p className="text-white/80 text-[10px] md:text-sm" style={{ fontWeight: 500 }}>Challenge your friends in real-time math battles!</p>
-            </div>
+            </motion.div>
 
             {/* Info Card */}
-            <div className={`rounded-xl p-2 md:p-4 border flex-none mb-4 md:mb-6 
-                ${isMobile ? 'bg-white/10 border-white/10' : 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-400/30 backdrop-blur-md shadow-lg opacity-0 animate-fade-in-up'}`}
-                style={isMobile ? {} : { animationDelay: '0.3s' }}>
+            <motion.div
+                className={`rounded-xl p-2 md:p-4 border flex-none mb-4 md:mb-6 
+                ${isMobile ? 'bg-white/10 border-white/10' : 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-400/30 backdrop-blur-md shadow-lg'}`}
+                initial={isMobile ? {} : { opacity: 0, y: 20 }}
+                animate={isMobile ? {} : { opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+            >
                 <div className="flex items-start gap-3">
                     <div className="bg-yellow-400/30 rounded-lg p-2 mt-0.5">
                         <Info className="w-4 h-4 text-yellow-200" />
@@ -62,20 +71,29 @@ export default function RoomSelection({
                         </p>
                     </div>
                 </div>
-            </div>
+            </motion.div>
 
             {/* Error Message */}
             {error && (
-                <div className={`mb-6 relative flex-none ${isMobile ? '' : 'animate-scale-in'}`}>
+                <motion.div
+                    className="mb-6 relative flex-none"
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                >
                     <div className="absolute inset-0 bg-red-500/30 rounded-xl blur-lg" />
                     <div className="relative bg-red-500/90 backdrop-blur-sm px-4 py-2 md:p-3 rounded-xl border-2 border-red-300/50 text-white text-center text-sm md:text-sm font-semibold">
                         {error}
                     </div>
-                </div>
+                </motion.div>
             )}
 
             {/* Nickname Input */}
-            <div className={`mb-4 md:mb-6 flex-none ${isMobile ? '' : 'opacity-0 animate-fade-in-up'}`} style={isMobile ? {} : { animationDelay: '0.4s' }}>
+            <motion.div
+                className="mb-4 md:mb-6 flex-none"
+                initial={isMobile ? {} : { opacity: 0, y: 20 }}
+                animate={isMobile ? {} : { opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+            >
                 <label className="block text-white/90 mb-2 text-[10px] md:text-sm" style={{ fontWeight: 700 }}>
                     ENTER YOUR NICKNAME
                 </label>
@@ -87,14 +105,16 @@ export default function RoomSelection({
                     className="w-full px-3 py-2 md:px-4 md:py-2.5 bg-white/90 backdrop-blur-sm border-2 border-white/50 rounded-xl focus:border-cyan-400 focus:ring-4 focus:ring-cyan-400/30 outline-none transition-all placeholder-gray-400 text-gray-800 shadow-xl text-xs md:text-base"
                     style={{ fontWeight: 600 }}
                 />
-            </div>
+            </motion.div>
 
             {/* Host & Join Cards */}
             <div className="space-y-4 mb-2 flex-none">
                 {/* Host a Game - Reduced Compact Version */}
-                <div
-                    className={`relative ${isMobile ? '' : 'opacity-0 animate-fade-in-up'}`}
-                    style={isMobile ? {} : { animationDelay: '0.5s' }}
+                <motion.div
+                    className="relative"
+                    initial={isMobile ? {} : { opacity: 0, y: 20 }}
+                    animate={isMobile ? {} : { opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
                 >
                     <div className={`relative overflow-hidden rounded-xl p-2 md:p-5 border-2 shadow-xl backdrop-blur-sm transition-all
                         ${isMobile ? 'bg-purple-600/80 border-white/10' : 'bg-gradient-to-br from-purple-600/80 to-violet-600/80 border-white/30'}`}>
@@ -124,12 +144,14 @@ export default function RoomSelection({
                             </button>
                         </div>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Join a Game - Reverted to Stacked Layout (Fixed Empty State) */}
-                <div
-                    className={`relative ${isMobile ? '' : 'opacity-0 animate-fade-in-up'}`}
-                    style={isMobile ? {} : { animationDelay: '0.6s' }}
+                <motion.div
+                    className="relative"
+                    initial={isMobile ? {} : { opacity: 0, y: 20 }}
+                    animate={isMobile ? {} : { opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6 }}
                 >
                     <div className={`relative overflow-hidden rounded-xl p-2 md:p-5 border-2 shadow-xl backdrop-blur-sm transition-all
                         ${isMobile ? 'bg-cyan-600/80 border-white/10' : 'bg-gradient-to-br from-blue-600/80 to-cyan-600/80 border-white/30'}`}>
@@ -173,7 +195,7 @@ export default function RoomSelection({
                             </div>
                         </div>
                     </div>
-                </div>
+                </motion.div>
             </div>
 
             {/* Flexible Spacer */}
@@ -181,10 +203,10 @@ export default function RoomSelection({
 
             {/* Footer Text */}
             <motion.div
+                className="w-full px-4 text-center text-white/40 text-xs md:text-xs font-semibold mt-1 flex-none"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.8 }}
-                className="w-full px-4 text-center text-white/40 text-xs md:text-xs font-semibold mt-1 flex-none"
             >
                 <p>Enter your nickname and choose to host or join a game! 🎮</p>
             </motion.div>

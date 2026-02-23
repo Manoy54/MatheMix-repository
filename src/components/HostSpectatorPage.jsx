@@ -1,7 +1,4 @@
-
-import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { db } from "../firebaseConfig.js";
-import { doc, updateDoc, getDoc, serverTimestamp, increment, arrayUnion } from "firebase/firestore";
+import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from 'framer-motion';
 import { LogOut, User, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { useMobile } from "../hooks/useMobile.jsx";
@@ -12,8 +9,10 @@ import {
     QuestionCard,
     RoundOverOverlay,
     LeaveConfirmationModal,
-    CATEGORY_MAP
 } from "./MultiplayerComponents.jsx";
+
+import { useHostGameLogic } from "../hooks/useHostGameLogic";
+import { useLeaveNotifications } from "../hooks/useLeaveNotifications";
 
 export default function HostSpectatorPage({ roomCode, roomData, user, onLeave, onOpenSidebar }) {
     const {
@@ -23,154 +22,20 @@ export default function HostSpectatorPage({ roomCode, roomData, user, onLeave, o
         roundStartTime,
     } = roomData || {};
 
-    const [isTimeUp, setIsTimeUp] = useState(false);
     const [showLeaveModal, setShowLeaveModal] = useState(false);
-    const [nextCategory, setNextCategory] = useState("Number & Algebra");
-    const [leaveNotifications, setLeaveNotifications] = useState([]);
-    const prevPlayersRef = useRef(players);
+
+    // Extracted Hook
+    const leaveNotifications = useLeaveNotifications(players);
+
     const isMobile = useMobile();
 
-    // Reset state on new question
-    useEffect(() => {
-        setIsTimeUp(false);
-    }, [currentQuestion]);
-
-    // Handle Time Up -> Auto Advance Logic
-    const handleTimeUp = useCallback(() => {
-        setIsTimeUp(true);
-    }, []);
-
-    // Auto Advance Effect
-    useEffect(() => {
-        let timeout;
-        if ((isTimeUp || (players.length > 0 && players.length === answers.length)) && roomData.status !== "finished") {
-            // Wait 5 seconds, then go to next round
-            timeout = setTimeout(() => {
-                handleNextRound();
-            }, 5000);
-        }
-        return () => clearTimeout(timeout);
-    }, [isTimeUp, answers.length, players.length, roomData.status]);
-
-
-    const handleNextRound = async (manualCategory) => {
-        // Recalculate scores and push updates
-        const totalRounds = roomData.rounds || 5;
-        const currentRoundNumber = roomData.roundNumber || 1;
-        const roomRef = doc(db, "rooms", roomCode);
-
-        // Score Calculation
-        const correctAnswers = answers
-            .filter(a => a.isCorrect)
-            .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
-
-        const roundScores = {};
-        correctAnswers.forEach((answerData, index) => {
-            const rank = index + 1;
-            const baseScore = 100;
-            const rankBonus = Math.max(0, 30 - ((rank - 1) * 10));
-            roundScores[answerData.uid] = baseScore + rankBonus;
-        });
-
-        const updatedPlayers = players.map(p => {
-            const verifiedRoundScore = roundScores[p.uid] || 0;
-            return { ...p, score: p.score + verifiedRoundScore };
-        });
-
-        if (currentRoundNumber >= totalRounds) {
-            // FINISH GAME
-            await updateDoc(roomRef, {
-                status: "finished",
-                players: updatedPlayers,
-                answers: [],
-                currentQuestion: null
-            });
-
-            // Update stats for each player
-            const batchPromises = updatedPlayers.map(async (p) => {
-                try {
-                    const userStatsRef = doc(db, 'userStats', p.uid);
-                    // Check if doc exists first to avoid errors if user doesn't have stats yet
-                    const userStatsSnap = await getDoc(userStatsRef);
-
-                    const isWinner = p.uid === updatedPlayers.sort((a, b) => b.score - a.score)[0].uid;
-                    const gameResult = {
-                        id: roomCode + Date.now(),
-                        mode: 'Multiplayer',
-                        result: isWinner ? 'Victory' : 'Defeat',
-                        score: p.score, // Using score instead of streak for MP
-                        date: new Date().toLocaleDateString(),
-                        timestamp: Date.now()
-                    };
-
-                    const updateData = {
-                        'multiplayer.gamesPlayed': increment(1),
-                        'multiplayer.wins': increment(isWinner ? 1 : 0),
-                        'recentGames': arrayUnion(gameResult)
-                    };
-
-                    if (userStatsSnap.exists()) {
-                        await updateDoc(userStatsRef, updateData);
-                    } else {
-                        // Ideally create it, but for now rely on existing migration or just update if exists
-                        // To be safe we could use setDoc with merge, but keeping it simple as per instructions "Fix stats"
-                    }
-                } catch (err) {
-                    console.error("Failed to update stats for player", p.uid, err);
-                }
-            });
-            await Promise.all(batchPromises);
-
-            return;
-        }
-
-        // Get Next Question
-        const categoryToUse = manualCategory || nextCategory;
-        const slug = CATEGORY_MAP[categoryToUse] || "number-algebra";
-        const qDocRef = doc(db, 'question-data', slug);
-        const qDocSnap = await getDoc(qDocRef);
-
-        let question = null;
-        if (qDocSnap.exists()) {
-            const data = qDocSnap.data();
-            const questions = data.questions || [];
-            if (questions.length > 0) {
-                question = questions[Math.floor(Math.random() * questions.length)];
-            } else if (data.definition && data.answer) {
-                question = { definition: data.definition, answer: data.answer };
-            }
-        }
-
-        if (!question) {
-            question = { definition: "Wait, no questions found in this category!", answer: "ERROR" };
-        }
-
-        await updateDoc(roomRef, {
-            status: "playing",
-            currentQuestion: question,
-            roundStartTime: serverTimestamp(),
-            answers: [],
-            players: updatedPlayers,
-            category: categoryToUse,
-            roundNumber: currentRoundNumber + 1
-        });
-    };
-
-    // Notification for players leaving
-    useEffect(() => {
-        const prevPlayers = prevPlayersRef.current;
-        if (players.length < prevPlayers.length) {
-            const leftPlayer = prevPlayers.find(p => !players.some(curr => curr.uid === p.uid));
-            if (leftPlayer) {
-                const id = Date.now();
-                setLeaveNotifications(prev => [...prev, { id, name: leftPlayer.nickname }]);
-                setTimeout(() => {
-                    setLeaveNotifications(prev => prev.filter(n => n.id !== id));
-                }, 4000);
-            }
-        }
-        prevPlayersRef.current = players;
-    }, [players]);
+    const {
+        isTimeUp,
+        handleTimeUp,
+        handleNextRound,
+        nextCategory,
+        setNextCategory
+    } = useHostGameLogic(roomCode, roomData, true); // isHost=true always for SpectatorPage
 
     const sortedPlayers = useMemo(() => {
         if (!players || !roomData) return [];

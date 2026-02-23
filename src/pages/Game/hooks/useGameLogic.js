@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { auth, db } from '../../../firebaseConfig';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useMobile } from '../../../hooks/useMobile';
+import { QUESTIONS } from '../../../data';
 
 export const useGameLogic = (onGameEnd) => {
     const isMobile = useMobile();
@@ -15,7 +16,7 @@ export const useGameLogic = (onGameEnd) => {
     const CATEGORY_MAP = {
         "Number & Algebra": "number-algebra",
         "Measurement & Geometry": "measurement-geometry",
-        "Data & probability": "data-probability"
+        "Data & Probability": "data-probability"
     };
 
     const category = location.state?.category || "Number & Algebra";
@@ -32,12 +33,36 @@ export const useGameLogic = (onGameEnd) => {
     const [input, setInput] = useState('');
     const [streak, setStreak] = useState(0);
     const [bestStreak, setBestStreak] = useState(0);
+    // New Points System
+    const [currentPoints, setCurrentPoints] = useState(25);
+    const [highestPoints, setHighestPoints] = useState(0);
     const [questionNumber, setQuestionNumber] = useState(1);
+    const [hintError, setHintError] = useState(false);
 
     useEffect(() => {
+        const fetchUserData = async () => {
+            const userId = auth.currentUser?.uid;
+            if (userId) {
+                try {
+                    const userStatsRef = doc(db, 'userStats', userId);
+                    const docSnap = await getDoc(userStatsRef);
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        setBestStreak(data.longestStreak || 0);
+                        setHighestPoints(data.highestPoints || 0);
+                    }
+                } catch (e) {
+                    console.error("Error fetching user stats", e);
+                }
+            }
+        };
+        fetchUserData();
+
         const fetchQuestions = async () => {
             setLoadingQuestions(true);
             const slug = CATEGORY_MAP[category] || "number-algebra";
+            let loadedQuestions = [];
+
             try {
                 const docRef = doc(db, 'question-data', slug);
                 const docSnap = await getDoc(docRef);
@@ -45,19 +70,31 @@ export const useGameLogic = (onGameEnd) => {
                     const data = docSnap.data();
                     const qArray = data.questions || [];
                     if (qArray.length > 0) {
-                        setCategoryQuestions(qArray);
-                        setCurrentQ(qArray[Math.floor(Math.random() * qArray.length)]);
+                        loadedQuestions = qArray;
                     } else if (data.definition && data.answer) {
-                        const legacyQ = { definition: data.definition, answer: data.answer };
-                        setCategoryQuestions([legacyQ]);
-                        setCurrentQ(legacyQ);
+                        loadedQuestions = [{ definition: data.definition, answer: data.answer }];
                     }
                 }
             } catch (err) {
-                console.error("Error fetching questions:", err);
-            } finally {
-                setLoadingQuestions(false);
+                console.error("Error fetching questions from Firestore, falling back to local data:", err);
             }
+
+            // Fallback to local data if Firestore returned nothing
+            if (loadedQuestions.length === 0) {
+                // Try exact match or fallback
+                loadedQuestions = QUESTIONS[category] || [];
+                if (loadedQuestions.length === 0) {
+                    console.warn(`No local questions found for category: ${category}`);
+                }
+            }
+
+            setCategoryQuestions(loadedQuestions);
+            if (loadedQuestions.length > 0) {
+                setCurrentQ(loadedQuestions[Math.floor(Math.random() * loadedQuestions.length)]);
+            } else {
+                setCurrentQ(null);
+            }
+            setLoadingQuestions(false);
         };
         fetchQuestions();
     }, [category]);
@@ -82,7 +119,7 @@ export const useGameLogic = (onGameEnd) => {
         return "algebra";
     };
 
-    const updateStats = async (isCorrect, endedStreakCount = 0, isGameEnd = false) => {
+    const updateStats = async (isCorrect, endedStreakCount = 0, isGameEnd = false, currentScore = 0) => {
         const userId = auth.currentUser?.uid;
         if (!userId) return;
 
@@ -112,6 +149,9 @@ export const useGameLogic = (onGameEnd) => {
             const candidateStreak = isCorrect ? (streak + 1) : endedStreakCount;
             const newLongestStreak = Math.max(currentLongest, candidateStreak);
 
+            const currentHighestPoints = currentStats.highestPoints || 0;
+            const newHighestPoints = Math.max(currentHighestPoints, currentScore);
+
             const currentPlayTime = currentStats.totalPlayTime || 0;
             const newPlayTime = currentPlayTime + timeTaken;
 
@@ -132,6 +172,7 @@ export const useGameLogic = (onGameEnd) => {
                 totalWins: newTotalWins,
                 accuracy: newAccuracy,
                 longestStreak: newLongestStreak,
+                highestPoints: newHighestPoints,
                 totalPlayTime: Math.round(newPlayTime),
                 avgAnswerTime: newAvgTime,
                 fastestAnswer: newFastest,
@@ -169,6 +210,7 @@ export const useGameLogic = (onGameEnd) => {
     const resetGame = useCallback(() => {
         setIsGameOver(false);
         setStreak(0);
+        setCurrentPoints(25);
         setQuestionNumber(1);
         setAnswerStatus(null);
         setInput('');
@@ -241,13 +283,28 @@ export const useGameLogic = (onGameEnd) => {
         const inputNoSpaces = input.replace(/ /g, '');
         const answerNoSpaces = answer.replace(/ /g, '');
 
+        if (inputNoSpaces.length === 0) {
+            const finalStreak = streak;
+            if (onGameEnd) onGameEnd(false);
+            updateStats(false, finalStreak, true, currentPoints);
+            setInput(answerNoSpaces);
+            setAnswerStatus('revealed');
+            setTimeout(() => { setIsGameOver(true); }, 3000);
+            return;
+        }
+
         if (inputNoSpaces.toUpperCase() === answerNoSpaces) {
             setAnswerStatus('correct');
             const newStreak = streak + 1;
             setStreak(newStreak);
             if (newStreak > bestStreak) setBestStreak(newStreak);
+
+            const newPoints = currentPoints + 5;
+            setCurrentPoints(newPoints);
+            if (newPoints > highestPoints) setHighestPoints(newPoints);
+
             if (onGameEnd) onGameEnd(true);
-            updateStats(true, newStreak, false);
+            updateStats(true, newStreak, false, newPoints);
             setTimeout(() => {
                 nextQuestion();
                 if (isMobile && hiddenInputRef.current) {
@@ -259,10 +316,10 @@ export const useGameLogic = (onGameEnd) => {
             setAnswerStatus('wrong');
             const finalStreak = streak;
             if (onGameEnd) onGameEnd(false);
-            updateStats(false, finalStreak, true);
+            updateStats(false, finalStreak, true, currentPoints);
             setTimeout(() => { setIsGameOver(true); }, 1000);
         }
-    }, [input, answer, streak, bestStreak, onGameEnd, nextQuestion, answerStatus, isGameOver]);
+    }, [input, answer, streak, bestStreak, onGameEnd, nextQuestion, answerStatus, isGameOver, currentPoints, highestPoints]);
 
     const handleSkip = useCallback(() => {
         if (!answerStatus && !isGameOver) {
@@ -280,7 +337,7 @@ export const useGameLogic = (onGameEnd) => {
         setShowGiveUpModal(false);
         const finalStreak = streak;
         if (onGameEnd) onGameEnd(false);
-        updateStats(false, finalStreak, true);
+        updateStats(false, finalStreak, true, currentPoints);
         const cleanAnswer = answer.replace(/ /g, '');
         setInput(cleanAnswer);
         setAnswerStatus('revealed');
@@ -328,6 +385,51 @@ export const useGameLogic = (onGameEnd) => {
         }
     }, [isMobile, loadingQuestions, showGiveUpModal, isGameOver]);
 
+    // Hint Logic
+    const handleHint = useCallback(() => {
+        if (answerStatus || isGameOver || loadingQuestions) return;
+
+        if (currentPoints <= 0) {
+            setHintError(true);
+            setTimeout(() => setHintError(false), 500);
+            return;
+        }
+
+        const answerClean = answer.replace(/ /g, '');
+        let targetIndex = -1;
+
+        // Find first mismatch or empty spot
+        for (let i = 0; i < answerClean.length; i++) {
+            const charInput = (input[i] || '').toUpperCase();
+            const charAnswer = answerClean[i].toUpperCase();
+            if (charInput !== charAnswer) {
+                targetIndex = i;
+                break;
+            }
+        }
+
+        if (targetIndex === -1) return;
+
+        const charToReveal = answerClean[targetIndex];
+
+        // Deduct points
+        let nextPoints = currentPoints - 5;
+        if (nextPoints <= 0) {
+            nextPoints = 0;
+            setStreak(0);
+        }
+        setCurrentPoints(nextPoints);
+
+        // Update input
+        setInput(prev => {
+            const chars = prev.split('');
+            while (chars.length <= targetIndex) chars.push(' ');
+            chars[targetIndex] = charToReveal;
+            return chars.join('');
+        });
+
+    }, [answer, input, answerStatus, isGameOver, loadingQuestions, currentPoints]);
+
     const handleGameAreaClick = () => {
         if (isMobile && hiddenInputRef.current) {
             hiddenInputRef.current.focus();
@@ -340,9 +442,12 @@ export const useGameLogic = (onGameEnd) => {
         currentQ,
         loadingQuestions,
         input,
+        currentPoints,
+        highestPoints,
         streak,
         bestStreak,
         questionNumber,
+        hintError,
         showGiveUpModal,
         isGameOver,
         answerStatus,
@@ -364,6 +469,8 @@ export const useGameLogic = (onGameEnd) => {
         handleBoxInput,
         handleBoxBackspaceNav,
         setActiveBoxIndex,
-        handleGameAreaClick
+        setActiveBoxIndex,
+        handleGameAreaClick,
+        handleHint
     };
 };

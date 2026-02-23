@@ -1,8 +1,7 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Trophy, LogOut, Crown, Users, Star, RotateCcw, CheckCircle2 } from 'lucide-react';
-import { db } from '../firebaseConfig.js';
-import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { MultiplayerService } from '../services/MultiplayerService';
 
 const PodiumItem = ({ player, rank, height, color, glow, delay }) => {
     if (!player) return <div className="flex-1" />;
@@ -89,10 +88,7 @@ export default function MultiplayerGameFinish({ roomData, user, onLeave, onHostP
     const handleVotePlayAgain = async () => {
         if (hasVoted) return;
         try {
-            const roomRef = doc(db, "rooms", roomData.roomCode);
-            await updateDoc(roomRef, {
-                playAgainVotes: arrayUnion(user.uid)
-            });
+            await MultiplayerService.votePlayAgain(roomData.roomCode, user.uid);
         } catch (error) {
             console.error("Error voting for play again:", error);
         }
@@ -108,23 +104,23 @@ export default function MultiplayerGameFinish({ roomData, user, onLeave, onHostP
                     animate={{ y: 0, opacity: 1 }}
                     className="text-center space-y-1 md:space-y-2"
                 >
-                    <div className="inline-block p-2 md:p-3 bg-white/10 rounded-2xl backdrop-blur-md border border-white/20 mb-1 md:mb-2">
-                        <Trophy className="w-8 h-8 md:w-10 md:h-10 text-yellow-400 animate-bounce" />
+                    <div className="inline-block p-2 bg-white/10 rounded-2xl backdrop-blur-md border border-white/20 mb-1">
+                        <Trophy className="w-6 h-6 md:w-8 md:h-8 text-yellow-400 animate-bounce" />
                     </div>
-                    <h1 className="text-3xl md:text-5xl font-black text-white tracking-tighter uppercase italic drop-shadow-lg">
+                    <h1 className="text-2xl md:text-4xl font-black text-white tracking-tighter uppercase italic drop-shadow-lg">
                         Match Results
                     </h1>
-                    <p className="text-white/60 font-bold tracking-widest uppercase text-xs md:text-sm">
+                    <p className="text-white/60 font-bold tracking-widest uppercase text-xs">
                         Legendary Performance!
                     </p>
                 </motion.div>
 
                 {/* Podium Section */}
-                <div className="w-full max-w-2xl flex items-end justify-center gap-2 md:gap-4 mt-4 min-h-[220px] md:min-h-[260px]">
+                <div className="w-full max-w-xl flex items-end justify-center gap-2 md:gap-3 mt-2 min-h-[180px] md:min-h-[220px]">
                     <PodiumItem
                         player={top3[0]}
                         rank={2}
-                        height={120}
+                        height={100}
                         color="border-slate-300"
                         glow="bg-slate-300"
                         delay={0.4}
@@ -132,7 +128,7 @@ export default function MultiplayerGameFinish({ roomData, user, onLeave, onHostP
                     <PodiumItem
                         player={top3[1]}
                         rank={1}
-                        height={160}
+                        height={130}
                         color="border-yellow-400"
                         glow="bg-yellow-400"
                         delay={0.2}
@@ -140,7 +136,7 @@ export default function MultiplayerGameFinish({ roomData, user, onLeave, onHostP
                     <PodiumItem
                         player={top3[2]}
                         rank={3}
-                        height={90}
+                        height={80}
                         color="border-orange-500"
                         glow="bg-orange-500"
                         delay={0.6}
@@ -152,24 +148,24 @@ export default function MultiplayerGameFinish({ roomData, user, onLeave, onHostP
                     initial={{ y: 50, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.8 }}
-                    className="w-full max-w-2xl bg-black/20 backdrop-blur-xl rounded-[30px] border-2 border-white/10 p-4 md:p-6 shadow-2xl space-y-3"
+                    className="w-full max-w-xl bg-black/20 backdrop-blur-xl rounded-[24px] border-2 border-white/10 p-3 md:p-4 shadow-2xl space-y-2"
                 >
-                    <div className="flex items-center justify-between px-4 mb-4">
-                        <h3 className="text-white/40 font-black uppercase tracking-widest text-xs">Final Standings</h3>
-                        <div className="flex items-center gap-2 text-white/40 text-xs font-black uppercase">
-                            <Users className="w-4 h-4" />
+                    <div className="flex items-center justify-between px-2 mb-2">
+                        <h3 className="text-white/40 font-black uppercase tracking-widest text-[10px]">Final Standings</h3>
+                        <div className="flex items-center gap-2 text-white/40 text-[10px] font-black uppercase">
+                            <Users className="w-3 h-3" />
                             {sortedPlayers.length} Players
                         </div>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                         {sortedPlayers.map((player, index) => (
                             <motion.div
                                 key={player.uid}
                                 initial={{ x: -20, opacity: 0 }}
                                 animate={{ x: 0, opacity: 1 }}
                                 transition={{ delay: 1 + index * 0.1 }}
-                                className={`flex items-center justify-between p-4 rounded-2xl border-2 transition-all relative ${playAgainVotes.includes(player.uid)
+                                className={`flex items-center justify-between p-3 rounded-xl border transition-all relative ${playAgainVotes.includes(player.uid)
                                     ? 'bg-green-500/10 border-green-500/50 shadow-[0_0_20px_rgba(34,197,94,0.2)]'
                                     : player.uid === user.uid
                                         ? 'bg-white/20 border-white/40 shadow-xl'
@@ -177,13 +173,13 @@ export default function MultiplayerGameFinish({ roomData, user, onLeave, onHostP
                                     }`}
                             >
                                 {playAgainVotes.includes(player.uid) && (
-                                    <div className="absolute -top-3 right-4 bg-green-500 text-white text-[10px] font-black uppercase px-3 py-1 rounded-full shadow-lg flex items-center gap-1 animate-bounce">
-                                        <CheckCircle2 className="w-3 h-3" />
+                                    <div className="absolute -top-2 right-2 bg-green-500 text-white text-[8px] font-black uppercase px-2 py-0.5 rounded-full shadow-lg flex items-center gap-1 animate-bounce">
+                                        <CheckCircle2 className="w-2.5 h-2.5" />
                                         Play Again
                                     </div>
                                 )}
-                                <div className="flex items-center gap-4">
-                                    <span className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-sm ${index === 0 ? 'bg-yellow-400 text-slate-900' :
+                                <div className="flex items-center gap-3">
+                                    <span className={`w-6 h-6 rounded-full flex items-center justify-center font-black text-xs ${index === 0 ? 'bg-yellow-400 text-slate-900' :
                                         index === 1 ? 'bg-slate-300 text-slate-900' :
                                             index === 2 ? 'bg-orange-400 text-slate-900' :
                                                 'bg-white/10 text-white'
@@ -191,15 +187,15 @@ export default function MultiplayerGameFinish({ roomData, user, onLeave, onHostP
                                         {index + 1}
                                     </span>
                                     <div>
-                                        <p className="text-white font-bold">{player.nickname}</p>
+                                        <p className="text-white font-bold text-sm">{player.nickname}</p>
                                         {player.uid === user.uid && (
-                                            <span className="text-[10px] text-yellow-300 font-black uppercase tracking-tighter">Your Score</span>
+                                            <span className="text-[8px] text-yellow-300 font-black uppercase tracking-tighter">Your Score</span>
                                         )}
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-white font-black text-xl">{player.score}</p>
-                                    <p className="text-white/40 font-bold text-[10px] uppercase">Points</p>
+                                    <p className="text-white font-black text-lg">{player.score}</p>
+                                    <p className="text-white/40 font-bold text-[8px] uppercase">Points</p>
                                 </div>
                             </motion.div>
                         ))}
@@ -211,26 +207,26 @@ export default function MultiplayerGameFinish({ roomData, user, onLeave, onHostP
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 1.5 }}
-                    className="w-full max-w-2xl px-4 pb-12"
+                    className="w-full max-w-xl px-4 pb-8"
                 >
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <button
                             onClick={hasVoted ? undefined : handleVotePlayAgain}
                             disabled={hasVoted}
-                            className={`py-6 rounded-3xl font-black uppercase tracking-[0.2em] shadow-xl transition-all flex items-center justify-center gap-3 ${hasVoted
+                            className={`py-4 rounded-2xl font-black uppercase tracking-[0.15em] text-sm shadow-xl transition-all flex items-center justify-center gap-2 ${hasVoted
                                 ? 'bg-green-500/20 text-green-300 border-2 border-green-500/30 cursor-default'
                                 : 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white hover:from-cyan-300 hover:to-blue-400 hover:scale-[1.02] active:scale-[0.98]'
                                 }`}
                         >
                             {hasVoted ? (
                                 <>
-                                    <CheckCircle2 className="w-6 h-6" />
-                                    Voted Play Again
+                                    <CheckCircle2 className="w-5 h-5" />
+                                    Voted
                                 </>
                             ) : (
                                 <>
-                                    <RotateCcw className="w-6 h-6" />
-                                    Vote Play Again
+                                    <RotateCcw className="w-5 h-5" />
+                                    Play Again
                                 </>
                             )}
                         </button>
@@ -238,23 +234,23 @@ export default function MultiplayerGameFinish({ roomData, user, onLeave, onHostP
                         <button
                             onClick={isHost && canPlayAgain ? onHostPlayAgain : undefined}
                             disabled={!isHost || !canPlayAgain}
-                            className={`py-6 rounded-3xl font-black uppercase tracking-[0.2em] shadow-xl transition-all flex items-center justify-center gap-3 ${isHost && canPlayAgain
+                            className={`py-4 rounded-2xl font-black uppercase tracking-[0.15em] text-sm shadow-xl transition-all flex items-center justify-center gap-2 ${isHost && canPlayAgain
                                 ? 'bg-white text-[#023e8a] hover:bg-white/90 hover:scale-[1.02] active:scale-[0.98]'
                                 : isHost
                                     ? 'bg-white/10 text-white/40 border-2 border-white/10 cursor-not-allowed opacity-50'
                                     : 'hidden md:flex bg-white/5 text-white/20 border-2 border-white/5 cursor-not-allowed'
                                 }`}
                         >
-                            <Star className={`w-6 h-6 ${isHost && canPlayAgain ? 'animate-spin-slow text-yellow-500' : ''}`} />
-                            {isHost ? 'Start New Match' : 'Waiting for Host...'}
+                            <Star className={`w-5 h-5 ${isHost && canPlayAgain ? 'animate-spin-slow text-yellow-500' : ''}`} />
+                            {isHost ? 'New Match' : 'Waiting...'}
                         </button>
 
                         <button
                             onClick={onLeave}
-                            className="md:col-span-2 py-6 bg-black/30 text-white/60 hover:text-white rounded-3xl font-black uppercase tracking-[0.2em] hover:bg-black/40 transition-all flex items-center justify-center gap-3 border-2 border-white/5 hover:border-white/10"
+                            className="md:col-span-2 py-4 bg-black/30 text-white/60 hover:text-white rounded-2xl font-black uppercase tracking-[0.15em] text-sm hover:bg-black/40 transition-all flex items-center justify-center gap-2 border-2 border-white/5 hover:border-white/10"
                         >
-                            <LogOut className="w-6 h-6" />
-                            Return to Main Lobby
+                            <LogOut className="w-5 h-5" />
+                            Return to Lobby
                         </button>
                     </div>
                     {myRank === 1 && (

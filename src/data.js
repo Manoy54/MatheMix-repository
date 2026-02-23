@@ -87,7 +87,7 @@ export const QUESTIONS = {
         { definition: "A pyramid with a rectangular base.", answer: "RECTANGULAR PYRAMID" },
         { definition: "A polyhedron with two congruent and parallel bases", answer: "RECTANGULAR PRISM" },
     ],
-    "Data & probability": [
+    "Data & Probability": [
         // ... (no changes in this category)
         { definition: "Refers to information such as facts and numbers used to analyze something or make decisions.", answer: "DATA" },
         { definition: "The study of collecting, organizing, and analyzing data.", answer: "STATISTICS" },

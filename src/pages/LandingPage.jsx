@@ -308,16 +308,16 @@ const LandingPage = ({ user }) => {
             {/* Meet the Developers (NEW) */}
             <section className="py-10 md:py-20 relative z-10">
                 <div className="w-[85%] md:container mx-auto">
-                    <h2 className="text-2xl md:text-4xl font-black text-center mb-4 md:mb-6">Meet The Developers</h2>
+                    <h2 className="text-2xl md:text-4xl font-black text-center mb-4 md:mb-6">Game Designers & Conceptualizers</h2>
                     <p className="text-center text-blue-100 max-w-3xl mx-auto mb-8 md:mb-16 text-xs md:text-lg leading-relaxed drop-shadow-md">
                         "We are BSIT students from the Bicol University College of Science, pushing the boundaries of technology by building a high-performance website that bridges the gap between innovation and user experience."
                     </p>
                     <div className="flex flex-col md:flex-row justify-center gap-6 md:gap-8 flex-wrap">
                         {[
-                            { name: "Sean Dylan Armenta", role: "Full Stack Developer", icon: Code },
-                            { name: "John Benedict Candelaria", role: "Full Stack Developer", icon: Code },
-                            { name: "Jeffrey Cruel", role: "Backend Specialist", icon: Cpu },
-                            { name: "Nash Mapula", role: "Frontend Developer", icon: Monitor }
+                            { name: "PLANDEZ, PRINCESS JAIRA B.", role: "Game Designer & Conceptualizer", icon: Star },
+                            { name: "BARCENAS, REYMUND B.", role: "Game Designer & Conceptualizer", icon: Gamepad2 },
+                            { name: "BROQUEZA, MARIANNE JOY B.", role: "Game Designer & Conceptualizer", icon: Brain },
+                            { name: "TADURAN, BIANCA MAE R.", role: "Game Designer & Conceptualizer", icon: Sparkles }
                         ].map((dev, index) => (
                             <motion.div
                                 key={index}

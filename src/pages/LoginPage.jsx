@@ -1,59 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { initializeApp } from 'firebase/app';
 import {
-    getAuth,
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
     updateProfile,
-    signInWithCustomToken,
-    signInAnonymously,
-    onAuthStateChanged
+    signInWithCustomToken
 } from "firebase/auth";
-import { getFirestore, doc, setDoc } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
+import { auth, db } from "../firebaseConfig";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown } from "lucide-react"; // Imported ChevronDown
+import { ChevronDown } from "lucide-react";
 import { useLoading } from "../context/LoadingContext";
 import { useMobile } from "../hooks/useMobile";
 import StandardHeader from '../components/StandardHeader';
 
-
 import createAccImg from "../assets/createaccimg.jpg";
-
-
-
-
-// --- 2. FIREBASE CONFIGURATION ---
-let auth;
-let db;
-
-
-const firebaseConfig = {
-    apiKey: "AIzaSyB-2pa1BV9M6hnkVaurpun25dPB54xDq4A",
-    authDomain: "mathemix-9c8ba.firebaseapp.com",
-    projectId: "mathemix-9c8ba",
-    storageBucket: "mathemix-9c8ba.firebasestorage.app",
-    messagingSenderId: "935229093991",
-    appId: "1:935229093991:web:39c640add883cbf3a43cc2",
-    measurementId: "G-0RMLEHK80H"
-};
-
-const app = initializeApp(firebaseConfig);
-auth = getAuth(app);
-db = getFirestore(app);
-
-
-// FOR PREVIEW USE ONLY (Keeps the preview running here)
-try {
-    if (typeof __firebase_config !== 'undefined' && !auth) {
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const app = initializeApp(firebaseConfig);
-        auth = getAuth(app);
-        db = getFirestore(app);
-    }
-} catch (e) {
-    console.error("Firebase initialization failed:", e);
-}
-
 
 function App() {
     const isMobile = useMobile();

@@ -21,9 +21,11 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
         currentQ,
         loadingQuestions,
         input,
+        currentPoints,
         streak,
         bestStreak,
         questionNumber,
+        hintError,
         showGiveUpModal,
         isGameOver,
         answerStatus,
@@ -44,7 +46,8 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
         handleBoxInput,
         handleBoxBackspaceNav,
         setActiveBoxIndex,
-        handleGameAreaClick
+        handleGameAreaClick,
+        handleHint
     } = useGameLogic(onGameEnd);
 
     // --- Container Measurement for CharacterBoxes ---
@@ -115,6 +118,8 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
                         questionNumber={questionNumber}
                         streak={streak}
                         bestStreak={bestStreak}
+                        currentPoints={currentPoints}
+                        hintError={hintError}
                     />
 
                     <div className="w-full" ref={questionCardRef}>
@@ -160,7 +165,10 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
                                 onSpace={() => { }} // handleSpace was empty
                                 onSubmit={handleSubmit}
                                 onSkip={handleSkip}
+                                onHint={handleHint}
                                 pressedKey={pressedKey}
+                                currentPoints={currentPoints}
+                                hintError={hintError}
                             />
                         </motion.div>
                     )}
@@ -169,6 +177,9 @@ export default function Game({ onGameEnd, onOpenSidebar }) {
                             isMobile={true}
                             onSkip={handleSkip}
                             onSubmit={handleSubmit}
+                            onHint={handleHint}
+                            currentPoints={currentPoints}
+                            hintError={hintError}
                         />
                     )}
                 </div>

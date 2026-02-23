@@ -243,42 +243,43 @@ export const RoundOverOverlay = ({ roomData, user, sortedPlayers, isHost, onNext
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#023e8a]/90 md:backdrop-blur-xl"
         >
+
             <motion.div
                 initial={{ scale: 0.9, y: 50, opacity: 0 }}
                 animate={{ scale: 1, y: 0, opacity: 1 }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                className="bg-[#0f172a] border-2 border-white/10 p-3 md:p-8 rounded-[20px] md:rounded-[40px] md:shadow-[0_0_100px_rgba(0,0,0,0.5)] max-w-xl w-[90%] md:w-full h-auto max-h-[70vh] md:max-h-none text-center flex flex-col md:block relative overflow-hidden"
+                className="bg-[#0f172a] border-2 border-white/10 p-3 md:p-6 rounded-[20px] md:rounded-[36px] md:shadow-[0_0_80px_rgba(0,0,0,0.5)] max-w-lg w-[90%] md:w-full h-auto max-h-[85vh] md:max-h-none text-center flex flex-col md:block relative overflow-hidden"
             >
-                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 shrink-0" />
-                <div className="space-y-1 md:space-y-2 shrink-0 mb-1 md:mb-2">
-                    <div className="inline-block p-2 md:p-4 bg-yellow-400/10 rounded-2xl md:rounded-3xl mb-1 md:mb-2">
-                        <Trophy className={`w-6 h-6 md:w-12 md:h-12 ${isWinner ? 'text-yellow-400 animate-bounce' : 'text-gray-400'}`} />
+                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 shrink-0" />
+                <div className="space-y-1 shrink-0 mb-2">
+                    <div className="inline-block p-2 md:p-3 bg-yellow-400/10 rounded-2xl mb-1">
+                        <Trophy className={`w-6 h-6 md:w-10 md:h-10 ${isWinner ? 'text-yellow-400 animate-bounce' : 'text-gray-400'}`} />
                     </div>
-                    <h2 className="text-2xl md:text-4xl font-black text-white tracking-tight">
+                    <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight">
                         {isFinalRound ? "Match Over!" : "Round Over!"}
                     </h2>
-                    <p className="text-white/60 font-medium text-[10px] md:text-base">Amazing performance from everyone!</p>
+                    <p className="text-white/60 font-medium text-[10px] md:text-sm">Amazing performance from everyone!</p>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 md:gap-4 flex-1 overflow-y-auto md:overflow-visible content-start md:content-center py-1 md:py-2 px-1">
-                    <div className="col-span-3 bg-gradient-to-r from-yellow-400/20 to-orange-500/20 p-2 md:p-4 rounded-2xl md:rounded-3xl border border-yellow-400/30 flex flex-col items-center justify-center">
-                        <p className="text-yellow-400 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-0.5 md:mb-1">Round Winner</p>
-                        <p className="text-lg md:text-2xl font-black text-white truncate w-full">
+                <div className="grid grid-cols-3 gap-2 md:gap-3 flex-1 overflow-y-auto md:overflow-visible content-start md:content-center py-1 md:py-2 px-1">
+                    <div className="col-span-3 bg-gradient-to-r from-yellow-400/20 to-orange-500/20 p-2 md:p-3 rounded-2xl md:rounded-3xl border border-yellow-400/30 flex flex-col items-center justify-center">
+                        <p className="text-yellow-400 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-0.5">Round Winner</p>
+                        <p className="text-lg md:text-xl font-black text-white truncate w-full">
                             {answers.filter(a => a.isCorrect).sort((a, b) => a.timestamp - b.timestamp)[0]?.nickname || "None"}
                         </p>
                     </div>
                     {/* Only show "Items Found" etc if user is a player (has user object and is participating) */}
                     {user && (
                         <>
-                            <div className="bg-white/5 p-2 md:p-4 rounded-xl md:rounded-3xl border border-white/10 flex flex-col items-center justify-center">
-                                <p className="text-white/40 text-[8px] md:text-[10px] font-bold uppercase mb-0.5 md:mb-1">Items Found</p>
-                                <p className={`text-sm md:text-2xl font-black ${answers.filter(a => a.uid === user.uid && a.isCorrect).length > 0 ? "text-green-500" : "text-red-500"}`}>
+                            <div className="bg-white/5 p-2 md:p-3 rounded-xl md:rounded-2xl border border-white/10 flex flex-col items-center justify-center">
+                                <p className="text-white/40 text-[8px] md:text-[9px] font-bold uppercase mb-0.5">Items Found</p>
+                                <p className={`text-sm md:text-xl font-black ${answers.filter(a => a.uid === user.uid && a.isCorrect).length > 0 ? "text-green-500" : "text-red-500"}`}>
                                     {answers.filter(a => a.uid === user.uid && a.isCorrect).length > 0 ? "Correct" : "Missed"}
                                 </p>
                             </div>
-                            <div className="bg-white/5 p-2 md:p-4 rounded-xl md:rounded-3xl border border-white/10 flex flex-col items-center justify-center">
-                                <p className="text-white/40 text-[8px] md:text-[10px] font-bold uppercase mb-0.5 md:mb-1">Points Earned</p>
-                                <p className="text-sm md:text-2xl font-black text-white">
+                            <div className="bg-white/5 p-2 md:p-3 rounded-xl md:rounded-2xl border border-white/10 flex flex-col items-center justify-center">
+                                <p className="text-white/40 text-[8px] md:text-[9px] font-bold uppercase mb-0.5">Points Earned</p>
+                                <p className="text-sm md:text-xl font-black text-white">
                                     {(() => {
                                         const myRoundAnswer = answers.find(a => a.uid === user.uid && a.isCorrect);
                                         if (!myRoundAnswer) return 0;
@@ -288,9 +289,9 @@ export const RoundOverOverlay = ({ roomData, user, sortedPlayers, isHost, onNext
                                     })()}
                                 </p>
                             </div>
-                            <div className="bg-white/5 p-2 md:p-4 rounded-xl md:rounded-3xl border border-white/10 flex flex-col items-center justify-center">
-                                <p className="text-white/40 text-[8px] md:text-[10px] font-bold uppercase mb-0.5 md:mb-1">Total Score</p>
-                                <p className="text-sm md:text-2xl font-black text-white">
+                            <div className="bg-white/5 p-2 md:p-3 rounded-xl md:rounded-2xl border border-white/10 flex flex-col items-center justify-center">
+                                <p className="text-white/40 text-[8px] md:text-[9px] font-bold uppercase mb-0.5">Total Score</p>
+                                <p className="text-sm md:text-xl font-black text-white">
                                     {(() => {
                                         const baseScore = myPlayer?.score || 0;
                                         const myRoundAnswer = answers.find(a => a.uid === user.uid && a.isCorrect);
@@ -304,30 +305,120 @@ export const RoundOverOverlay = ({ roomData, user, sortedPlayers, isHost, onNext
                             </div>
                         </>
                     )}
-                </div>
 
-                {isFinalRound ? (
-                    <div className="pt-2 md:pt-4 shrink-0 mt-auto">
-                        <button
-                            onClick={() => isHost && onNextRound(nextCategory)}
-                            className={`w-full bg-gradient-to-r from-yellow-400 to-orange-500 active:from-yellow-300 active:to-orange-400 md:hover:from-yellow-300 md:hover:to-orange-400 text-white font-black py-5 rounded-2xl md:shadow-[0_20px_40px_rgba(251,191,36,0.3)] transition-all flex items-center justify-center gap-3 group ${!isHost ? 'opacity-70 cursor-default' : ''}`}
-                        >
-                            <Trophy className="w-6 h-6 fill-white group-hover:scale-110 transition-transform" />
-                            {isHost ? "VIEW MATCH RESULTS" : "VIEW RESULTS (WAITING FOR HOST)"}
-                        </button>
-                    </div>
-                ) : (
-                    <div className="bg-white/5 rounded-3xl p-4 md:p-6 border border-white/10 flex flex-col items-center gap-3 shrink-0 mt-auto">
-                        <div className="flex items-center gap-2">
-                            <Clock className="w-5 h-5 text-cyan-400 animate-spin-slow" />
-                            <span className="text-white/80 font-bold italic">
-                                {autoAdvancing ? "Next round starting shortly..." : "Waiting for next round..."}
-                            </span>
+
+                    {/* Leaderboard Section */}
+                    <div className="col-span-3 mt-2 md:mt-3 bg-white/5 rounded-2xl border border-white/10 overflow-hidden md:shadow-lg">
+                        <div className="p-2 bg-white/5 border-b border-white/10 font-bold text-white text-[10px] md:text-xs uppercase tracking-wider flex items-center gap-2">
+                            <Trophy className="w-3 h-3 text-yellow-500" />
+                            Current Standings
+                        </div>
+                        <div className="max-h-[140px] md:max-h-[160px] overflow-y-auto custom-scrollbar">
+                            {sortedPlayers.map((p, i) => (
+                                <div key={p.uid} className={`flex justify-between px-3 py-2 md:px-4 md:py-3 border-b border-white/5 last:border-0 transition-colors ${p.uid === user?.uid ? 'bg-white/10' : 'hover:bg-white/5'}`}>
+                                    <div className="flex items-center gap-2 md:gap-3">
+                                        <span className={`font-black text-xs md:text-sm w-5 md:w-6 ${i === 0 ? 'text-yellow-400' : i === 1 ? 'text-gray-300' : i === 2 ? 'text-orange-400' : 'text-white/40'}`}>
+                                            #{i + 1}
+                                        </span>
+                                        <span className={`text-xs md:text-sm font-bold ${p.uid === user?.uid ? 'text-cyan-300' : 'text-white/90'}`}>
+                                            {p.nickname} {p.uid === user?.uid && '(You)'}
+                                        </span>
+                                    </div>
+                                    <span className="font-black text-xs md:text-sm text-white">{p.score}</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
-                )}
+                </div>
+
+                {
+                    isFinalRound ? (
+                        <div className="pt-2 md:pt-4 shrink-0 mt-auto">
+                            <button
+                                onClick={() => isHost && onNextRound(nextCategory)}
+                                className={`w-full bg-gradient-to-r from-yellow-400 to-orange-500 active:from-yellow-300 active:to-orange-400 md:hover:from-yellow-300 md:hover:to-orange-400 text-white font-black py-3 rounded-xl md:shadow-[0_10px_20px_rgba(251,191,36,0.3)] transition-all flex items-center justify-center gap-2 group text-sm md:text-base ${!isHost ? 'opacity-70 cursor-default' : ''}`}
+                            >
+                                <Trophy className="w-5 h-5 fill-white group-hover:scale-110 transition-transform" />
+                                {isHost ? "VIEW MATCH RESULTS" : "VIEW RESULTS (WAITING FOR HOST)"}
+                            </button>
+                        </div>
+                    ) : (
+                        <CountdownOverlay
+                            autoAdvancing={autoAdvancing}
+                            targetTime={roomData?.intermissionEndsAt}
+                        />
+                    )
+                }
             </motion.div>
         </motion.div>
+    );
+};
+
+const CountdownOverlay = ({ autoAdvancing, targetTime }) => {
+    // We rely purely on targetTime from server/host
+    const [seconds, setSeconds] = useState(10); // Default to 10 visual
+
+    useEffect(() => {
+        if (!autoAdvancing || !targetTime) {
+            setSeconds(10);
+            return;
+        }
+
+        const updateTimer = () => {
+            const now = Date.now();
+            // If targetTime is invalid or in the past (stale from previous round), show 10s (Waiting state)
+            // This prevents "Stuck at 0" while waiting for the new round's intermission timestamp to propagate.
+            if (!targetTime || targetTime <= now) {
+                setSeconds(10);
+                return;
+            }
+
+            const remaining = Math.max(0, targetTime - now);
+            setSeconds(Math.ceil(remaining / 1000));
+        };
+
+        // Initial update
+        updateTimer();
+
+        const interval = setInterval(() => {
+            const now = Date.now();
+            if (!targetTime || targetTime <= now) {
+                // Keep checking in case it updates, but keep display at 10 or 0? 
+                // If it is truly over, we should probably stay at 0, BUT... 
+                // If we are autoAdvancing, we expect a future time. 
+                // If we are strictly stuck at 0, it means we are waiting for host.
+                // Let's stick to 10s "Waiting..." visual if it's stale. 
+                // But wait, if the round DOES end (timer reaches 0), we want it to show 0.
+                // How to distinguish "Stale Old Round" vs "Just Finished Countdown"?
+                // We can check if (now - targetTime) is huge?
+                // Simpler: If targetTime creates a negative remaining > 5 seconds (e.g. old round), treat as Stale.
+                // If it is close to 0 (e.g. -1s), it just finished.
+                // Let's use a threshold. 15 seconds.
+                const diff = targetTime - now;
+                if (diff < -5000) {
+                    // Propagated stale time
+                    setSeconds(10);
+                } else {
+                    setSeconds(Math.ceil(Math.max(0, diff) / 1000));
+                }
+            } else {
+                setSeconds(Math.ceil((targetTime - now) / 1000));
+            }
+        }, 200);
+
+        return () => clearInterval(interval);
+    }, [autoAdvancing, targetTime]);
+
+    return (
+        <div className="bg-white/5 rounded-2xl p-3 md:p-4 border border-white/10 flex flex-col items-center gap-2 shrink-0 mt-auto w-full">
+            <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-cyan-400 animate-spin-slow" />
+                <span className="text-white/80 font-bold italic text-sm md:text-base">
+                    {autoAdvancing ? `Next round in ${seconds}s...` : "Waiting..."}
+                </span>
+            </div>
+            {/* Countdown bar removed as requested */}
+        </div>
     );
 };
 
