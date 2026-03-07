@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useRef, useEffect, useCallback, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useMobile } from '../hooks/useMobile';
 
 const MusicContext = createContext();
 
@@ -81,6 +82,7 @@ export function MusicProvider({ children }) {
     const [isMuted, setIsMuted] = useState(false);
     const mutedRef = useRef(false);
     const interactedRef = useRef(false);
+    const isMobile = useMobile();
 
     useEffect(() => { mutedRef.current = isMuted; }, [isMuted]);
 
@@ -246,7 +248,8 @@ export function MusicProvider({ children }) {
             playMelody(c, m, melody[melIdx], waveType, noteDur);
 
             // Percussion: tick on every sub-beat, accent on beat 1 and 3
-            if (isLobby) {
+            // Skip on mobile — noise buffer creation is CPU expensive
+            if (isLobby && !isMobile) {
                 const posInBar = subBeatIdx % 4;
                 playTick(c, m, posInBar === 0 || posInBar === 2);
             }
@@ -269,18 +272,20 @@ export function MusicProvider({ children }) {
         const bassTimer = setInterval(tickBass, barDuration * 1000);
         timersRef.current.push(bassTimer);
 
-        // ── Pad chord loop (one chord per bar) ──────────────────────
-        let padIdx = 0;
-        const tickPad = () => {
-            if (!ctxRef.current || !masterRef.current) return;
-            playPadChord(ctxRef.current, masterRef.current, pads[padIdx % pads.length], barDuration);
-            padIdx++;
-        };
-        tickPad();
-        const padTimer = setInterval(tickPad, barDuration * 1000);
-        timersRef.current.push(padTimer);
+        // ── Pad chord loop (one chord per bar) — skip on mobile for perf ──
+        if (!isMobile) {
+            let padIdx = 0;
+            const tickPad = () => {
+                if (!ctxRef.current || !masterRef.current) return;
+                playPadChord(ctxRef.current, masterRef.current, pads[padIdx % pads.length], barDuration);
+                padIdx++;
+            };
+            tickPad();
+            const padTimer = setInterval(tickPad, barDuration * 1000);
+            timersRef.current.push(padTimer);
+        }
 
-    }, [killAll, getCtx, playMelody, playBass, playTick, playPadChord]);
+    }, [killAll, getCtx, playMelody, playBass, playTick, playPadChord, isMobile]);
 
     // ── Mute toggle ─────────────────────────────────────────────────
     const toggleMute = useCallback(() => {

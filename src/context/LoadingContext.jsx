@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
-import { useMobile } from '../hooks/useMobile'; // Import useMobile
+import { useMobile } from '../hooks/useMobile';
 
 const LoadingContext = createContext();
 
@@ -13,16 +13,16 @@ export const LoadingProvider = ({ children }) => {
     const [isBg3DReady, setBg3DReady] = useState(false);
     const [isLoading, setIsLoading] = useState(!hasFinishedAlready);
     const timerRef = useRef(null);
-    const isMobile = useMobile(); // Use the hook
+    const isMobile = useMobile();
 
-    // Fallback for mobile to prevent getting stuck
+    // On mobile: skip loading entirely after first load, and use a very short fallback
     useEffect(() => {
         if (isMobile && isLoading) {
             const fallbackTimeout = setTimeout(() => {
-                if (isLoading) { // Re-check if still loading
+                if (isLoading) {
                     stopLoading();
                 }
-            }, 2000); // 2-second fallback
+            }, 800); // Reduced from 2000ms — mobile should never wait this long
 
             return () => clearTimeout(fallbackTimeout);
         }
@@ -37,22 +37,21 @@ export const LoadingProvider = ({ children }) => {
         }
     }, []);
 
-    // Safety effect: If we are loading but no timer works (e.g. initial refresh), force finish after delay
+    // Safety fallback: force finish if stuck
     useEffect(() => {
         if (isLoading && !isModeDataReady && !timerRef.current) {
             const safetyTimer = setTimeout(() => {
                 setModeDataReady(true);
                 setBg3DReady(true);
-            }, 2500); // 2.5s safety net for initial load
+            }, isMobile ? 600 : 2500); // Much shorter on mobile
             return () => clearTimeout(safetyTimer);
         }
-    }, [isLoading, isModeDataReady]);
+    }, [isLoading, isModeDataReady, isMobile]);
 
     const startLoading = useCallback((options = {}) => {
-        // Default to 1500ms if no duration specified to prevent infinite hanging
-        const { durationMs = 1500 } = options;
+        // On mobile, use a much shorter loading duration
+        const { durationMs = isMobile ? 400 : 1500 } = options;
 
-        // Reset readiness flags
         setModeDataReady(false);
         setBg3DReady(false);
         setIsLoading(true);
@@ -61,14 +60,11 @@ export const LoadingProvider = ({ children }) => {
             clearTimeout(timerRef.current);
         }
 
-        // Always set a timer since we have a default duration now
         timerRef.current = setTimeout(() => {
             setModeDataReady(true);
             setBg3DReady(true);
-            // Note: LoadingScreen component will call markAsFinished/stopLoading 
-            // when its internal progress animation reaches 100%.
         }, durationMs);
-    }, []);
+    }, [isMobile]);
 
     // Maintain backward compatibility aliases
     const markAsFinished = stopLoading;
@@ -81,7 +77,7 @@ export const LoadingProvider = ({ children }) => {
             isBg3DReady,
             setBg3DReady,
             isLoading,
-            hasFinishedLoading: !isLoading, // Backward compatibility
+            hasFinishedLoading: !isLoading,
             startLoading,
             stopLoading,
             markAsFinished,

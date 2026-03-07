@@ -3,12 +3,10 @@
 
 // 1. Import the functions you need
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-import { getAuth } from "firebase/auth";         // <--- ADDED: For Login
-import { getFirestore } from "firebase/firestore"; // <--- ADDED: For Database
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 
 // 2. Your web app's Firebase configuration
-// (These are your specific keys, do not change them)
 const firebaseConfig = {
   apiKey: "AIzaSyB-2pa1BV9M6hnkVaurpun25dPB54xDq4A",
   authDomain: "mathemix-9c8ba.firebaseapp.com",
@@ -21,9 +19,14 @@ const firebaseConfig = {
 
 // 3. Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
 
-// 4. Export the services so the rest of your app can use them
-// (Your app will crash without these lines!)
+// 4. Lazy-load analytics (not needed at startup, saves ~50KB from initial bundle)
+if (typeof window !== 'undefined') {
+  import("firebase/analytics").then(({ getAnalytics }) => {
+    getAnalytics(app);
+  }).catch(() => { });
+}
+
+// 5. Export the services so the rest of your app can use them
 export const auth = getAuth(app);
 export const db = getFirestore(app);

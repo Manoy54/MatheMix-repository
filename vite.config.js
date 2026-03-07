@@ -20,10 +20,13 @@ export default defineConfig({
     }),
   ],
   build: {
+    target: 'es2020',
+    cssCodeSplit: true,
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom', 'framer-motion'],
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          motion: ['framer-motion'],
           three: ['three', '@react-three/fiber', '@react-three/drei'],
           firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
         },

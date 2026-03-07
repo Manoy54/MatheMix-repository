@@ -35,11 +35,12 @@ const ModeSelect = React.memo(function ModeSelect({ username, onOpenSidebar }) {
         };
         checkStatus();
 
+        // On mobile, no 3D background to wait for — signal ready almost immediately
         const timer = setTimeout(() => {
             setModeDataReady(true);
-        }, 800);
+        }, isMobile ? 100 : 800);
         return () => clearTimeout(timer);
-    }, [setModeDataReady]);
+    }, [setModeDataReady, isMobile]);
 
     const updateCardBounds = useCallback(() => {
         const bounds = {};
