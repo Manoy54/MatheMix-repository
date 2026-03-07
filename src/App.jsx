@@ -1,7 +1,7 @@
 // src/App.jsx
 import React, { useState, useEffect, lazy, Suspense } from "react";
 import { Routes, Route, Navigate, useLocation, useNavigationType, useNavigate } from "react-router-dom";
-import { Menu } from 'lucide-react';
+import { Menu, Volume2, VolumeX } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLoading } from "./context/LoadingContext";
 import { useMobile } from "./hooks/useMobile";
@@ -31,6 +31,7 @@ import AdminRoute from "./components/AdminRoute.jsx";
 import { auth, db } from "./firebaseConfig.js";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, onSnapshot } from "firebase/firestore";
+import { useMusic } from "./context/MusicContext.jsx";
 
 const ProtectedRoute = ({ user, loading, children }) => {
     if (loading) return null;
@@ -116,6 +117,7 @@ function App() {
 
     // We define isPublicPage to rely on path or if user is not logged in
     const isPublicPage = location.pathname === "/welcome" || location.pathname === "/login";
+    const { isMuted, toggleMute } = useMusic();
 
     return (
         <div className="font-nunito min-h-screen w-full relative bg-gradient-to-br from-[#023e8a] via-[#0077b6] to-[#0096c7]">
@@ -173,6 +175,18 @@ function App() {
                     <Route path="*" element={<Navigate to={currentUser ? "/mode-select" : "/welcome"} replace />} />
                 </Routes>
             </div>
+
+            {/* Music Mute/Unmute Toggle */}
+            {!isPublicPage && currentUser && !showLoading && (
+                <button
+                    onClick={toggleMute}
+                    className="fixed bottom-4 right-4 z-[100] p-3 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 text-white/70 hover:text-white hover:bg-white/20 transition-all duration-200 shadow-lg"
+                    title={isMuted ? 'Unmute Music' : 'Mute Music'}
+                    aria-label={isMuted ? 'Unmute Music' : 'Mute Music'}
+                >
+                    {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                </button>
+            )}
         </div>
     );
 }

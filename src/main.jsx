@@ -8,13 +8,17 @@ import "./index.css";
 import { BrowserRouter } from "react-router-dom"; // <--- Import this
 
 import { LoadingProvider } from "./context/LoadingContext";
+import { MusicProvider } from "./context/MusicContext.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <LoadingProvider>
       <BrowserRouter>
-        <App />
+        <MusicProvider>
+          <App />
+        </MusicProvider>
       </BrowserRouter>
     </LoadingProvider>
   </React.StrictMode>
 );
+

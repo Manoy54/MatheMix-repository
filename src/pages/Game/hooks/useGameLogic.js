@@ -4,6 +4,7 @@ import { auth, db } from '../../../firebaseConfig';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useMobile } from '../../../hooks/useMobile';
 import { QUESTIONS } from '../../../data';
+import { useSoundEffects } from '../../../hooks/useSoundEffects';
 
 export const useGameLogic = (onGameEnd) => {
     const isMobile = useMobile();
@@ -11,6 +12,7 @@ export const useGameLogic = (onGameEnd) => {
     const navigate = useNavigate();
     const hiddenInputRef = useRef(null);
     const keyboardContainerRef = useRef(null);
+    const { playKeyPress, playCorrect, playWrong, playGiveUp } = useSoundEffects();
 
     // --- 1. Get Category & Questions ---
     const CATEGORY_MAP = {
@@ -223,6 +225,7 @@ export const useGameLogic = (onGameEnd) => {
 
     const handleChar = useCallback((char) => {
         if (answerStatus || isGameOver) return;
+        playKeyPress();
         setInput(prev => {
             const nonSpaceInput = prev.replace(/ /g, '');
             if (nonSpaceInput.length < answerWithSpaces.length) {
@@ -230,7 +233,7 @@ export const useGameLogic = (onGameEnd) => {
             }
             return prev;
         });
-    }, [answerWithSpaces.length, answerStatus, isGameOver]);
+    }, [answerWithSpaces.length, answerStatus, isGameOver, playKeyPress]);
 
     const [activeBoxIndex, setActiveBoxIndex] = useState(0);
 
@@ -238,6 +241,7 @@ export const useGameLogic = (onGameEnd) => {
         const char = val.slice(-1).toUpperCase().replace(/[^A-Z]/g, '');
         if (!char) return;
 
+        playKeyPress();
         setInput(prev => {
             const chars = prev.split('');
             while (chars.length <= index) chars.push('');
@@ -249,7 +253,7 @@ export const useGameLogic = (onGameEnd) => {
         if (index < answerWithSpaces.length - 1) {
             setActiveBoxIndex(index + 1);
         }
-    }, [answerWithSpaces]);
+    }, [answerWithSpaces, playKeyPress]);
 
     const handleBoxBackspaceNav = useCallback((index) => {
         if (input[index] === ' ' || !input[index] || input[index] === undefined) {
@@ -271,12 +275,18 @@ export const useGameLogic = (onGameEnd) => {
     }, [input]);
 
     const handleClear = useCallback(() => {
-        if (!answerStatus && !isGameOver) setInput('');
-    }, [answerStatus, isGameOver]);
+        if (!answerStatus && !isGameOver) {
+            playKeyPress();
+            setInput('');
+        }
+    }, [answerStatus, isGameOver, playKeyPress]);
 
     const handleDelete = useCallback(() => {
-        if (!answerStatus && !isGameOver) setInput(prev => prev.slice(0, -1));
-    }, [answerStatus, isGameOver]);
+        if (!answerStatus && !isGameOver) {
+            playKeyPress();
+            setInput(prev => prev.slice(0, -1));
+        }
+    }, [answerStatus, isGameOver, playKeyPress]);
 
     const handleSubmit = useCallback(() => {
         if (answerStatus || isGameOver) return;
@@ -294,6 +304,7 @@ export const useGameLogic = (onGameEnd) => {
         }
 
         if (inputNoSpaces.toUpperCase() === answerNoSpaces) {
+            playCorrect();
             setAnswerStatus('correct');
             const newStreak = streak + 1;
             setStreak(newStreak);
@@ -313,13 +324,14 @@ export const useGameLogic = (onGameEnd) => {
                 }
             }, 2000);
         } else {
+            playWrong();
             setAnswerStatus('wrong');
             const finalStreak = streak;
             if (onGameEnd) onGameEnd(false);
             updateStats(false, finalStreak, true, currentPoints);
             setTimeout(() => { setIsGameOver(true); }, 1000);
         }
-    }, [input, answer, streak, bestStreak, onGameEnd, nextQuestion, answerStatus, isGameOver, currentPoints, highestPoints]);
+    }, [input, answer, streak, bestStreak, onGameEnd, nextQuestion, answerStatus, isGameOver, currentPoints, highestPoints, playCorrect, playWrong]);
 
     const handleSkip = useCallback(() => {
         if (!answerStatus && !isGameOver) {
@@ -334,6 +346,7 @@ export const useGameLogic = (onGameEnd) => {
     }, [answerStatus, isGameOver, isMobile]);
 
     const confirmGiveUp = () => {
+        playGiveUp();
         setShowGiveUpModal(false);
         const finalStreak = streak;
         if (onGameEnd) onGameEnd(false);
