@@ -244,11 +244,15 @@ const LandingPage = () => {
                         <video
                             className="w-full h-full object-cover"
                             autoPlay
-                            loop
+                            loop={true}
                             muted
                             playsInline
+                            onEnded={(e) => {
+                                e.target.currentTime = 0;
+                                e.target.play();
+                            }}
                         >
-                            <source src="/gameplay-preview.mp4" type="video/mp4" />
+                            <source src="/gamepreview.mp4" type="video/mp4" />
                             Your browser does not support the video tag.
                         </video>
 
